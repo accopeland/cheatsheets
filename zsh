@@ -1,3 +1,14 @@
+# readline
+bindkey -e # emacs mode
+bindkey -v # vi ins mode
+bindkey -a # vi cmd mode
+
+# line editing - zle
+zle -l
+
+# switch from bash
+chsh -s /bin/zsh
+
 # A plain old glob
 print -l *.txt
 print -l **/*.txt

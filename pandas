@@ -1,0 +1,18 @@
+# description
+
+# install
+python3 -m pip install pandas
+
+#
+
+# calplot
+python3 -m pip install pandas numpy calplot
+import numpy as np
+import pandas as pd
+import calplot
+df = pd.read_csv('2022-ALL.csv', parse_dates=['start','end'])
+df['start'] = pd.to_datetime(df['start'], utc=True)
+df['end'] = pd.to_datetime(df['end'], utc=True)
+df['duration'] = (df.end - df.start)/np.timedelta64(1,'D')
+df.set_index('start', inplace=True)
+calplot.calplot(df['duration'])

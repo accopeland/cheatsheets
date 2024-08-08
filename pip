@@ -1,6 +1,17 @@
 ---
 tags: [ packaging ]
 ---
+# see also
+pipx
+uv
+
+# install
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+python3 -m ensurepip
+
+# upgrade
+python -m pip install --upgrade pip
+
 # To search for a package:
 pip search <package>
 
@@ -23,6 +34,10 @@ pip show <package>
 # To list outdated packages:
 pip list --outdated
 
+# cleanup
+pip cache info
+pip cache purge OR pip cache remove *
+
 # To upgrade all outdated packages:
 pip freeze --local | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
 
@@ -31,3 +46,49 @@ pip list --outdated --format=freeze | cut -d = -f 1 | xargs -n1 pip install -U
 
 # To install specific version of a package:
 pip install -I SomePackage1==1.1.0 'SomePackage2>=1.0.4'
+
+# install locations / directories
+# -- By default 'pip --user' installs to one of the following locations:
+~/.local/lib/python2.7/site-packages
+~/.local/lib/python3.4/site-packages
+~/.local/lib/python3.6/site-packages
+# -- By default, 'pip' installed locally installs to one of:
+/usr/lib/python2.7/site-packages
+/usr/lib/python3.4/site-packages
+/usr/lib/python3.6/site-packages
+
+# broken pip search
+just do an install and hope for the best
+
+# automatically create docs
+pip3 install pdoc3
+pdoc --html -o <DIR> .
+
+# dependencies
+pip freeze > requirements.txt
+or
+pip3 install pipreqs
+pipreqs <PRJ>
+
+# python / pip
+python -m venv venv
+source venv/bin/activate
+ -- pip install -r requirements.txt
+pip install -e .
+or
+python -m pip install boto3
+
+# example broken usage: e.g. convert xls to csv: csvkit
+#ideally
+pip install --upgrade setuptools
+pip install --upgrade csvkit
+in2csv data.xls > data.csv
+csvcut -c column_a,column_c data.csv > new.csv
+csvstat data.csv
+# if python is broken again
+brew link openssl --force
+pip uninstall cryptography
+pip uninstall cryptography --no-use-wheel
+pip install cryptography --no-use-wheel
+brew unlink openssl
+pip install --upgrade csvkit

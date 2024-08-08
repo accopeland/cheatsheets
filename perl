@@ -76,3 +76,24 @@ cat test.txt | perl -0pe "s/test1\ntest2/test1 test2/m"
 
 # Replace double newlines with single newline:
 perl -pe '$/=""; s/(\n)+/$1/' my-file
+
+# perlbrew  - like jenv for perl . Only for maintaining multiple perl versions
+https://github.com/gugod/App-perlbrew
+
+# Custom local perl lib install:
+cpan> o conf makepl_arg "INSTALLBIN=/usr/local/bin INSTALLSCRIPT=/usr/local/bin"
+cpan> o conf commit
+cpan> exit
+
+# Install Bioperl module
+> cpanm Bio::SeqIO
+
+# macos perl
+conda perl
+brew cpan
+perlbrew
+
+# custom perl package install location
+cpan> o conf makepl_arg "INSTALLBIN=/usr/local/bin INSTALLSCRIPT=/usr/local/bin"
+cpan> o conf commit
+cpan> exit

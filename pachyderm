@@ -1,0 +1,14 @@
+brew install --HEAD xhyve
+brew install docker-machine-driver-xhyve
+sudo chown root:wheel $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+sudo chmod u+s $(brew --prefix)/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+
+brew install minikube
+brew cask install kubectl
+# curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.18.0/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+#$ curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/darwin/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+# start minikube using xhyve driver
+minikube start --logtostderr --show-libmachine-logs --vm-driver=xhyve
+minikube start --memory=2048 --vm-driver=xhyve
+minikube start --v=5 --logtostderr --show-libmachine-logs --vm-driver=xhyve # debug

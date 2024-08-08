@@ -1,0 +1,11 @@
+# opencv
+
+# docs
+
+# usage
+
+# install
+
+# compile opencv project (almost)
+gcc_init
+> $CXX $(pkg-config --cflags --libs /usr/local/Cellar/opencv/4.7.0_1/lib/pkgconfig/opencv4.pc) -std=c++11  -I /usr/local/Cellar/opencv/4.7.0_1/include/opencv4  circles.c -o circ -lc

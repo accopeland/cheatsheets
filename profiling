@@ -1,0 +1,11 @@
+cscope
+
+pycallgraph
+
+pyan
+ python ./pyan.py  ../jgi-rqc-pipeline/jigsaw/jigsaw.py  --dot > f.dot
+
+python -m cProfile foo.py
+
+
+perl  - perlmonks::sub_graph.pl

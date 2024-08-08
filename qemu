@@ -1,0 +1,80 @@
+# description
+QEMU is a fast, cross-platform open source machine emulator which can emulate a
+huge number of hardware architectures. QEMU lets you run a complete
+unmodified operating system (VM Guest) on top of your existing system (VM Host
+Server).
+
+# install
+
+# remove
+
+# docs
+
+# version
+qemu-system-aarch64 --version
+
+# monitor
+
+# cleanup
+
+# basic run
+
+# direct linux boot
+qemu-system-x86_64 -kernel bzImage -hda rootdisk.img -append "root=/dev/hda"
+
+#
+# run ubuntu
+curl https://cdimage.ubuntu.com/releases/20.04/release/ubuntu-20.04.2-live-server-arm64.iso -o ubuntu-lts.iso
+  qemu-img create -f qcow2 virtual-disk.qcow2 8G
+  cp $(dirname $(which qemu-img))/../share/qemu/edk2-aarch64-code.fd .
+  dd if=/dev/zero conv=sync bs=1m count=64 of=ov
+  # then
+  qemu-system-aarch64 -machine virt,accel=hvf,highmem=off -cpu cortex-a72 -smp 4 -m 4G -device virtio-gpu-pci \
+  -device virtio-keyboard-pci -drive "format=raw,file=edk2-aarch64-code.fd,if=pflash,readonly=on" \
+  -drive "format=raw,file=ovmf_vars.fd,if=pflash" -drive "format=qcow2,file=virtual-disk.qcow2"  -cdrom ubuntu-lts.iso
+
+# commands
+qemu-edid
+qemu-img
+qemu-io
+qemu-nbd
+qemu-storage-daemon
+
+# systems
+qemu-system-aarch64
+qemu-system-alpha
+qemu-system-arm
+qemu-system-avr
+qemu-system-cris
+qemu-system-hppa
+qemu-system-i386
+qemu-system-loongarch64
+qemu-system-m68k
+qemu-system-microblaze
+qemu-system-microblazeel
+qemu-system-tricore
+qemu-system-x86_64
+qemu-system-xtensa
+qemu-system-xtensaeb
+qemu-system-mips
+qemu-system-mips64
+qemu-system-mips64el
+qemu-system-mipsel
+qemu-system-nios2
+qemu-system-or1k
+qemu-system-ppc
+qemu-system-ppc64
+qemu-system-riscv32
+qemu-system-riscv64
+qemu-system-rx
+qemu-system-s390x
+qemu-system-sh4
+qemu-system-sh4eb
+qemu-system-sparc
+qemu-system-sparc64
+
+# pinned 6.2.0 install
+curl -L -H "Authorization: Bearer QQ==" -o qemu-6.2.0_1.monterey.bottle.tar.gz https://ghcr.io/v2/homebrew/core/qemu/blobs/sha256:fcc3b1a8139f70dae57f5449f3856f9b3b67448ee0623e64da1e47dc255b46f6
+brew install -f qemu-6.2.0_1.monterey.bottle.tar.gz
+
+#

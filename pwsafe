@@ -1,0 +1,24 @@
+# code
+ git clone https://github.com/pwsafe/pwsafe.git
+
+# deps wxWidgets
+# https://wiki.wxwidgets.org/Development:_wxMac
+need wxwidgets > 3.1.5
+git clone https://github.com/wxWidgets/wxWidgets.git
+cd wxWidgets/
+git submodule update --recursive --init
+../configure --with-osx_cocoa --enable-universal-binary=x86_64
+
+# config
+export LDFLAGS=-L/usr/local/opt/openssl/lib
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/opt/openssl/lib/pkgconfig
+mkd build
+cmake .. -DXML_XERCESC=0
+
+# compile
+cd ~/Projects/2023/20230314-_pwsafe/pwsafe/build
+cmake -D wxWidgets_CONFIG_EXECUTABLE=../../wxWidgets/build-cocoa/wx-config  ..
+make # clang14
+
+# notes

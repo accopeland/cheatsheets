@@ -1,0 +1,34 @@
+# description
+a fully open catalog of the global research system with a REST API, named after the ancient Library of Alexandria and made by the nonprofit OurResearch.
+daily limit for API calls is 100,000 requests per user per day.
+
+# docs
+https://docs.openalex.org/api-entities/
+
+# see also
+# Scholarly API Cookbook
+https://journals.library.ualberta.ca/istl/index.php/istl/article/view/2766
+https://ualibweb.github.io/UALIB_ScholarlyAPI_Cookbook/content/about/introduction.html
+
+# install
+OA_API = https://api.openalex.org
+
+# limits
+add email to all API requests, like mailto=example@domain.com
+
+# sci search
+http https://api.openalex.org/authors/https://orcid.org/0000-0002-3971-5439
+https://api.openalex.org/works?filter=publication_year:2022
+
+# author via orcid
+https://api.openalex.org/authors/orcid:0000-0002-8140-0131 (BBushnell)
+
+#oa_my_pubs ()
+    http $OA_API/authors/https://orcid.org/0000-0002-3971-5439?mailto=accopeland@bl.gov
+
+# oa_jgi_pubs
+oa_jgi_pubs ()
+    http $OA_API/works?filter=institutions.id:I196679689?mailto=accopeland@bl.gov
+
+# openalex_me
+    curl https://api.openalex.org/works?filter=author.orcid:https://orcid.org/0000-0002-3971-5439,is_paratext:false

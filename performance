@@ -1,0 +1,190 @@
+# description
+Various tools for performance measurement and benchmarking
+
+# profiling
+ply
+bpf
+bpftrace
+bcc
+ebpf
+
+# io
+ionice
+
+# show available probes in an elf using readelf
+find /usr/lib/jvm -name libjvm.so -exec readelf -n {} + | grep -A2 NT_STAPSDT
+
+# show available probes
+tplist -p `pidof java`
+
+# find /usr/lib/jvm -name hotspot-*.stp -exec grep 'mark("monitor__waited")' -A10 {} +
+
+# java
+create-java-perf-map.sh (from
+perf-map-agent)	generates	a	symbol	file
+describing	Java	symbols	and	addresses
+
+# # trace 'SyS_write (arg1==1) "%s", arg2' -U -p `pidof java
+
+# filesystem
+filetop
+filelife
+fileslower
+vfscount
+vfsstat
+cachestat
+cachetop
+mountsnoop
+*fsslower
+*fsdist
+dcstat
+dcsnoop
+mdflush
+
+# block IO
+biotop
+biolatency
+biosnoop
+bitesize
+
+# tcpip
+tcptop
+tcplife
+tcpconnect
+tcpaccept
+
+# device drivers
+hardirqs
+softirqs
+ttysnoop
+
+# memory
+memleak
+oomkill
+slabratetop
+
+# memory bandwidth
+see github.com/MattPD/cpplinks/performance.tools.md
+spatter
+mbw
+STREAM
+tinymembench
+
+# scheduler
+runqlat
+cpudist
+offcputime
+offwaketime
+cpuunclaimed
+
+# cpu
+profile
+llcstat
+
+# jvm
+ustat
+ugc
+ucalls
+uthreads
+uobjnew
+uflow
+
+# applications
+mysqld_qslower
+bashreadline
+dbslower
+dbstat
+mysqlsniff
+
+# system libs
+memleak
+sslsniff
+gethostlatency
+deadlock_detector
+
+# syscall interface
+execsnoop
+opensnoop
+killsnoop
+statsnoop
+syncsnoop
+setuidsnoop
+
+# whole stack
+argdist
+trace
+funccount
+funclatency
+stackcount
+
+# bcc/jvm performance checklist
+ustat
+2. ugc
+3. execsnoop
+4. opensnoop
+5. ext4slower
+(or	btrfs*
+,	xfs*
+,	zfs*)
+6. biolatency
+7. biosnoop
+8. cachestat
+9. tcpconnect
+10.tcpaccept
+11.tcptop
+12.gethostlatency
+13.uthreads
+14.cpudist
+15.runqlat
+16.profile
+
+# threads
+uthreads (from	BCC)	traces	thread	 ✁
+creation	and	destruction	events
+
+# hot call stacks
+profile (from	BCC)	collects	hot
+CPU	call	stacks	and	aggregates	them
+(requires	/tmp/perf-PID.map)
+profile -f -F 97 5 > java.stacks
+cat java.stacks | flamegraph.pl --color java > javacpu.svg
+
+# db
+dbstat (from	BCC)	generates	a
+histogram	of	database	query
+latencies	for	MySQL	and	PostgreSQL
+dbstat mysq
+l
+
+# mysql
+ dbstat mysql -m 5
+Tracing database queries slower than 5ms for PID 25776... Ctrl+C to quit
+
+# trace -p `pidof mysqld` 'u:/usr/local/mysql/bin/mysqld:query__exec__start "query=%s", arg1'
+
+by	attaching	trace to	the
+query__exec__start probe,	we
+see	the	internal	queries	executed	by
+the	getproduct sproc
+
+# abov e  see https://assets.ctfassets.net/oxjq45e8ilak/2KmV3daziwmWGeyIye8Kmy/3b9d739704dcc1292712c1374124b8d4/Sasha-Goldshtein_Monitoring-JVM-applications-with-BPF-magic.pdf
+
+# ustat
+ustat (from	BCC)	is	a	top-like
+extension	for	Java	events	(and
+other	languages)
+
+# uobjnew (from	BCC)	traces	object	allocations
+by	using	an	expensive	probe	that	requires
+-XX:+ExtendedDTraceProbes
+uobjnew java `pidof java` 5
+
+# stackcount -i 5 -p `pidof java` "u:…/libjvm.so:object__alloc"
+stackcount (from	BCC)	attaches	to	that
+probe	and	summarizes	Java	call	stacks	leading
+up	to	it	(could	also	do	a	flame	graph)
+
+# host latency
+gethostlatency
+trace -T -p `pidof java` 'c:getaddrinfo "resolving: %s", arg1' \
+'r:c:getaddrinfo "done resolving: %d", retval'

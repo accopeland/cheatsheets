@@ -1,0 +1,5 @@
+# run presto
+jenv global 1.8
+presto-server run
+# edit etc/node.properites
+# edit etc/config.properties

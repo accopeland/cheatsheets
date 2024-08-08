@@ -1,0 +1,8 @@
+# description
+proxychains-ng : proxy most networking applications using a SOCKS4/5 proxy in /etc/proxychains.conf
+
+# install
+brew install proxychains-ng  # sourceforge
+
+# example
+proxychains nmap 192.168.1.221 -sT -p 80,443

@@ -1,0 +1,46 @@
+# description
+pk: a field extractor utility (C)
+pk is a tool for grabbing columns from an input stream and printing them on stdout. Each argument represents something you would like to see appearing in the output.
+
+# install
+brew install pk
+
+# usage
+a positive integer arg is a request to extract that column from the input (1-based).
+$ df | pk 6 5
+
+# range
+X..Y	Print each field from index X through to index Y
+X..	Print each field from index X through to the last field
+..Y	Print each field from field 1 through to field Y
+..	Print every field
+
+# append
+Finally, any argument that does not appear to be an index or a range is outputted directly. This can be useful for putting together command lines or quick scripts:
+ls -l /etc | pk 9 is owned by 3
+
+# delimiter -- the -d flag changes delimiters.
+the string argument to -d contains a set of characters, each of which is a delimiter, not a fixed string that separates each field.
+Note that you can pass an explicit <tab> as a delimiter by enclosing \t in double quotes: -d"\t".
+default = <tab> and <space>
+
+# OFS
+-S <char> e.g.
+pk -S, for csv
+
+# empty fields
+-e <col> treat adjacent delimiter characters in input as empty fields.
+
+# null
+-N <string> pk prints NULL for empty fields, this can be set to another string using the -N flag. If this flag is used without an argument then empty fields are not printed.
+
+#  trimming
+-T trims non-alphanumeric characters from the left and right side before printing the field to stdout. T
+
+# quoting
+-q <col> quote column <col>
+
+# excludes
+-E list of patterns to alwasy exclude
+cat input | pk -E 1 3
+

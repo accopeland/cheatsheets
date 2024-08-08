@@ -1,0 +1,95 @@
+#  description
+
+# see also
+prosimos
+simod
+disco
+minit
+pm4py pip
+proM  processming.org prom.org
+celonis www.celonis.de
+bupaR cran
+rapidProM https://arxiv.org/abs/1703.03740 www.rapidprom.org
+
+# R
+https://www.dataminingapps.com/2017/11/a-process-mining-tour-in-r/
+
+#  https://processminingbook.com/read/tutorial/
+#  https://github.com/topics/process-mining?o=desc&s=forks
+
+#  http://fluxicon.com/s/discomanual
+
+# Disco  Resources
+- Which process mining project should you start with: https://fluxicon.com/blog/2018/10/which-process-mining-project-should-you-start-with/
+- How to perform a bottleneck analysis: http://fluxicon.com/blog/2017/01/how-to-perform-a-bottleneck-analysis-with-process-mining/
+- How to understand variants: http://fluxicon.com/blog/2012/11/how-to-understand-the-variants-in-your-process/
+- How to identify rework in your process: https://fluxicon.com/blog/2017/03/how-to-identify-rework-in-your-process/
+- How to check segregation of duties: http://fluxicon.com/blog/2014/03/how-to-check-segregation-of-duties-with-disco/
+- How to analyze open cases with process mining: https://fluxicon.com/blog/2019/10/how-to-analyze-open-cases-with-process-mining/
+- How to quickly get to the ‘First Time Right’: Process: http://fluxicon.com/blog/2015/12/how-to-quickly-get-to-the-first-time-right-process/
+- Process mining transformations series: https://fluxicon.com/blog/2018/01/process-mining-transformations-part-1-unfold-loops-for-cases/
+- Data suitability checklist for process mining: https://fluxicon.com/blog/2020/04/data-suitability-checklist-for-process-mining/
+- Data requirements for new IT systems: https://fluxicon.com/blog/2020/12/process-mining-cafe-vivat/
+- Do I need to remove outliers for my process mining analysis: https://fluxicon.com/blog/2020/10/do-i-need-to-remove-outliers-for-my-process-mining-analysis/
+
+# 15-min introduction video
+http://youtu.be/ql1S1wAxJ0E?t=10s
+
+#  introductory articles:
+
+- Process mining use cases: http://fluxicon.com/blog/2016/11/process-mining-use-cases-who-uses-process-mining/
+- The added value of process mining: http://www.bptrends.com/the-added-value-of-process-mining/
+- Comparison to other technologies: http://fluxicon.com/blog/2014/02/how-is-process-mining-different-from/
+
+
+# time series monitoring and db:
+timescaledb (postgres extension)
+influxdb/ flux
+telegraf  / influxdb  - time series db; 100x faster than mongo ?
+
+# https://www.dataminingapps.com/2017/11/a-process-mining-tour-in-r/
+https://rpubs.com/jwross83/624656
+https://fluxicon.com/blog/2017/01/how-to-perform-a-bottleneck-analysis-with-process-mining/
+
+# disco
+disco.app
+
+# eventlog preprocessing
+gather === pivot_longer
+mutate(activity_instance_id=dplyr::row_number())  # for enumerating groups
+
+# process mininmg
+minit
+disco
+pm4py pip
+proM  processming.org prom.org
+celonis www.celonis.de
+bupaR cran
+rapidProM https://arxiv.org/abs/1703.03740 www.rapidprom.org
+
+
+# clarity (rqcapi)
+https://rqcapi@clarity-prd01.jgi-psf.org/api/v2/processes/24-137879
+
+# logfile processing / viewing
+logstash
+splunk
+prometheus
+fluentd
+influxdb
+flume
+lnav ***
+
+# simulation
+https://github.com/AutomatedProcessImprovement/Simod
+/Users/ihar/projects/api/simod/venv/bin/python /Users/ihar/projects/api/simod/src/simod/cli.py discover --config_path config/discover_without_model_config.yml
+https://github.com/AutomatedProcessImprovement/Prosimos
+https://github.com/AutomatedProcessImprovement/Prosimos/issues/7
+https://github.com/orgs/AutomatedProcessImprovement/teams/simod-team/discussions/10
+https://owncloud.ut.ee/owncloud/index.php/s/D2SXiKoBGgMCGpa
+
+# wait time analysis
+https://github.com/AutomatedProcessImprovement/waiting-time-analysis
+
+# batches
+https://github.com/AutomatedProcessImprovement/batch-processing-analysis

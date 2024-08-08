@@ -1,0 +1,46 @@
+# description
+ply dynamically instruments the running kernel to aggregate and extract user-defined data. It compiles an input program to one or more Linux bpf(2) binaries and attaches them to arbitrary points in the kernel using kprobes and tracepoints.
+Needs root?
+
+# syscalls
+#!/usr/bin/env ply
+kprobe:SyS_*
+{
+    @syscalls[caller] = count();
+}
+ply count-syscalls.ply
+
+# return distribution
+kretprobe:SyS_read
+{
+    @["retsize"] = quantize(retval);
+}
+sudo ./read-dist.ply
+
+# stack tracese
+ply ./i2c-stack.ply &
+
+# opens
+kprobe:do_sys_open
+{
+    printf("%v(%v): %s\n",
+           comm, pid, str(arg1));
+}
+sudo ./opensoop.ply
+
+# Trace file opens:
+ply -c 'kprobe:do_sys_open { printf("opened: %s\n", mem(arg(1), "128s")); }'
+
+# Counting vfs functions by process name:
+ply -c 'kprobe:vfs_* { @[comm(), func()].count(); }'
+
+# Counting off-CPU stacks:
+ply -c 'kprobe:schedule { @[stack()].count() }'
+
+# Syscall read return size as a histogram:
+ply -c 'kretprobe:SyS_read { @ret.quantize(retval()); }'
+
+# Syscall read latency as a histogram:
+ply -A -c 'kprobe:SyS_read { @start[tid()] = nsecs(); }
+ kretprobe:SyS_read /@start[tid()]/ { @ns.quantize(nsecs() - @start[tid()]);
+ @start[tid()] = nil; }'

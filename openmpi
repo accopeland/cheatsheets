@@ -1,0 +1,770 @@
+# description
+openmpi notes, tips and tricks
+
+# install
+use system pmix (external in spack.yaml), and spack hwloc, libfabric, ucx, libevent
+spack install openmpi +romio fabrics=ofi,ucx,cma,verbs schedulers=slurm ~mpi-fortran
+N.B. xpmem, knem not working/avail on dori
+
+# usage
+module use ...
+prterun [options] binary
+srun [options] -n <nodes> binary
+
+# spack problems
+https://github.com/spack/spack/pull/10340
+legacylaunchers
+
+# info
+ompi_info
+pmix_info
+prte_info
+ucx_info
+
+# IO info
+ompi_info --param io       ompio --level 9
+ompi_info --param fcoll    all --level 9
+ompi_info --param fs       all --level 9
+ompi_info --param fbtl     all --level 9
+ompi_info --param sharedfp all --level 9
+
+# PML : process management layer
+pmi4x
+srun --mpi=list
+
+SLURM_MPI_TYPE
+mpirun --mca=...
+
+# spack build
+spack install openmpi schedulers=slurm fabric=ucx +pmi +singularity # atomics?
+
+# depends on ucx
+ucx +cm,cma,dcrocm,ud,knem,xpmem,rc,dct,xrc,dm,ib_hw_tm,verbs
+openmpi fabrics=auto|ucx,verbs,cma
+
+# ucx
+ucx@1.13.1%gcc@12.2.0~assertions~backtrace_detail~cma~cuda~dc~debug+dm+examples~gdrcopy~ib_hw_tm~java~knem~logging~mlx5_dv+openmp+optimizations~parameter_checking+pic~rc~rdmacm~rocm~thread_multiple~ucg~ud+verbs~vfs~xpmem build_system=autotools libs=shared,static opt=3 patches=32fce32 simd=auto arch=linux-rocky8-zen2
+
+# slurm (>23.11) issues w openmpi
+https://github.com/open-mpi/ompi/issues/12471
+
+# dori -- Rob's build
+/clusterfs/jgi/groups/gentech/genome_analysis/rnd/rsegan/Software
+
+# spack
+[copeland@login25:/global/cfs/cdirs/jgiqaqc/TestData] spack install openmpi +atomics +gpfs +romio fabrics=ucx schedulers=auto
+
+# from slack
+#  spack install openmpi@4.0.7 schedulers=slurm +pmi  +legacylaunchers %gcc@12.1.0 ^pmix@4.1 ^libevent@2.0 ^hwloc@1.11.8 ^openssl@1.0.2k-fips ^munge@0.5.15 to install openmpi that worked for srun --mpi=pmix, srun --mpi=pmi2 and mpirun for a hello world mpi program
+
+# debugging mpiexec/mpirun
+--report-bindings
+--verbose
+--mca ras_base_verbose 10
+--mca pml_base_verbose 50
+--debug-daemons #Enable debugging of any OpenRTE daemons used by application
+--debug-daemons-file #Enable debugging of any OpenRTE daemons used by application, storing output in files
+--debugger <arg0> # Sequence of debuggers to search for when "--debug" is used
+--default-hostfile <arg0> # Provide a default hostfile
+--disable-recovery # Disable recovery (resets all recovery options tooff)
+--display-allocation # Display the allocation being used by this job
+--display-devel-allocation # Display a detailed list (mostly intended for developers) of the allocation being used by this job
+--display-devel-ma # Display a detailed process map (mostly intended for developers) just before launch
+--display-diffable-map # Display a diffable process map (mostly intended for developers) just before launch
+--display-map # Display the process map just before launch
+--display-topo #Display the topology as part of the process map (mostly intended for developers) just before launch
+
+# performance
+compare the performance with
+MPi jobs bound to specific cores (eg -R with affinity[core(1):distribute=pack]')
+MPI jobs bound to sockets alternating (eg --bind-to socket)
+MPI jobs bound to sockets contiguously (eg --bind-to socket --rank-by core or -R with affinity[core(1):cpubind=socket:distribute=balance)
+mpirun --map-by socket --bind-to socket --rank-by core
+
+# performance tuning
+FI_LOG_LEVEL=debug mpirun osu_alltoall -m 16 -x 1000 -i 20000 > debug.out 2>&1
+prterun --verbose --map-by node:pe=8 -np 2 --mca smsc ^cma --display bind  hostname
+
+# pmi
+ls /usr/lib64/libpmi*
+
+# c test
+# test_mpi.c
+#define _GNU_SOURCE
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sched.h>
+#include <unistd.h>
+void print_affinity() {
+    int i, n;
+    char hostname[64];
+    char *str;
+    cpu_set_t mask;
+    n = sysconf(_SC_NPROCESSORS_ONLN);
+    sched_getaffinity(0, sizeof(mask), &mask);
+    str = malloc(n + 256);
+    if (!str) { return; }
+    gethostname(hostname, 64);
+    sprintf(str, "%s:%d ", hostname, getpid());
+    for (i=0; i<n; ++i) {
+        if (CPU_ISSET(i, &mask)) {
+            strcat(str, "1");
+        } else {
+            strcat(str, "0");
+        }
+    }
+    printf("%s\n", str);
+    free(str);
+}
+int main(int argc, char **argv){
+        int myrank, numprc;
+        MPI_Init(&argc, &argv);
+        MPI_Comm_size(MPI_COMM_WORLD, &numprc);
+        MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+        print_affinity();
+        printf("Hello from proc %d of %d\n", myrank, numprc);
+        MPI_Finalize();
+}
+> mpicc -o test_mpi_main test_mpi.c
+> srun -n 4 ./test_mpi_main
+> srun -n 4 --mpi=pmix ./test_mpi_main
+
+# fortran test
+# hello.f90
+program hello
+   use mpi
+   integer rank, size, ierror, strlen, status(MPI_STATUS_SIZE)
+   character(len=MPI_MAX_PROCESSOR_NAME) :: hostname
+
+   call MPI_INIT(ierror)
+   call MPI_COMM_SIZE(MPI_COMM_WORLD, size, ierror)
+   call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierror)
+   call MPI_GET_PROCESSOR_NAME( hostname, strlen, ierror )
+   print*, trim(hostname), rank, size
+   call MPI_FINALIZE(ierror)
+end
+> mpif90 hello.f90
+> srun  --mpi=pmix -p rome -N5 -n40 --mem=0 a.out
+
+# mpicc -o test_mpi_main test_mpi.c
+
+srun -n 4 ./test_mpi_main
+srun -n 4 --mpi=pmix ./test_mpi_main
+Expect:
+[ec2-user@ip-172-31-82-82 openmpi]$ srun -n 4 --mpi=pmix ./test_mpi_main
+Hello from proc 1 of 4
+Hello from proc 2 of 4
+Hello from proc 3 of 4
+Hello from proc 0 of 4
+
+# debugging
+ompi_info
+slurmd -C
+
+# dori
+slurmd -C
+NodeName=n0030 CPUs=64 Boards=1 SocketsPerBoard=2 CoresPerSocket=32 ThreadsPerCore=1 RealMemory=515579  # compute
+NodeName=ln000 CPUs=32 Boards=1 SocketsPerBoard=1 CoresPerSocket=32 ThreadsPerCore=1 RealMemory=515849  # head
+
+# configure options  (https://docs.open-mpi.org/en/main/installing-open-mpi/configure-cli-options/networking.html)
+--with-fca=DIR: Mellanox FCA lib and headers . FCA is the support lib for Mellanox switches and HCAs.
+## if libs/headers not in default compiler/linker search paths
+--with-hcoll=DIR: Mellanox hcoll lib and headers. hcoll is the support lib for MPI collective operation offload on Mellanox ConnectX-3 HCAs (and later).
+--with-knem=DIR: knem libs and header files locations. knem is a Linux kernel module that allows direct process-to-process memory copies (optionally using hardware offload), potentially increasing bandwidth for large messages sent between messages on the same server. See the Knem web site for details.
+--with-libfabric=DIR: libfabric lib and header. Libfabric is the support lib for OpenFabrics Interfaces-based network adapters, Cisco usNIC, Intel TrueScalePSM, etc.
+--with-portals4=DIR: Portals4 libs and header files. Portals is a low-level network API for HP networking... with transport over InfiniBand verbs and UDP.
+--with-ucx=DIR: Specify dir where the UCX libs and header files are located.
+
+
+# run verbose
+SLURM_CPU_BIND=verbose,sockets OMPI_MCA_pmix_base_verbose=10  srun  --mem-bind=verbose,none --cpu-bind=verbose,none mpitest-rsegan
+
+# testing prte / salloc
+$ salloc -N 2
+$ prte --daemonize
+$ prun hostname
+$ pterm # terminate the DVM
+
+# run testing
+mpirun --verbose -n 8 --mca pml ob1 --mca btl self,vader ./test_mpi_main
+##
+ln000.jgi:2431615 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2431614 01000000000000000000000000000000
+Hello from proc 1 of 8
+ln000.jgi:2431617 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2431620 00000001000000000000000000000000
+Hello from proc 7 of 8
+ln000.jgi:2431613 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2431616 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2431618 00000100000000000000000000000000
+Hello from proc 5 of 8
+ln000.jgi:2431619 00000010000000000000000000000000
+Hello from proc 6 of 8
+
+## run testing verbose w env vars
+OMPI_MCA_rmaps_base_oversubscribe=1                                     mpirun --verbose -n 8 --mca pml ob1 --mca btl self,vader ./test_mpi_main
+ln000.jgi:2431615 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2431614 01000000000000000000000000000000
+Hello from proc 1 of 8
+ln000.jgi:2431617 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2431620 00000001000000000000000000000000
+Hello from proc 7 of 8
+ln000.jgi:2431613 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2431616 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2431618 00000100000000000000000000000000
+Hello from proc 5 of 8
+ln000.jgi:2431619 00000010000000000000000000000000
+Hello from proc 6 of 8
+
+# test
+OMPI_MCA_rmaps_base_oversubscribe=1 OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml ucx   ./test_mpi_main
+ln000.jgi:2431706 00000010000000000000000000000000
+Hello from proc 6 of 8
+ln000.jgi:2431705 00000100000000000000000000000000
+Hello from proc 5 of 8
+ln000.jgi:2431703 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2431704 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2431701 01000000000000000000000000000000
+Hello from proc 1 of 8
+ln000.jgi:2431700 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2431702 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2431707 00000001000000000000000000000000
+Hello from proc 7 of 8
+
+# test
+OMPI_MCA_rmaps_base_oversubscribe=1 OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml cm   ./test_mpi_main
+ln000.jgi:2431825 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2431828 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2431826 01000000000000000000000000000000
+Hello from proc 1 of 8
+ln000.jgi:2431827 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2431832 00000001000000000000000000000000
+Hello from proc 7 of 8
+ln000.jgi:2431829 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2431831 00000010000000000000000000000000
+Hello from proc 6 of 8
+ln000.jgi:2431830 00000100000000000000000000000000
+Hello from proc 5 of 8
+
+# Error:An error occurred in MPI_Init
+# Fix: ???
+srun -N2 OMPI_MCA_rmaps_base_oversubscribe=1 OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml cm   ./test_mpi_main
+[ln000:3804619] *** An error occurred in MPI_Init
+[ln000:3804619] *** reported by process [422969345,2]
+[ln000:3804619] *** on a NULL communicator
+[ln000:3804619] *** Unknown error
+[ln000:3804619] *** MPI_ERRORS_ARE_FATAL (processes in this communicator will now abort,
+[ln000:3804619] ***    and potentially your MPI job)
+[ln000.jgi:3804613] 7 more processes have sent help message help-mca-base.txt / find-available:not-valid
+[ln000.jgi:3804613] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+[ln000.jgi:3804613] 7 more processes have sent help message help-mpi-runtime.txt / mpi_init:startup:internal-failure
+[ln000.jgi:3804613] 7 more processes have sent help message help-mpi-errors.txt / mpi_errors_are_fatal unknown handle
+OMPI_MCA_rmaps_base_oversubscribe=1 OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml cm   ./test_mpi_main
+OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml_base_verbose 50 ./test_mpi_main
+Hello from proc 7 of 8
+Hello from proc 2 of 8
+Hello from proc 5 of 8
+Hello from proc 6 of 8
+Hello from proc 1 of 8
+Hello from proc 3 of 8
+Hello from proc 0 of 8
+Hello from proc 4 of 8
+
+# test
+OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml_base_verbose 50 ./test_mpi_main
+ln000.jgi:2431918 00000100000000000000000000000000
+Hello from proc 5 of 8
+ln000.jgi:2431915 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2431916 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2431919 00000010000000000000000000000000
+Hello from proc 6 of 8
+ln000.jgi:2431917 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2431914 01000000000000000000000000000000
+Hello from proc 1 of 8
+ln000.jgi:2431913 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2431920 00000001000000000000000000000000
+Hello from proc 7 of 8
+
+# test
+prterun -np 2 --map-by ppr:1:node:pe=16 true
+--------------------------------------------------------------------------
+Your job has requested more processes than the ppr for
+this topology can support:
+  App: true
+  Number of procs:  2
+  Procs mapped:  1
+  Total number of procs:  1
+  PPR: 1:node
+
+# test
+prterun -np 1 --map-by ppr:1:node:pe=8 --mca smsc none hostname
+ln000.jgi
+
+# test
+prterun -np 1 --mca smsc ^cma --display bind  hostname
+[ln000.jgi:2432511] Rank 0 bound to package[0][core:0]
+ln000.jgi
+
+# test
+prterun --personality ompi --display bind -n 4 --bind-to hwthread  hostname
+[ln000.jgi:2433245] Rank 0 bound to package[0][core:0]
+[ln000.jgi:2433245] Rank 1 bound to package[0][core:1]
+[ln000.jgi:2433245] Rank 2 bound to package[0][core:2]
+[ln000.jgi:2433245] Rank 3 bound to package[0][core:3]
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+
+# test
+prterun --display map --map-by node -np 2 osu_bw -m $((1024 * 1024)):$((4 * 1024 * 1024)) D D
+========================   JOB MAP   ========================
+Data for JOB prterun-ln000-2433479@1 offset 0 Total slots allocated 32
+    Mapping policy: BYNODE:NOOVERSUBSCRIBE  Ranking policy: NODE Binding policy: CORE:IF-SUPPORTED
+    Cpu set: N/A  PPR: N/A  Cpus-per-rank: N/A  Cpu Type: CORE
+
+Data for node: ln000    Num slots: 32   Max slots: 0    Num procs: 2
+        Process jobid: prterun-ln000-2433479@1 App: 0 Process rank: 0 Bound: package[0][core:0]
+        Process jobid: prterun-ln000-2433479@1 App: 0 Process rank: 1 Bound: package[0][core:1]
+=============================================================
+# OSU MPI Bandwidth Test v7.3
+# Size      Bandwidth (MB/s)
+# Datatype: MPI_CHAR.
+1048576              9606.85
+2097152             10297.24
+4194304              9783.03
+
+
+# test
+prterun --map-by ppr:1 -np 2 --mca smsc ^cma --display bind  hostname
+--------------------------------------------------------------------------
+The mapping request contains a pattern that doesn't match
+the required syntax of #:object
+
+  Pattern: ppr:1
+
+Please check your request and try again.
+--------------------------------------------------------------------------
+
+# test
+prterun --np 2 --map-by node:pe=1 --display bind osu_bw
+[ln000.jgi:2433591] Rank 0 bound to package[0][core:0]
+[ln000.jgi:2433591] Rank 1 bound to package[0][core:1]
+# OSU MPI Bandwidth Test v7.3
+# Size      Bandwidth (MB/s)
+# Datatype: MPI_CHAR.
+1                       9.83
+2                      19.73
+4                      39.63
+8                      79.05
+16                    154.73
+32                    305.16
+64                    516.94
+128                   774.71
+256                  1392.65
+512                  3165.57
+1024                 5126.81
+2048                 8742.21
+4096                 5131.47
+8192                 8282.56
+16384               11408.89
+32768               15080.43
+65536               17902.14
+131072              18592.86
+262144              11044.84
+524288              10762.28
+1048576             10926.16
+2097152             11002.85
+4194304             11066.85
+
+# test
+OMPI_MCA_pmix_base_verbose=10 prterun --np 2 --map-by node:pe=1 --display bind  osu_bw
+[ln000.jgi:2433659] Rank 0 bound to package[0][core:0]
+[ln000.jgi:2433659] Rank 1 bound to package[0][core:1]
+[ln000.jgi:2433662] mca: base: components_register: registering framework pmix components
+[ln000.jgi:2433662] mca: base: components_open: opening pmix components
+[ln000.jgi:2433663] mca: base: components_register: registering framework pmix components
+[ln000.jgi:2433663] mca: base: components_open: opening pmix components
+# OSU MPI Bandwidth Test v7.3
+# Size      Bandwidth (MB/s)
+# Datatype: MPI_CHAR.
+1                       9.69
+2                      19.56
+4                      38.04
+8                      78.08
+16                    153.93
+32                    308.90
+64                    512.75
+128                   771.26
+256                  1390.76
+512                  2985.65
+1024                 5064.84
+2048                 8625.71
+4096                 5192.47
+8192                 7997.00
+16384               11286.28
+32768               13958.81
+65536               16696.72
+131072              12912.82
+262144               6610.55
+524288               6246.81
+1048576              7350.30
+2097152              8959.49
+4194304              9855.71
+
+# test
+prterun -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_device_param
+s_found 0 --mca btl_openib_allow_ib true hostname
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+ln000.jgi
+
+# test
+prterun --verbose -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_de
+vice_params_found 0 --mca btl_openib_allow_ib true ./test_mpi_main
+ln000.jgi:2434731 00001000000000000000000000000000
+Hello from proc 4 of 8
+ln000.jgi:2434734 00000001000000000000000000000000
+Hello from proc 7 of 8
+ln000.jgi:2434729 00100000000000000000000000000000
+Hello from proc 2 of 8
+ln000.jgi:2434732 00000100000000000000000000000000
+Hello from proc 5 of 8
+ln000.jgi:2434730 00010000000000000000000000000000
+Hello from proc 3 of 8
+ln000.jgi:2434733 00000010000000000000000000000000
+Hello from proc 6 of 8
+ln000.jgi:2434727 10000000000000000000000000000000
+Hello from proc 0 of 8
+ln000.jgi:2434728 01000000000000000000000000000000
+Hello from proc 1 of 8
+
+# test
+mpirun -np 8 -x UCX_LOG_LEVEL=info --mca ras_base_verbose 10 --display bind  --bind-to package ./test_mpi_main
+[ln000.jgi:2434824] mca: base: component_find: searching NULL for ras components
+[ln000.jgi:2434824] mca: base: find_dyn_components: checking NULL for ras components
+[ln000.jgi:2434824] pmix:mca: base: components_register: registering framework ras components
+[ln000.jgi:2434824] pmix:mca: base: components_register: found loaded component simulator
+[ln000.jgi:2434824] pmix:mca: base: components_register: component simulator register function successful
+[ln000.jgi:2434824] pmix:mca: base: components_register: found loaded component testrm
+[ln000.jgi:2434824] pmix:mca: base: components_register: component testrm register function successful
+[ln000.jgi:2434824] pmix:mca: base: components_register: found loaded component pbs
+[ln000.jgi:2434824] pmix:mca: base: components_register: component pbs register function successful
+[ln000.jgi:2434824] pmix:mca: base: components_register: found loaded component slurm
+[ln000.jgi:2434824] pmix:mca: base: components_register: component slurm register function successful
+[ln000.jgi:2434824] mca: base: components_open: opening ras components
+[ln000.jgi:2434824] mca: base: components_open: found loaded component simulator
+[ln000.jgi:2434824] mca: base: components_open: found loaded component testrm
+[ln000.jgi:2434824] mca: base: components_open: found loaded component pbs
+[ln000.jgi:2434824] mca: base: components_open: component pbs open function successful
+[ln000.jgi:2434824] mca: base: components_open: found loaded component slurm
+[ln000.jgi:2434824] mca: base: components_open: component slurm open function successful
+[ln000.jgi:2434824] mca:base:select: Auto-selecting ras components
+[ln000.jgi:2434824] mca:base:select:(  ras) Querying component [simulator]
+[ln000.jgi:2434824] mca:base:select:(  ras) Querying component [testrm]
+[ln000.jgi:2434824] mca:base:select:(  ras) Querying component [pbs]
+[ln000.jgi:2434824] mca:base:select:(  ras) Querying component [slurm]
+[ln000.jgi:2434824] mca:base:select:(  ras) No component selected!
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate nothing found in module - proceeding to hostfile
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate parsing default hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-roc
+ky8-zen2/gcc-12.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate nothing found in hostfiles - inserting current node
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:node_insert inserting 1 nodes
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:node_insert updating HNP [ln000] info to 1 slots
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-ze[2/15091]
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+======================   ALLOCATED NODES   ======================
+    ln000: slots=1 max_slots=0 slots_inuse=0 state=UP
+        Flags: DAEMON_LAUNCHED:LOCATION_VERIFIED
+        aliases: ln000.jgi,ln000
+=================================================================
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate
+[ln000.jgi:2434824] [prterun-ln000-2434824@0,0] ras:base:allocate allocation already read
+[ln000.jgi:2434824] Rank 0 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 1 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 2 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 3 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 4 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 5 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 6 bound to package[0][core:0-31]
+[ln000.jgi:2434824] Rank 7 bound to package[0][core:0-31]
+[1716432350.277854] [ln000:2434828:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.278206] [ln000:2434833:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.278221] [ln000:2434829:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.278515] [ln000:2434834:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.285508] [ln000:2434831:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.286736] [ln000:2434832:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.296851] [ln000:2434827:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+[1716432350.296987] [ln000:2434830:0]     ucp_context.c:2119 UCX  INFO  Version 1.15.0 (loaded from /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/
+linux-rocky8-zen2/gcc-12.2.0/ucx-1.15.0-lvjuqvu6upjv5m5qce2hmr46evbswrnd/lib/libucp.so.0)
+ln000.jgi:2434832 11111111111111111111111111111111
+Hello from proc 5 of 8
+ln000.jgi:2434827 11111111111111111111111111111111
+Hello from proc 0 of 8
+ln000.jgi:2434834 11111111111111111111111111111111
+Hello from proc 7 of 8
+ln000.jgi:2434831 11111111111111111111111111111111
+Hello from proc 4 of 8
+ln000.jgi:2434828 11111111111111111111111111111111
+Hello from proc 1 of 8
+ln000.jgi:2434830 11111111111111111111111111111111
+Hello from proc 3 of 8
+ln000.jgi:2434829 11111111111111111111111111111111
+Hello from proc 2 of 8
+ln000.jgi:2434833 11111111111111111111111111111111
+Hello from proc 6 of 8
+
+# test
+#prterun -np 8 -x UCX_LOG_LEVEL=info --mca ras_base_verbose 10 --display bind  --bind-to socket --rank-by core  ./test_mpi_main
+prterun -np 8 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by span  ./test_mpi_main
+[ln000.jgi:2435664] [prterun-ln000-2435664@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435664] [prterun-ln000-2435664@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435664] Rank 0 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 1 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 2 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 3 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 4 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 5 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 6 bound to package[0][core:0-31]
+[ln000.jgi:2435664] Rank 7 bound to package[0][core:0-31]
+ln000.jgi:2435671 11111111111111111111111111111111
+Hello from proc 4 of 8
+ln000.jgi:2435673 11111111111111111111111111111111
+Hello from proc 6 of 8
+ln000.jgi:2435672 11111111111111111111111111111111
+Hello from proc 5 of 8
+...
+
+#test
+#prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to socket --rank-by core  ./test_mpi_main # NO!
+prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by slot  ./test_mpi_main # YES!
+[ln000.jgi:2435825] [prterun-ln000-2435825@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435825] [prterun-ln000-2435825@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435825] Rank 0 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 1 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 2 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 3 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 4 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 5 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 6 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 7 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 8 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 9 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 10 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 11 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 12 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 13 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 14 bound to package[0][core:0-31]
+[ln000.jgi:2435825] Rank 15 bound to package[0][core:0-31]
+ln000.jgi:2435839 11111111111111111111111111111111
+Hello from proc 11 of 16
+ln000.jgi:2435834 11111111111111111111111111111111
+Hello from proc 6 of 16
+ln000.jgi:2435843 11111111111111111111111111111111
+Hello from proc 15 of 16
+ln000.jgi:2435840 11111111111111111111111111111111
+Hello from proc 12 of 16
+ln000.jgi:2435837 11111111111111111111111111111111
+...
+
+# test
+prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to core  --rank-by slot  ./test_mpi_main
+[ln000.jgi:2435979] [prterun-ln000-2435979@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435979] [prterun-ln000-2435979@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2435979] Rank 0 bound to package[0][core:0]
+[ln000.jgi:2435979] Rank 1 bound to package[0][core:1]
+[ln000.jgi:2435979] Rank 2 bound to package[0][core:2]
+[ln000.jgi:2435979] Rank 3 bound to package[0][core:3]
+[ln000.jgi:2435979] Rank 4 bound to package[0][core:4]
+[ln000.jgi:2435979] Rank 5 bound to package[0][core:5]
+[ln000.jgi:2435979] Rank 6 bound to package[0][core:6]
+[ln000.jgi:2435979] Rank 7 bound to package[0][core:7]
+[ln000.jgi:2435979] Rank 8 bound to package[0][core:8]
+[ln000.jgi:2435979] Rank 9 bound to package[0][core:9]
+[ln000.jgi:2435979] Rank 10 bound to package[0][core:10]
+[ln000.jgi:2435979] Rank 11 bound to package[0][core:11]
+[ln000.jgi:2435979] Rank 12 bound to package[0][core:12]
+[ln000.jgi:2435979] Rank 13 bound to package[0][core:13]
+[ln000.jgi:2435979] Rank 14 bound to package[0][core:14]
+[ln000.jgi:2435979] Rank 15 bound to package[0][core:15]
+ln000.jgi:2435989 00000001000000000000000000000000
+Hello from proc 7 of 16
+ln000.jgi:2435987 00000100000000000000000000000000
+Hello from proc 5 of 16
+....
+
+# test w/out fabric -- definitely worse
+prterun -np 16 --mca pml ob1 --mca btl tcp,self --hostfile ~/hosts  osu_bw
+prterun -n 2 --mca pml ob1 --mca btl tcp,self --mca ras_base_verbose 1 --display bind --bind-to package --rank-by span  osu_bw
+[ln000.jgi:2462457] [prterun-ln000-2462457@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2462457] [prterun-ln000-2462457@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
+.2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
+[ln000.jgi:2462457] Rank 0 bound to package[0][core:0-31]
+[ln000.jgi:2462457] Rank 1 bound to package[0][core:0-31]
+# OSU MPI Bandwidth Test v7.3
+# Size      Bandwidth (MB/s)
+# Datatype: MPI_CHAR.
+1                       5.93
+2                      11.96
+4                      24.01
+8                      47.97
+16                     68.99
+32                    140.33
+64                    289.79
+128                   377.13
+256                   567.84
+512                  1230.48
+1024                 1801.71
+2048                 2866.93
+4096                 4138.93
+8192                 6519.83
+16384                9379.00
+32768               12418.19
+65536               14531.07
+131072               9475.06
+262144               6592.27
+524288               6144.48
+1048576              6939.57
+2097152              8582.19
+4194304              8011.88
+
+
+#Rob's stash
+/clusterfs/jgi/groups/gentech/genome_analysis/rnd/rsegan/Software
+
+# PRRTE - PMIx Reference Runtime Environment
+
+# ucx devices
+ucx_info -d
+
+# ucx info
+
+# Error: An error occurred in MPI_Init\n*** on a NULL communicator
+# Fix: srun -n 1 <prog>
+
+# prterun --bind-to
+none:hwthread:core:l1cache:l2cache:l3cache:numa:package
+
+# dori
+FAIL srun_ --nodes 4 --ntasks-per-socket 4 dwalk ../..
+srun: defined options
+srun: -------------------- --------------------
+srun: account             : grp-org-gt-ga
+srun: cpu-bind            : verbose
+srun: mpi                 : pmix
+srun: nodes               : 4
+srun: ntasks-per-socket   : 4
+srun: partition           : dori
+srun: verbose             : 1
+srun: -------------------- --------------------
+srun: end of defined options
+srun: error: Unable to allocate resources: Requested node configuration is not available
+
+OK   srun_ -N 1 -n 2 dwalk ../../
+FAIL srun_ -N 1 -n 3 dwalk ../../
+OK   srun_ --nodes 1 dwalk ../../
+
+srun_ -N 7 -n 7 dwalk ../..
+srun: defined options
+srun: -------------------- --------------------
+srun: account             : grp-org-gt-ga
+srun: cpu-bind            : verbose
+srun: mpi                 : pmix
+srun: nodes               : 7
+srun: ntasks              : 7
+srun: partition           : dori
+srun: verbose             : 1
+srun: -------------------- --------------------
+srun: end of defined options
+srun: job 6568124 queued and waiting for resources
+srun: job 6568124 has been allocated resources
+srun: Waiting for nodes to boot (delay looping 3150 times @ 0.100000 secs x index)
+srun: Nodes n0004.dori0,n0006.dori0,n0008.dori0,n0009.dori0,n0010.dori0,n0013.dori0,n0025.dori0 are ready for job
+srun: jobid 6568124: nodes(7):`n0004.dori0,n0006.dori0,n0008.dori0,n0009.dori0,n0010.dori0,n0013.dori0,n0025.dori0', cpu counts: 1(x7)
+srun: launch/slurm: launch_p_step_launch: CpuBindType=verbose
+srun: launching StepId=6568124.0 on host n0004.dori0, 1 tasks: 0
+srun: launching StepId=6568124.0 on host n0006.dori0, 1 tasks: 1
+srun: launching StepId=6568124.0 on host n0008.dori0, 1 tasks: 2
+srun: launching StepId=6568124.0 on host n0009.dori0, 1 tasks: 3
+srun: launching StepId=6568124.0 on host n0010.dori0, 1 tasks: 4
+srun: launching StepId=6568124.0 on host n0013.dori0, 1 tasks: 5
+srun: launching StepId=6568124.0 on host n0025.dori0, 1 tasks: 6
+srun: route/default: init: route default plugin loaded
+srun: launch/slurm: _task_start: Node n0010.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0025.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0009.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0008.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0004.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0013.dori0, 1 tasks started
+srun: launch/slurm: _task_start: Node n0006.dori0, 1 tasks started
+[2024-05-23T16:10:04] Walking /clusterfs/jgi/scratch/gentech/genome_analysis/qaqc/accopeland/Projects
+[2024-05-23T16:10:07] Walked 28726 items in 3.383 secs (8490.804 items/sec) ...
+[2024-05-23T16:10:07] Walked 28726 items in 3.390 seconds (8473.195 items/sec)
+[2024-05-23T16:10:07] Items: 28726
+[2024-05-23T16:10:07]   Directories: 2434
+[2024-05-23T16:10:07]   Files: 26280
+[2024-05-23T16:10:07]   Links: 12
+[2024-05-23T16:10:07] Data: 33.810 GiB (1.317 MiB per file)
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0025.dori0: task 6: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0013.dori0: task 5: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0006.dori0: task 1: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0008.dori0: task 2: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0009.dori0: task 3: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0004.dori0: task 0: Completed
+srun: launch/slurm: _task_finish: Received task exit notification for 1 task of StepId=6568124.0 (status=0x0000).
+srun: launch/slurm: _task_finish: n0010.dori0: task 4: Completed
+
+
+# scontrol
+
+# debug execve()

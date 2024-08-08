@@ -2,6 +2,13 @@
 syntax: bash
 tags: [ python, deps ]
 ---
+# install poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# uninstall poetry
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 - --uninstall # old
+curl -sSL https://install.python-poetry.org | python3 - --uninstall  # new
+
 # Regenerate lock
 poetry lock --no-update
 
@@ -35,7 +42,6 @@ poetry add "<package>[<extra>]"
 [tool.poetry.dependencies]
 my-package = {path = "../my/path", develop = true}
 ```
-
 # Remove package
 poetry remove <package>
 

@@ -1,0 +1,143 @@
+
+# oracle limit rows - rownum<LIMIT
+
+# oracle
+user_tables
+user_source
+all_tab_columns
+dba_tab_columns
+dba_join_ind_columns
+all_objects, all_tables, all_views, all_synonyms
+# list all tables containing a given column
+select sys.sysobjects.name, * from syscolumns, sysobjects where syscolumns.name='column-name'
+	and sysobjects.id = syscolumns.id and (sysobjects.xtype='U' or sysobjects.xtype='S') and sysobjects.name like 'sys%'
+
+# show oracle columns
+function cols_dw() { local Q=${1:?"Column to find?"} ;
+
+# show oracle columns
+select table_name,column_name,data_type from all_tab_cols where column_name like '%$Q%' ;"
+
+
+# geneology view for rqc (dw1793)
+henplus> connect jdbc:oracle:thin:dw_user/dw_user@troi.jgi-psf.org:1521:mondb
+
+
+# img : henplus -J  jdbc:oracle:thin:img_core_v400_ro/img_core_v400_ro987@muskrat/imgiprd
+
+# henplus
+build java-readline
+# make java-readline support usable for henplus (can also use rlwrap)
+> cp bin/libJavaReadline.so ~/local/x86_64/share/henplus/
+> cp bin/libreadline-java.jar ~/local/x86_64/share/henplus/
+#
+> connect jdbc:oracle:thin:dw_user/dw_user@farina.jgi-psf.org:1521:dwprd1
+
+# jdbc connection strings
+jdbc:oracle:thin:dw_user/dw_user@farina.jgi-psf.org:1521:dwprd1
+jdbc:mysql://128.3.96.130/rqc?user=qc_read&password=xxxx
+jdbc:oracle:thin:img_core_v400_ro/img_core_v400_ro987@muskrat/imgiprd
+jdbc:oracle:thin:@muskrat/imgiprd
+
+# jdbc connection configuration
+username="";
+password="";
+url="jdbc:oracle:thin:@localhost:1523:system";
+Driver="oracle.jdbc.OracleDriver";
+Class.forName(this.Driver);
+this.con=DriverManager.getConnection(this.url,this.username,this.password);
+System.out.println("Connect");
+
+
+# ORACLE truncates clob columns
+set longchunksize 100000
+set long 10000
+
+# data warehouse (dw, air)
+#dw_user/dw_user
+#jdbc:oracle:thin:@ldap://ldap-ha.jgi-psf.org:389/dwprd1,cn=OracleContext,ou=oracle,dc=jgi-psf,dc=org
+# jdbc:oracle:thin:dw_user/dw_user@farina.jgi-psf.org:1521:dwprd1
+#
+select *
+from DW.all_inclusive_report
+where sequencing_project_id = '1015487'
+
+
+# eclipse jdbc connection strings -
+# driver - /jgi/tools/oracle_client/DEFAULT/jdbc/lib/classes12.zip
+oracle: jdbc:oracle:thin:dw_user/dw_user@farina.jgi-psf.org:1521:dwprd1
+# http://dev.mysql.com/downloads/connector/j/5.1.html
+mysql: jdbc:mysql://sequoia.jgi-psf.org:3306/rqc
+#
+jdbc:sqlite:/DRIVE:/dirA/dirB/dbfile
+jdbc:sqlite:///COMPUTERNAME/shareA/dirB/dbfile
+
+# oracle over firewalls  - www.orafaq.com/wiki/ORA-12170
+
+# show oracle configuration using sqlplus:
+show parameters
+(see also ?show in sqlplus)
+
+# oracle : . /jgi/tools/oracle_client/oracle_env.sh
+
+# DBI/Oracle - must use /usr/local/bin/perl (perl5.005)
+# list dbi drivers
+perl -MDBI -e 'print join("\n",DBI->available_drivers());'
+# list data sources
+perl -MDBI -e 'print join("\n",DBI->data_sources(Oracle));'
+
+# ORACLE dates
+# between
+and s.qc_date between '01-JAN-2009' and '01-FEB-2009'
+# aggregation and  ranges:
+select count(*) from md_run where run_start_date > current_date - interval '1' day;
+# char conversion
+WHERE to_char(run_start_date,'YYYY') > '2002'
+# grouping
+GROUP BY to_char(run_start_date,'MM-DD'),to_char(run_start_date,'MM-DD');
+
+# use tnsping to test an ORACLE connection e.g?
+tnsping rndabi1
+tnsping '(ADDRESS=(PROTOCOL=tcp)(HOST=rndabi1)(PORT=1521))'
+trcroute rndabi1
+
+# ORACLE sqlplus connection
+sqlplus <user>/<passwd>@<conn>
+sqplus <user>/<passwd>@<host>:<port>/<conn>
+
+# ORACLE connection strings:
+module load oracle_client
+locate tnsnames.ora
+cat $ORACLE_HOME/network/admin/tnsnames.ora
+
+# ORACLE temp tables:
+see  (http://www.indiana.edu/~dss/Services/DataWarehouse/Oracle/TemporaryTables/tmptabl.html)
+create global temporary table temp__temp (sdate date, libplate varchar2(12), mchn varchar2(12)) ;
+# format column names and values
+trim('somechar' from col) as "foobar"
+
+# ORACLE - limit output of query using rownum < N
+
+# ORACLE aggregate functions - must GROUP BY all non-aggregated columns
+
+# ORACLE - format output:
+select '+'||SUBSTR(row, 1,2)||' ('||SUBSTR(row,3,4)||') '||SUBSTR(row,5) raw_row
+column foobar format A10 (or 9999)
+
+# ORACLE - configuration / session
+~/login.sql
+
+# ORACLE - set default schema:
+ALTER SESSION SET CURRENT_SCHEMA = 'foo'
+
+# ORACLE introspection:
+user_tables
+user_source
+all_tab_columns
+dba_tab_columns
+dba_join_ind_columns
+all_objects, all_tables, all_views, all_synonyms
+
+# list all tables containing a given column
+select sys.sysobjects.name, * from syscolumns, sysobjects where syscolumns.name='column-name'
+        and sysobjects.id = syscolumns.id and (sysobjects.xtype='U' or sysobjects.xtype='S') and sysobjects.name like 'sys%'

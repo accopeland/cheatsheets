@@ -1,14 +1,247 @@
-# Basic example of server with python
-# Will start a Web Server in the current directory on port 8000
-# go to http://127.0.0.1:8000
+# install
+brew install python@3.10
 
-# Python v2.7
-python -m SimpleHTTPServer
-# Python 3
-python -m http.server 8000
+# install pkgs
+python3 -m ensurepip --upgrade
+
+# library / version hell
+fades ?
+pipenv ?
+env ?
+pyenv ?
+poetry ?
+
+# module path -- Python 3.y also searches for modules in:
+/Library/Python/3.y/site-packages
+~/Library/Python/3.y/lib/python/site-packages
+
+# upgrade pip
+Similarly, pip3 can be used to upgrade itself via:
+python3 -m pip install --upgrade pip
+
+# upgrade setuptools
+Setuptools can be updated via pip3, without having to re-brew Python:
+$(brew --prefix)/lib/pythonX.Y/site-packages  #So, for Python 3.y.z, you’ll find it at /usr/local/lib/python3.y/site-packages.
+python3 -m pip install --upgrade setuptools
+
+# site-packages and PYTHONPATH /brew
+site-packages contains Python modules, including bindings installed by other formulae.
+Homebrew creates it here:  $(brew --prefix)/lib/pythonX.Y/site-packages
+
+# Basic example of server with python - Will start a Web Server in the current directory on port 8000
+# go to http://127.0.0.1:8000
+python -m SimpleHTTPServer # Python v2.7
+python -m http.server 8000 # Python 3
+
+# debugging wrapped scripts
+python3 -m pdb /usr/bin/asciinema upload demo-ascii.cast
 
 # SMTP-Server for debugging, messages will be discarded, and printed on stdout.
 python -m smtpd -n -c DebuggingServer localhost:1025
 
 # Pretty print a json
 python -m json.tool foo.json
+
+# site-packages
+>>> import site
+>>> site.getsitepackages()
+
+# prefix
+>>> import sys
+>>> sys.prefix
+
+# python import uses sys.path
+>>> import sys
+>>> sys.path
+
+# use __file__ attribute to determine location of module
+$ import numpy
+$ numpy.__file__
+
+# imp module exposes import api
+$ import imp
+$ imp.find_module('numpy')
+
+# site module and sys.path
+$ import site
+$ site.__file__
+
+# spack python
+$ spack python --path#	see which python spack is using
+setup-env.sh sets SPACK_PYTHON in your environment, so Spack will continue to use whatever python it found
+to ensure that you don’t make an env with a broken python, load it, and make Spack unusable.
+
+# nix python:
+mach-nix - create Python derivation with packages using requirements.txt syntax of Pip.
+https://thomazleite.com/posts/development-with-nix-python/
+buildPythonPackage
+
+# python environments / versions
+https://realpython.com/intro-to-pyenv/#working-with-multiple-environments
+
+# python cli: https://github.com/hauntsaninja/pyp
+
+# python ggplot
+>>> from plotnine import *
+>>> import pandas as pd
+>>> df = pd.read_csv("iris_data.csv")
+>>> ggplot(df, aes(x="sepal_length",y="sepal_width",color="species")) + geom_point()
+
+# sanddance
+jupyter - https://github.com/microsoft/SandDance/tree/master/python/jupyter-widget#sanddance-jupyter-widget
+import pandas as pd
+from pandas_sanddance import SandDanceWidget
+widget  = SandDanceWidget()
+widget.show()
+
+# nteract - install new kernel
+# e.g. C++
+conda install xeus-cling notebook -c QuantStack -c conda-forge
+python -m ipykernel install --user --name myenv --display-name "C++ (cling)"
+
+# polyglot notebook
+jupyter --kernel sos #
+iodide
+
+# poetry python installer - To configure your current shell run `source $HOME/.poetry/env`
+You can uninstall at any time with `poetry self uninstall`,
+
+# profile python with Profile (see https://sites.google.com/a/lbl.gov/glennklockwood/benchmarks-tools/profiling-python?authuser=0)
+python -m cProfile -o profile.out myscript.py arg1 arg2
+gprof2dot -f pstats profile.out -o profile_callgraph.dot
+dot -Tsvg profile_callgraph.dot -o profile_callgraph.svg
+
+# profile with lineprofiler
+# in script.py
+@profile
+def slow_fun(...)
+$ kernprof -l script.py
+$ python -mline_profiler script.py.lprof
+
+# python profiling py-spy
+sudo -E py-spy record -p 97520 --output py-spy.svg
+also speedscope format
+
+# python dependencies
+pydep
+
+# profile
+see dask : web UI is essentially a realtime profiler ?
+scalene
+dask
+cProfile
+line_profiler
+pysnoop
+py-spy
+memray
+sudo -E py-spy record -p 97520 --output py-spy.svg # py-spy
+speedscope format
+
+# profile memory
+memray
+
+# spack troubleshooting
+	# on cray , may need
+	spack install foo os=sles15
+	spack install foo platform=linux
+	# debug
+	spack -d
+	$ spack external list
+	spack debug report
+	spack external find python #supports >1 version
+
+# python multiprocessing memory consumption
+see also chunksize
+pool = mp.Pool(processes=2,maxtasksperchild=1000) # https://stackoverflow.com/questions/21485319/high-memory-usage-using-python-multiprocessing
+
+# python list modules installed
+$ python
+>>> help("modules")
+
+# python -c 'import numpy; numpy.test()'
+
+# python async communication libraries / frameworks
+tornado
+
+# ipython (install http://www.tapir.caltech.edu/~dtsang/python.html)
+ipython qtconsole --pylab inline
+ipython notebook --pylab inline
+
+# python pyenv
+$ echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bash_profile
+
+# pyenv
+# brew install pyenv
+To use Homebrew's directories rather than ~/.pyenv add to your profile:  export PYENV_ROOT=/usr/local/var/pyenv
+To enable shims and autocompletion add to your profile:
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+>>>>>>> 8262140 (new: python)
+
+# python version and library madness
+pyenv for python version management
+virtualenv for python package/lib management
+virtualenvwrapper because virtualenv is fundamentally a lame idea
+
+# create / use venv
+python -m venv venv
+source venv\bin\activate
+
+# python venv
+e.g. biokit (python3 -m venv ... )
+git clone https://github.com/JLSteenwyk/BioKIT.git
+cd biokit/
+python3  -m venv .venv
+source .venv/bin/activate
+make install
+biokit -h
+
+# python env
+https://docs.python.org/3/tutorial/venv.html
+python3 -m venv <envname>
+pyenv
+
+# env: python / pip
+python -m venv venv
+source venv/bin/activate
+-- pip install -r requirements.txt
+pip install -e .
+or
+python -m pip install boto3
+
+# env check if running in virtual venv
+$VIRTUAL_ENV environment variable contains the virtual environment's directory when in an active virtual environment.
+
+# easy_install cleanup
+# see https://matthew-brett.github.io/pydagogue/un_easy_install.html
+find easy-install.pth in any of below and remove files/paths therein
+/usr/local/lib/pythonX.Y/dist-packages		#Debian/Ubuntu
+/usr/lib/pythonX.Y/site-packages		#Fedora
+/usr/lib64/pythonX.Y/site-packages		#Fedora 64-bit
+$HOME/.local/lib/pythonX.Y/site-packages	# Linux
+/Library/Frameworks/Python.framework/Versions/X.Y/lib/pythonX.Y/site-packages #OSX Python.org
+$HOME/Library/Python/X.Y/lib/python/site-packages #OSX Python user:
+
+# bad/missing python error from meson
+https://forums.gentoo.org/viewtopic-t-1152536.html
+look for old easy_install._pth files
+
+# Basic example of server with python
+# Will start a Web Server in the current directory on port 8000
+# go to http://127.0.0.1:8000
+python -m http.server 8000
+
+# packaging
+https://packaging.python.org/en/latest/guides/section-build-and-publish/
+
+# ruff linter pre-commit hooks
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.4.1
+  hooks:
+    # Run the linter.
+    - id: ruff
+      types_or: [ python, pyi, jupyter ]
+      args: [ --fix ]
+    # Run the formatter.
+    - id: ruff-format
+      types_or: [ python, pyi, jupyter ]

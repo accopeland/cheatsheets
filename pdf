@@ -1,0 +1,60 @@
+# description
+Various tools for dealing with pdf
+
+# create
+pandoc (* -> pdf)
+gitbook (md -> pdf)
+mdbook (md -> pdf)
+weasyprint (html -> pdf)
+tectonic (tex -> pdf)
+ConTeXt  (tex -> pdf)
+exact-image (ocr, ..? )
+
+# gitbook - web or pdf
+gitbook serve
+gitbook pdf .
+
+# scanning ocr
+https://kaerumy.medium.com/cleaning-up-scanned-documents-with-open-source-tools-9d87e15305b
+tesseract
+ocrmypdf - uses tesseract
+scantailor
+pdfsandwich - convert pdf to images; uses tesseract
+imagemagick::convert
+pdfunite - join multiple pdfs into single file
+pdftk - join multiple pdf into single pdf; extract one or more pages from pdf;
+parallel convert -density 300 document.pdf[{}] -quality 100 -trim pages-%04d.jpg ::: {0..79}
+
+# viewer
+skim - lightweight pdf viewer
+
+
+# tools
+k2pdfopt
+pdfocr
+ocrmypdf
+pdfsandwich - ocr
+tesseract - ocr
+mupdf (various)
+unpaper (post-processing for scanned images/books)
+convert
+
+# pdf converter
+gs -sDEVICE=pdfwrite -dFirstPage=1 -dLastPage=10 -o ped1-10.pdf Pedigree.pdf  #ps -> pdf
+qpdf
+pandoc (via latex)
+poppler::pdftotext
+pstoedit
+markdown-pdf README.md -o README.pdf  # markdown to pdf :  npm install -g markdown-pdf
+pandoc README.md -o README.pdf
+
+
+# xslt convert website to latex
+curl -s "https://github.com/lindenb/jvarkit/wiki/Illuminadir" | xsltproc --html ./stylesheets/github/github2tex.xsl - > tmp.tex && \
+	  pdflatex tmp.tex && evince tmp.pdf
+
+#  df to pdf
+using DataFrames, Latexify
+mdtab = replace(string(latexify(df)),'$' => "")
+write("table.md",mdtab)
+run(`pandoc table.md -o table.pdf`)

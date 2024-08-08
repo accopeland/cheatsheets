@@ -1,0 +1,16 @@
+# tutorial
+https://www.okteto.com/blog/develop-django-celery-app-in-kubernetes/?_hsmi=81199237&_hsenc=p2ANqtz-9sJ6xX2cnUFPc1pI7XXRqVJpnrpbcxA3MBk-9lpIBWr7eOb9qtIh0NzEF3NP8_c_l7fAKHmqF-iQWDS0UM3GU4cAD7aA
+
+# install
+brew install okteto
+
+# deps
+depends on minikube + kubectl working
+
+# startup
+minikube delete
+minikube start
+git clone https://github.com/okteto/math
+cd math
+kubectl apply -f manifests/
+kubectl get pod

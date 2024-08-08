@@ -1,0 +1,102 @@
+# description
+Run series of checks before git commit on staged files and rollback if any checks fail
+
+# install
+pipx install pre-commit
+brew install pre-commit
+pip install pre-commit
+#conda install -c conda-forge pre-commit
+
+# automatically enable on repos
+## With this configuration you don't need to remember to run pre-commit install after cloning repos.
+git config --global init.templateDir ~/.git-template
+pre-commit init-templatedir ~/.git-template
+##Then when you clone any repo with a .pre-commit-config.yaml file, pre-commit hooks will be autoenabled.
+
+# update
+pre-commit autoupdate [options]
+Auto-update pre-commit config to the latest repos' versions.
+Options:
+--bleeding-edge: update to the bleeding edge of the default branch instead of the latest tagged version (the default behaviour).
+--freeze: store "frozen" hashes in rev instead of tag names.
+--repo REPO: only update this repository. This option may be specified multiple times.
+
+# docs
+https://docs.google.com/presentation/d/1h4Tojqve7Lh34nsM9p8DTwDkMAIeGaxB5qpOTqsF830/edit#slide=id.g1243d078657_0_0
+https://pre-commit.com/
+Aggregate listing of existing checks: https://pre-commit.com/hooks.html
+git-leaks: https://github.com/zricethezav/gitleaks
+
+# some checks
+check-added-large-files - prevents giant files from being committed.
+check-ast - simply checks whether .py files parse as valid python.
+check-case-conflict - checks for files that would conflict in case-insensitive filesystems.
+check-json - checks json files for parseable syntax.
+check-shebang-scripts-are-executable - ensures that (non-binary) files with a shebang are executable.
+check-merge-conflict - checks for files that contain merge conflict strings.
+check-symlinks - checks for symlinks which do not point to anything.
+debug-statements - checks for debugger imports and py37+ `breakpoint()` calls in python source.
+detect-private-key - detects the presence of private keys.
+mixed-line-ending - replaces or checks mixed line ending.
+no-commit-to-branch - don't commit to specific branches such as main
+requirements-txt-fixer - sorts entries in requirements.txt.
+trailing-whitespace - trims trailing whitespace.
+
+# usage
+Configure checks via .pre-commit-config.yaml at the root of your git repository (see cheat .pre-commit-config.yaml) or below
+Activate git hooks in your repository by running pre-commit install
+Commit your pre-commit configuration with:
+git add .pre-commit-config.yaml
+git commit -m 'add pre-commit config file'
+
+# dry run
+pre-commit run trailing-whitespace [--files=...]
+bpre-commit run --all-files
+
+# bypassing
+1. Commit without running any pre-commit checks:
+	git commit --no-verify
+2. Commit without running a subset of pre-commit checks:
+	SKIP=flake8,trailing-whitespace git commit
+
+# config example
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.1.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-merge-conflict
+  - id: trailing-whitespace
+  - id: mixed-line-ending
+- repo: https://github.com/zricethezav/gitleaks
+  rev: v8.2.0
+  hooks:
+    - id: gitleaks
+- repo: local
+  hooks:
+  - id: flake8_diff
+    name: flake8 only on lines modified by the commit
+    entry: sh -c 'git diff -U0 -w --staged HEAD | flake8 --diff'
+    language: system
+    types: [python]
+
+# other supported git ops
+commit
+merge-commit
+push
+prepare-commit-msg
+commit-msg
+post-checkout
+post-commit
+post-merge
+post-rewrite
+manual
+
+# fixing errors
+pre-commit run --verbose
+Note any files with 'fixes'
+Run vim + Stripwhitespace
+git add <files>
+recheck:pre-commit run --verbose
+git commit -m "..."

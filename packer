@@ -1,0 +1,48 @@
+# description
+Packer - utility from hashicorp to create AMI from json specs
+
+# install
+brew install packer
+
+# install from source
+git clone https://github.com/hashicorp/packer.git
+cd packer
+make dev
+
+# doc
+https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli
+
+# config / using
+mkdir img
+cd img
+vim docker-ubuntu.pkr.hcl
+packer {
+  required_plugins {
+    docker = {
+      version = ">= 1.0.8"
+      source = "github.com/hashicorp/docker"
+    }
+  }
+}
+source "docker" "ubuntu" {
+  image  = "ubuntu:jammy"
+  commit = true
+}
+build {
+  name    = "learn-packer"
+  sources = [
+    "source.docker.ubuntu"
+  ]
+}
+packer init .
+packer fmt .
+packer build docker-ubuntu.pkr.hcl
+docker images
+
+# plugins -- https://developer.hashicorp.com/packer/docs/community-tools#community-builders
+#  the plugin repository must always have the format github.com/hashicorp/packer-plugin-myawesomecloud,
+#  but the required_plugins block omits the 'packer-plugin-' for brevity.
+github.com/hashicorp/packer-plugin-docker
+github.com/exoscale/packer-plugin-exoscale
+github.com/sylviamoss/packer-plugin-comment
+github.com/hashicorp/packer-plugin-hashicups

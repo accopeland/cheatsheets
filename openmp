@@ -1,0 +1,53 @@
+# description
+OpenMP multi processing library
+
+# doc
+https://www.openmp.org/spec-html/5.0/openmp.html
+
+# install
+
+# usage
+gcc ... -fopenmp -lomp
+
+
+# homebrew
+may need
+-L $(brew prefix libomp)/...
+
+# pragma
+
+# env
+OMP_SCHEDULE=[monotonic|nonmonotonic,static|dynamic|guided|auto,[chunk_size:int]
+OMP_NUM_THREADS=section1:int,section2:int,section3:int,...
+OMP_DYNAMIC=true|false
+OMP_PROC_BIND=true|false or a comma separated list of master, close, or spread.
+OMP_PLACES= see https://www.openmp.org/spec-html/5.0/openmpse53.html
+OMP_STACKSIZE=N:int<B,K,M,G>
+OMP_WAIT_POLICY=acitve|passive
+OMP_MAX_ACTIVE_LEVELS=https://www.openmp.org/spec-html/5.0/openmpse56.html
+OMP_NESTED= deprecated
+OMP_THREAD_LIMIT=N:int max threads in contention group
+OMP_CANCELLATION=true|false
+OMP_DISPLAY_ENV=true|false display the OpenMP version number and the value of the ICVs
+OMP_DISPLAY_AFFINITY=true|false display affinity info for all threads in parallel region
+OMP_AFFINITY_FORMAT="string %[tTLnNaHPiA]..."
+OMP_DEFAULT_DEVICE=https://www.openmp.org/spec-html/5.0/openmpse63.html
+OMP_MAX_TASK_PRIORITY=N:int
+OMP_TARGET_OFFLOAD=mandatory|disabled|default [mandatory:execution terminated if construct or memory routine is not available or is not supported]
+OMP_TOOL=enabled|disabled
+OMP_TOOL_LIBRARIES=
+OMP_DEBUG=enabled|disabled
+OMP_ALLOCATOR=
+
+# affinity
+Short Name	Long Name	Meaning
+t	team_num	The value returned by omp_get_team_num().
+T	num_teams	The value returned by omp_get_num_teams().
+L	nesting_level	The value returned by omp_get_level().
+n	thread_num	The value returned by omp_get_thread_num().
+N	num_threads	The value returned by omp_get_num_threads().
+a	ancestor_tnum	The value returned by omp_get_ancestor_thread_num(level), where level is omp_get_level() minus 1.
+H	host	The name for the host machine on which the OpenMP program is running.
+P	process_id	The process identifier used by the implementation.
+i	native_thread_id	The native thread identifier used by the implementation.
+A	thread_affinity	The list

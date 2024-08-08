@@ -1,0 +1,6 @@
+# problems with configure not finding stuff due to PKG-CONFIG
+	compiled-in pkg-config search path is /usr/lib/pkgconfig and will miss local installs unless
+	PKG_CONFIG_PATH is modified to list local dirs
+	export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/global/homes/c/copeland/.linuxbrew/lib/pkgconfig
+	> pkg-config --modversion --print-errors glib-2.0 2.22.3
+	pkg-config --list-all

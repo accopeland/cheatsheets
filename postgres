@@ -1,0 +1,427 @@
+# description
+
+# install
+brew install postgresql
+
+# postgres docs
+https://www.postgresql.org/docs/11/sql-select.html
+
+# config
+
+# firewalls
+# ssh bastion postgres port-forward - see https://aws.amazon.com/premiumsupport/knowledge-center/rds-connect-using-bastion-host-linux/
+# dw-prddb01.jgi.doe.gov
+ssh -i ~/.ssh/nersc -fN -l copeland -L 5432:128.3.122.41:5432 cori.nersc.gov -v # works
+Then in DBeaver (etc) , connect to localhost:5432
+
+# connection : dw
+dw-prddb01.jgi.doe.gov -U dw_user dwprd1p
+password: XXXX
+#psql postgresql://dbmaster:5433/mydb?sslmode=require
+# works inside nersc
+psql -h dw-prddb01.jgi.doe.gov -U dw_user -d dwprd1p # --csv
+
+# connection string -- postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
+postgresql://
+postgresql://localhost
+postgresql://localhost:5432
+postgresql://localhost/mydb
+postgresql://user@localhost
+postgresql://user:secret@localhost
+postgresql://other@localhost/otherdb?connect_timeout=10&application_name=myapp
+postgresql://localhost/mydb?user=other&password=secret
+
+
+# postgres using other schemas
+\db
+\dn
+\l
+dwprd1p^> \d claritylims.reagentlabel_ft
+
+# col / table info
+SELECT * FROM information_schema.columns ;
+SELECT * FROM information_schema.tables ;
+
+# UDF (string) - useful user def fn
+CREATE OR REPLACE FUNCTION random_between(low INT ,high INT) RETURNS INT AS
+$$
+BEGIN
+   RETURN floor(random()* (high-low + 1) + low);
+END;
+$$ language 'plpgsql' STRICT;
+
+# create function using ATOMIC (checks for deps)
+CREATE OR REPLACE FUNCTION c(int)
+RETURNS int
+LANGUAGE SQL
+IMMUTABLE PARALLEL SAFE
+BEGIN ATOMIC;
+  SELECT b($1);
+END;
+DROP FUNCTION a(int);
+
+# postgres using other schemas
+\db
+\dn
+\l
+
+# describe table
+\d+ claritylims.reagentlabel_ft
+
+# postgres good stuff- https://til.hashrocket.com/sql
+
+# connection info
+\c dbname username host port.
+\c example # psql switch db
+
+# generate
+generate_series()
+dw --csv <<< "select generate_series(1,10)as i, random() as r"
+dw --csv -c "select generate_series(1,10)as i, random() as r;"
+
+# lateral - like for loop
+1- SELECT * FROM oldest_orders_by_customer(80); Time: 89.296 ms
+2- SELECT * FROM oldest_orders_by_customer_lateral(80);  Time: 45.230 ms
+#
+1- CREATE OR REPLACE  FUNCTION oldest_orders_by_customer (int) RETURNS SETOF t_oldest_orders_by_customer  AS $$
+ DECLARE
+    c customers;
+    result record;
+ BEGIN
+	 FOR c IN SELECT * FROM customers c2 WHERE age > $1    loop
+	     SELECT c.firstname,o.orderid, o.orderdate , o.totalamount into result
+              FROM orders o
+              WHERE o.customerid = c.customerid
+              ORDER BY o.orderdate DESC
+              LIMIT 1;
+         IF result is not null THEN
+             RETURN NEXT result;
+         END IF;
+     END LOOP;
+    RETURN;
+ END;
+ $$
+ LANGUAGE plpgsql;
+2- CREATE OR REPLACE  FUNCTION oldest_orders_by_customer_lateral (int) RETURNS SETOF t_oldest_orders_by_customer  AS  $$
+ BEGIN
+	RETURN QUERY SELECT customer_sub.firstname  , o_sub.*
+       FROM (SELECT * FROM customers c2 WHERE age > $1) customer_sub,
+       LATERAL (SELECT o.orderid, o.orderdate , o.totalamount
+                FROM orders o
+                WHERE o.customerid = customer_sub.customerid
+                ORDER BY o.orderdate DESC
+                LIMIT 1) o_sub;
+ END;
+ $$
+ LANGUAGE plpgsql;
+
+# parallel safe  - function parmam
+# ok if no cursor, prepared stmt, tmp tables, writes, sequences; good for 2x speedup
+
+
+# immutable - function param
+
+# extract
+extract() : extract(year from lib_create_date) as y, extract(epoch from (lib_create_date-alq_create_date))  EXTRACT(year_month from `date` )
+
+# info
+\timing
+\watch
+\gx  # toggle \x
+
+# winodw
+window()
+
+# inner table
+CTE: WITH foo as ()
+
+# partition
+row_number() over PARTITION
+
+# rollup
+rollup() / cube() / group_sets()
+
+# type casting
+:: type casting
+
+
+# regex
+~  : regex matches
+
+# ltree
+LTREE and @>
+
+# str match
+select title from posts where title::tsvector @@ 'instr:*'::tsquery;
+
+# values
+select x.y from (values (null), (1), (2)) x(y) where x.y != 1;
+
+# distinct on, values()
+select distinct on (letter) * from (values ('y', 512), ('y',128), ('z', 512), ('x',128), ('z', 256)) as x (letter, number);
+group by and order by can use aliases
+
+# query over array of regexes
+select * from my_table where my_column ilike any (array['%some%', '%words%'])
+
+
+# citext - case insensitive matching
+create extension citext;
+dw <<< "select sample_id, date_created, current_status from dw.sample_aliquot where date_created>='2021-11-09'\x \! ls" # arbitrary cmd
+
+# full text search
+
+# duckdb
+git clone https://github.com/duckdblabs/postgres_scanner.git
+install postgres_scanner
+load postgres_scanner
+call postgres_attach('dbname=mydb')
+PRAGMA show_tables;
+
+
+# hyperloglog
+create extension if not exists hll
+
+# hlstore
+create extension if not exists hlstore
+
+# GIN GINI GIST
+create index ... GIN
+
+# domain - a data type with constraints. The user who defines a domain becomes its owner.
+CREATE DOMAIN name [ AS ] data_type
+    [ COLLATE collation ]
+    [ DEFAULT expression ]
+    [ constraint [ ... ] ]
+where constraint is:
+	[ CONSTRAINT constraint_name ]
+	{ NOT NULL | NULL | CHECK (expression) }
+
+
+# postgres create time series - interval , generate_series
+select d FROM generate_series('2020-02-01', '2020-04-05', '1 day'::interval) AS d
+select to_char(generate_series('2020-02-01', '2020-04-05', '1 week'::interval),'IYYY-IW') as w
+SELECT ts, row_number() over(order by ts) as row FROM generate_series('2022-01-01 00:00:00','2022-01-01 00:00:10',INTERVAL '1 second') ts;
+SELECT * from generate_series(1,10) a, generate_series(1,2) b;
+
+# postgres rollup
+dw <<< "select extract(year from sp_status_date) y, extract (month from sp_status_date) M, count(sp_status_date) ct from dw.all_inclusive_report where sp_status_date>'2021-03-01' group by rollup (extract( year from sp_status_date), extract (month from sp_status_date));"
+
+# group by week (start)
+select count(*), date_trunc('week', request_time) from requests group by date_trunc('week', request_time) order by date_trunc desc ;
+\c example # psql switch db
+# time series monitoring and db:
+timescaledb (postgres extension)
+influxdb/ flux
+telegraf  / influxdb  - time series db; 100x faster than mongo ?
+
+# group by day
+see https://linuxhint.com/postgres-groupby-day/
+
+# postgres time calclulation
+select avg(extract(epoch from (lib_create_date-alq_create_date))/(24*60*60)) as d_avg from dw.all_inclusive_report where lib_create_date between '2018-01-01 00:00:00' and '2019-01-01 00:00:00'
+select count(lib_id) as nlib, extract(year from lib_create_date) as y, extract(month from lib_create_date) as m, avg(extract(epoch from (lib_create_date-alq_create_date))/(24*60*60)) as d_avg from dw.all_inclusive_report group by rollup (y,m) order by y,m
+
+# postgres extract year-mon
+SELECT EXTRACT( YEAR_MONTH FROM `date` )
+
+# postgres useful user def fn
+CREATE OR REPLACE FUNCTION random_between(low INT ,high INT) RETURNS INT AS
+$$
+BEGIN
+RETURN floor(random()* (high-low + 1) + low);
+END;
+$$ language 'plpgsql' STRICT;
+
+# cli
+ \crosstabview [COLUMNS] execute query and display results in crosstab
+  \errverbose            show most recent error message at maximum verbosity
+  \g [FILE] or ;         execute query (and send results to file or |pipe)
+  \gdesc                 describe result of query, without executing it
+  \gexec                 execute query, then execute each value in its result
+  \gset [PREFIX]         execute query and store results in psql variables
+  \gx [FILE]             as \g, but forces expanded output mode
+  \q                     quit psql
+  \watch [SEC]           execute query every SEC seconds
+
+# Help
+  \? [commands]          show help on backslash commands
+  \? options             show help on psql command-line options
+  \? variables           show help on special variables
+  \h [NAME]              help on syntax of SQL commands, * for all commands
+
+# Query Buffer
+  \e [FILE] [LINE]       edit the query buffer (or file) with external editor
+  \ef [FUNCNAME [LINE]]  edit function definition with external editor
+  \ev [VIEWNAME [LINE]]  edit view definition with external editor
+  \p                     show the contents of the query buffer
+  \r                     reset (clear) the query buffer
+  \s [FILE]              display history or save it to file
+  \w FILE                write query buffer to file
+
+# Input/Output
+  \copy ...              perform SQL COPY with data stream to the client host
+  \echo [STRING]         write string to standard output
+  \i FILE                execute commands from file
+  \ir FILE               as \i, but relative to location of current script
+  \o [FILE]              send all query results to file or |pipe
+  \qecho [STRING]        write string to query output stream (see \o)
+
+# Conditional
+  \if EXPR               begin conditional block
+  \elif EXPR             alternative within current conditional block
+  \else                  final alternative within current conditional block
+  \endif                 end conditional block
+
+# Informational (options: S = show system objects, + = additional detail)
+  \d[S+]                 list tables, views, and sequences
+  \d[S+]  NAME           describe table, view, sequence, or index
+  \da[S]  [PATTERN]      list aggregates
+  \dA[+]  [PATTERN]      list access methods
+  \db[+]  [PATTERN]      list tablespaces
+  \dc[S+] [PATTERN]      list conversions
+  \dC[+]  [PATTERN]      list casts
+  \dd[S]  [PATTERN]      show object descriptions not displayed elsewhere
+  \dD[S+] [PATTERN]      list domains
+  \ddp    [PATTERN]      list default privileges
+  \dE[S+] [PATTERN]      list foreign tables
+  \det[+] [PATTERN]      list foreign tables
+  \des[+] [PATTERN]      list foreign servers
+  \deu[+] [PATTERN]      list user mappings
+  \dew[+] [PATTERN]      list foreign-data wrappers
+  \df[anptw][S+] [PATRN] list [only agg/normal/procedures/trigger/window] functions
+  \dF[+]  [PATTERN]      list text search configurations
+  \dFd[+] [PATTERN]      list text search dictionaries
+  \dFp[+] [PATTERN]      list text search parsers
+  \dFt[+] [PATTERN]      list text search templates
+  \dg[S+] [PATTERN]      list roles
+  \di[S+] [PATTERN]      list indexes
+  \dl                    list large objects, same as \lo_list
+  \dL[S+] [PATTERN]      list procedural languages
+  \dm[S+] [PATTERN]      list materialized views
+  \dn[S+] [PATTERN]      list schemas
+  \do[S+] [PATTERN]      list operators
+  \dO[S+] [PATTERN]      list collations
+  \dp     [PATTERN]      list table, view, and sequence access privileges (\z)
+  \dP[itn+] [PATTERN]    list [only index/table] partitioned relations [n=nested]
+  \drds [PATRN1 [PATRN2]] list per-database role settings
+  \dRp[+] [PATTERN]      list replication publications
+  \dRs[+] [PATTERN]      list replication subscriptions
+  \ds[S+] [PATTERN]      list sequences
+  \dt[S+] [PATTERN]      list tables
+  \dT[S+] [PATTERN]      list data types
+  \du[S+] [PATTERN]      list roles
+  \dv[S+] [PATTERN]      list views
+  \dx[+]  [PATTERN]      list extensions
+  \dy[+]  [PATTERN]      list event triggers
+  \l[+]   [PATTERN]      list databases
+  \sf[+]  FUNCNAME       show a function's definition
+  \sv[+]  VIEWNAME       show a view's definition
+
+# Formatting
+  \a                     toggle between unaligned and aligned output mode
+  \C [STRING]            set table title, or unset if none
+  \f [STRING]            show or set field separator for unaligned query output
+  \H                     toggle HTML output mode (currently off)
+  \pset [NAME [VALUE]]   set table output option (border|columns|csv_fieldsep|expanded|fieldsep|
+                         fieldsep_zero|footer|format|linestyle|null|numericlocale|pager|pager_min_lines|recordsep|
+                         recordsep_zero|tableattr|title|tuples_only|unicode_border_linestyle|unicode_column_linestyle|
+                         unicode_header_linestyle)
+  \t [on|off]            show only rows (currently off)
+  \T [STRING]            set HTML <table> tag attributes, or unset if none
+  \x [on|off|auto]       toggle expanded output (currently auto)
+
+# Connection
+  \c[onnect] {[DBNAME|- USER|- HOST|- PORT|-] connect to new database (currently "dwprd1p")
+  \conninfo              display information about current connection
+  \encoding [ENCODING]   show or set client encoding
+  \password [USERNAME]   securely change the password for a user
+
+# Operating System
+  \cd [DIR]              change the current working directory
+  \setenv NAME [VALUE]   set or unset environment variable
+  \timing [on|off]       toggle timing of commands (currently off)
+  \! [COMMAND]           execute command in shell or start interactive shell
+
+# Variables
+  \prompt [TEXT] NAME    prompt user to set internal variable
+  \set [NAME [VALUE]]    set internal variable, or list all if no parameters
+  \unset NAME            unset (delete) internal variable
+
+# Large Objects
+  \lo_export LOBOID FILE
+  \lo_import FILE [COMMENT]
+  \lo_list
+  \lo_unlink LOBOID      large object operations
+
+# query plan / explain
+EXPLAIN [ ( option [, ...] ) ] sql_statement;
+	where option can be one of the following:
+	ANALYZE [ TRUE|FALSE ]
+	VERBOSE [ TRUE|FALSE ]
+	COSTS [ TRUE|FALSE ]
+	BUFFERS [ TRUE|FALSE ]
+	TIMING [ TRUE|FALSE ]
+	SUMMARY [ TRUE|FALSE ]
+	FORMAT { TEXT | XML | JSON | YAML }
+# explain output
+e.g. SeqScan  on users(Cost=0.00..258.00 rows=5000 width=244)
+                           row1  total    rows      bytes
+
+# coalesce
+coalesce(column, 'is_null', 'other') ;
+select count(*) as N , coalesce(sam_qc_fail_mode,'OK','other')  from dw.all_inclusive_report where alq_create_date>'2019-10-01' group by sam_qc_fail_mode
+
+# text
+@@ : in domain
+::ts_vector | ts_vector() :  cast
+::ts_query | ts_query() : cast
+<-> == <1>  : followed by (1)
+<N> : followed after N (skip N)
+<0> : match same word
+!<x><-><y> : match 'y' if it isn't immediately after 'x'
+(x & y)<-><z> : x,y match at same place immediately before 'z'
+LIKE
+ILIKE
+~
+~*
+
+# ts
+SELECT
+    courses.id,
+    courses.title,
+    courses.description,
+    ts_rank(to_tsvector(courses.title), query) as rank_title,
+    ts_rank(to_tsvector(courses.description), query) as rank_description
+FROM
+    courses,
+    to_tsvector(courses.title || courses.description) document,
+    to_tsquery('sales') query
+WHERE query @@ document
+ORDER BY rank_description, rank_title DESC
+
+# ts
+select library_creation_sop_summary, ts_rank(to_tsvector(library_creation_sop_summary),query) as rank
+from dw.rqc_library_sop , to_tsvector(library_creation_sop_summary) as doc, to_tsquery('DNA & illumina & \!itag') as query
+where query @@ doc order by rank desc
+
+# timebins
+WITH counts AS (
+    SELECT date_bin('2.5 days'::interval, ts, '2023-02-13'::timestamp), count(*)
+    FROM quakes q
+    WHERE q.mag > 6
+    GROUP BY date_bin
+)
+SELECT series, coalesce(counts.count, 0) AS count
+FROM generate_series('2023-02-13'::timestamp, '2023-03-14'::timestamp, '2.5 days'::interval) series
+LEFT JOIN counts
+ON counts.date_bin = series;
+
+# inner join
+select * from a inner join b using(id)
+select * from a inner join b on a.id=b.id
+
+# access
+Dori in pg_hba.conf for SMC is:
+# dori
+host    all             all             128.3.7.0/24            md5

@@ -1,0 +1,38 @@
+# description
+ESNet network performance monitoring and tuning toolkit
+
+# install
+docker
+
+# map
+# http://stats.es.net/ServicesDirectory/#uri=lookup%2Fservice%2Fcccfd8ae-1d8b-46bb-9c1a-e15e409f9167
+
+#  docker perfsonar/tools - set up testpoint
+docker pull perfsonar/tools  #docker pull perfsonar/testpoint
+docker run -d -P --net=host perfsonar/tools # run container in background, so others can test to you:
+docker ps -a # Get the Container ID, then run interactive shell to run tests
+docker exec -it <ID> bash # Then use above ID in this command:
+
+# docker perfsonar/testpoing
+docker run -it perfsonar/testpoint /bin/bash
+
+# list tools and tests
+pscheduler plugins tests
+pscheduler plugins tools : list all tools that pscheduler knows how to run
+
+# docker
+        docker exec -it 4b935c239a5d ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'  # get ip
+        docker exec -it 4b935c239a5d pscheduler diag
+
+# network
+> docker network ls        # start vpn
+> docker run -itvd --rm --net=host perfsonar/tools /bin/bash -l
+$ pscheduler task throughput --interval PT1S --duration PT10S --dest bost-pt1.es.net  # fix /etc/resolv.conf
+
+# network testing: traceroute -P ICMP cori-lb.nersc.gov
+> networksetup
+https://www.speedguide.net/analyzer.php?DATA_OFFSET=52&TCP_Options_string=020405b4010303060101080a3c15f2340000000004020000&IP_MTU_DISCOVER=1&WIN=2058&RWIN=131712&MSS=1460&SCALE=6&TTL=47&TSOPT=1&SACK_PERM=1&IP_TOS=0&IP=67.164.94.214&timestamp=1595441177
+> docker ps
+CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS              PORTS               NAMES
+b4f0c1af10f0        perfsonar/testpoint   "/bin/sh -c '/usr/bi…"   6 minutes ago       Up 6 minutes                            dazzling_banzai
+> docker exec -it b4f0c1af10f0 /bin/bash -l

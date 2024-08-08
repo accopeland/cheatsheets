@@ -1,14 +1,576 @@
+# description
+Notes on podman
+
+# install
+brew install podman
+
+# configure
+ $HOME/.config/containers/storage.conf
+
+# config files
+~/.config/containers/containers.conf
+~/.config/containers/podman/machine/qemu/podman-machine-default.json
+
+# version
+$podman --version
+
+# lima startup
+limactl start /usr/local/share/lima/examples/podman.yaml
+limactl start podman # if running
+podman system connection add lima-podman "unix:///Users/copeland/.lima/podman/sock/podman.sock"
+podman system connection default lima-podman
+podman run quay.io/podman/hello
+
+#limactl shell podman podman run -it -v $HOME:$HOME --rm docker.io/library/alpine
+
+# native startup -- does not work
+podman machine start
+
+# login
+podman login -u accopeland@lbl.gov code.jgi.doe.gov (use PAT)
+podman login # default to u=accopeland p=LDAP url=code.jgi.doe.gov
+
+# registry login ???
+podman login -u accopeland@lbl.gov code.jgi.doe.gov (use PAT) # NOPE
+
+# registry search
+podman search registry.fedoraproject.org/
+
+# docker login
+echo "gQ...w" | podman login --username accopeland@lbl.gov  --password-stdin docker.io
+Login Succeeded!
+
 # List running container
 podman ps
 
 # List all containers created
 podman ps -a
 
-# Pull an image
-podman pull vaultwarden/server:latest
+# list external containers
+podman ps -a --external
 
-# List images in local storage
-podman images
+# debug
+podman --log-level=debug ps
+podman connection info
 
 # Delete a container
 podman rm <container-name>
+
+# build
+podman build -t nginx https://git.io/Jf8ol
+podman run -d -p 8080:80 nginx
+curl localhost:8080
+podman login quay.io
+podman tag localhost/nginx quay.io/accopeland/nginx  # tag image so that we can push it into our user account:
+podman push quay.io/accopeland/nginx # push image
+podman inspect quay.io/accopeland/nginx
+
+# inspect
+podman inspect docker.io/hashicorp/packer # can have issues with ~/.config/containers/repository.conf
+
+# fakeroot (build on dori)
+# fakeroot for dnf installs is necessary for installations requiring root which builder does not have.
+edit ~/.config/containers/storage.conf #  change graphroot
+$ mkdir simplecontainer
+$ cd simplecontainer
+$ cat > simple.dockerfile
+FROM quay.io/centos/centos:stream8
+RUN dnf -y install epel-release && dnf -y install fakeroot
+RUN fakeroot dnf upgrade -y && fakeroot dnf update -y
+RUN fakeroot dnf install -y wget hostname
+ENTRYPOINT ["/bin/bash"]
+$ podman build -t simple -f simple.dockerfile ..
+
+# transfer image
+podman image scp USERNAME@localhost::$IMAGE root@localhost::
+
+# run
+podman run registry.fedoraproject.org/fedora:latest
+
+# remote
+systemctl --user enable --now podman.socket
+podman --remote info
+sudo systemctl enable --now sshd
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+ssh-copy-id -i ~/.ssh/id_ed25519.pub 192.168.122.1
+podman-remote system connection add myuser --identity ~/.ssh/id_ed25519 ssh://192.168.122.1/run/user/1000/podman/podman.sock
+podman-remote system connection list
+podman-remote info
+
+# registry -- /etc/containers/registries.conf
+registry.access.redhat.com
+registry.centos.org
+docker.io/library/centos                 The official build of CentOS.
+docker.io/jdeathe/centos-ssh             OpenSSH / Supervisor / EPEL/IUS/SCL Repos - ...
+docker.io/ansible/centos7-ansible        Ansible on Centos7
+docker.io/library
+docker.io/alpine
+docker.io/anapsix
+quay.io/centos                    The official CentOS base containers.
+quay.io/ukhomeofficedigital
+quay.io/quarkus		     Quarkus.io builder image for building Quarku...
+quay.io/libpod
+quay.io/vqcomms
+quay.io/wire
+
+# search
+podman search REGISTRY_URL/IMAGE_NAME  # search for an image in registry
+podman search --format "{{.Name}}\t{{.Stars}}\t{{.Official}}" alpine --limit 3
+podman search --list-tags registry.access.redhat.com/ubi8 --limit 4
+
+# perfsonar / dori --  after editing storage.conf
+podman run --network host sif:../../perfsonar-testpoint.sif
+
+# clean
+# several times to clean out dangling images and layers for a full reset.
+podman system prune
+podman image rm --force $(podman image ls -aq)
+
+# Full container storage purge
+chmod -R +w /tmp/containers/<username>
+rm -r /tmp/containers/<username>.
+
+# kill podman
+pkill podman  # then log out and log back in to reset your cgroup usage.
+
+# rootless volumes
+https://www.tutorialworks.com/podman-rootless-volumes/
+
+# allow rootless podman container to write to a volume
+Problem: When the container runs, any volumes which are shared with it, will appear inside the user namespace as owned by root/root.
+1. Get UID of container user
+- Either from the USER line of Dockerfile of your image
+- Or, when running the container, can set the user explicitly using
+  podman run --user <id>
+2. Grant container UID permissions
+- podman unshare chown <UID>:<UID> -R /dir/file
+3. Confirm correct perms
+podman run -it --rm --name nexus2 -v /home/tom/myshares/nexus2:/sonatype-work:Z  sonatype/nexus /bin/sh
+$ ls -al
+*** OR ***
+1. Run as root in container
+- podman run -it --rm --name nexus2 -v /home/tom/myshares/nexus2:/sonatype-work:Z -u root sonatype/nexus /bin/sh
+
+# user namespaces
+view actual mappings by in file /proc/self/uid_map inside your container.
+$ man 7 user_namespaces
+
+# unshare -- user namespace share
+podman unshare : runs a command in Podman’s modified user namespace. It’s intended to be run with rootless podman (where you run podman as a non-root user).
+
+# info
+podman info
+
+# create new machine
+# VM (650M !)
+# onetime
+podman machine init
+podman machine init --cpus=4 --disk-size=20 --memory=3072 --timezone=local --rootful=false --now
+
+# machine stop
+podman machine stop
+
+# machine start
+podman machine start
+
+# machine  rm
+podman machine rm
+
+
+# build an image
+podman image build --tag local:podman-example .
+
+# run built image
+podman container run -d --name podman-example -p 8080:80 --network bridge local:podman-example
+
+# run image
+podman run -it busybox sh
+
+# list image
+podman image ls
+
+# list container
+podman container ls -a
+
+# run container
+podman container run --rm doejgi/jamo jamo info library NBHOW
+
+# stop container
+podman container stop podman-example
+
+# rm container
+podman container rm podman-example
+
+# prune container
+podman container prune
+
+# qemu dependency - leaves dangling process
+qemu-system-x86_64
+/usr/local/bin/qemu-system-x86_64
+
+# container checkpoint / restore
+sudo podman container checkpoint <container_id>
+sudo podman container restore <container_id>
+
+# Login to Registry
+$ sudo podman login -u USER_NAME REGISTRY_URL
+
+# Login with token or password eg: in OpenShift, token can retrive as TOKEN=$(oc whoami -t)
+$ sudo podman login -u USER_NAME  -p ${TOKEN}  REGISTRY_URL
+
+# Remove login credentials for registry.redhat.io
+$ podman logout quay.io
+
+# Remove login credentials for all registries
+$ podman logout --all
+
+# test
+podman run quay.io/podman/hello
+sudo podman run -d --name TEST  quay.io/USER_NAME/IMAGE_NAME:VERSION
+podman --log-level DEBUG run quay.io/podman/hello
+podman run -it docker.io/alpine:latest
+
+# easiest way to run Podman inside of a container is to use the --privileged flag.
+$ podman run --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+# List running containers
+$ sudo podman ps
+#
+# stop containers
+$ sudo podman stop CONTAINER_NAME
+
+# remove container
+$ sudo podman rm CONTAINER_NAME
+
+# sudo podman rmi IMAGE_NAME        # delete container image
+$ sudo podman logs CONTAINER_NAME   # check logs of running container
+
+# build container image from Dockerfile and spec
+$ sudo podman build -t NAME .
+
+# see available images
+$ sudo podman images
+
+# add DNS, enable and start systemd-resolved
+sudo systemctl enable systemd-resolved
+sudo systemctl start systemd-resolved
+
+# Rootful Podman with --privileged
+podman run --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+# volume
+podman run --privileged -v ./mycontainers:/var/lib/containers quay.io/podman/stable podman run ubi8 echo hello
+
+# root and podman in podman (https://github.com/containers/podman/issues/7012#issuecomment-669325263)
+$ podman run -v /dev/fuse:/dev/fuse:rw -v ./foo:/var/lib/containers:rw --rm --ulimit host -it --privileged --rm quay.io/podman/stable bash
+[root@075dee753ae8 /]# podman run --user 0 alpine ls
+Trying to pull registry.fedoraproject.org/alpine...
+...
+
+## podman in podman : Rootless Podman in rootful Podman with --privileged
+podman run --user podman --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+## Rootful Podman in rootful Podman without --privileged
+podman run --cap-add=sys_admin,mknod --device=/dev/fuse --security-opt label=disable quay.io/podman/stable podman run ubi8-minimal echo hello
+
+## Run podman inside podman and check podman version
+ podman run --privileged quay.io/podman/stable podman version
+
+## Run podman inside podman and using ubi8 image inside.
+* podman run --privileged  quay.io/podman/stable podman run ubi8 echo hello
+* podman run -it --privileged docker.io/mysticrenji/podman podman version
+* podman run -it --privileged docker.io/mysticrenji/podman podman run -d docker.io/library/node:12-alpine
+* podman run -it --privileged docker.io/mysticrenji/podman podman version && git version uptime uptime;\
+  git version;\
+  git clone https://github.com/mysticrenji/podman-experiments.git;\
+  cd podman-experiments;\
+  podman-compose up -d;\
+  podman-compose down
+  podman images
+
+# ssh
+podman machine ssh
+
+# list ssh connections
+podman system connection list
+
+# remove connection
+podman system connection remove podman-machine-default
+
+# remote
+https://github.com/containers/podman/blob/main/docs/tutorials/mac_win_client.md
+
+# init cuustom image
+podman machine init --memory 6144 --cpus 4 --disk-size 40 \
+    --image-path https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/35.20220424.3.0/aarch64/fedora-coreos-35.20220424.3.0-qemu.aarch64.qcow2.xz
+
+# arch
+ podman run --platform=linux/x86_64 quay.io/podman/hello
+
+# slirp4netns
+podman info # report on binary location
+
+# runc
+podman info # report on binary location
+# copy via skopeo
+podman run --privileged --rm -v $HOME/.local/share/containers/storage:/var/lib/containers/storage quay.io/skopeo/stable copy docker://quay.io/buildah/stable containers-storage:quay.io/buildah/stable
+
+# If you’re trying to mount your home directory with --bind /ccs/home/<user>:/ccs/home/<user> in your singularity exec command, it might not work correctly. /ccs/home/user is an alias to /autofs/nccs-svm1_home1/user or /autofs/nccs-svm1_home2/user. You can find out which one is yours with stat /ccs/home/user and then mount your home directory with --bind /autofs/nccs-svm1_home1/user:/ccs/home/user to make /ccs/home/user visible within your container.
+
+
+# mount
+podman run -it -v outside:inside[:Zz] docker.io/alpine:latest
+
+# Create container
+$ sudo podman run -d --name TEST  quay.io/USER_NAME/IMAGE_NAME:VERSION
+
+# easiest way to run Podman inside of a container is to use the --privileged flag.
+$ podman run --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+# stop containers
+$ sudo podman stop CONTAINER_NAME
+
+# remove container
+$ sudo podman rm CONTAINER_NAME
+
+# sudo podman rmi IMAGE_NAME        # delete container image
+$ sudo podman logs CONTAINER_NAME   # check logs of running container
+
+# build container image from Dockerfile and spec
+$ sudo podman build -t NAME .
+
+# see available images
+$ sudo podman images
+
+# add DNS, enable and start systemd-resolved
+sudo systemctl enable systemd-resolved
+sudo systemctl start systemd-resolved
+
+# Rootful Podman with --privileged
+podman run --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+# volume
+podman run --privileged -v ./mycontainers:/var/lib/containers quay.io/podman/stable podman run ubi8 echo hello
+
+# root and podman in podman (https://github.com/containers/podman/issues/7012#issuecomment-669325263)
+$ podman run -v /dev/fuse:/dev/fuse:rw -v ./foo:/var/lib/containers:rw --rm --ulimit host -it --privileged --rm quay.io/podman/stable bash
+[root@075dee753ae8 /]# podman run --user 0 alpine ls
+Trying to pull registry.fedoraproject.org/alpine...
+...
+
+## Rootless Podman in rootful Podman with --privileged
+podman run --user podman --privileged quay.io/podman/stable podman run ubi8 echo hello
+
+## Rootful Podman in rootful Podman without --privileged
+podman run --cap-add=sys_admin,mknod --device=/dev/fuse --security-opt label=disable quay.io/podman/stable podman run ubi8-minimal echo hello
+
+## Run podman inside podman and check podman version
+ podman run --privileged quay.io/podman/stable podman version
+
+## Run podman inside podman and using ubi8 image inside.
+podman run --privileged  quay.io/podman/stable podman run ubi8 echo hello
+podman run -it --privileged docker.io/mysticrenji/podman podman version
+podman run -it --privileged docker.io/mysticrenji/podman podman run -d docker.io/library/node:12-alpine
+podman run -it --privileged docker.io/mysticrenji/podman podman version && git version uptime uptime;\
+  git version;\
+  git clone https://github.com/mysticrenji/podman-experiments.git;\
+  cd podman-experiments;\
+  podman-compose up -d;\
+  podman-compose down
+  podman images
+
+# ssh
+podman machine ssh
+
+# list ssh connections
+podman system connection list
+
+# remove connection
+podman system connection remove podman-machine-default
+
+# remote
+https://github.com/containers/podman/blob/main/docs/tutorials/mac_win_client.md
+
+# init custom image
+podman machine init --memory 6144 --cpus 4 --disk-size 40 \
+    --image-path https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/35.20220424.3.0/aarch64/fedora-coreos-35.20220424.3.0-qemu.aarch64.qcow2.xz
+
+# arch
+podman run --platform=linux/x86_64 quay.io/podman/hello
+
+# Pull an image
+podman pull vaultwarden/server:latest
+
+# troubleshooting:
+https://github.com/containers/podman/blob/main/troubleshooting.md
+https://github.com/containers/podman/issues/14303
+
+# Error: unable to connect to Podman. failed to create sshClient: dial unix /private/tmp/com.apple.launchd.WAh1QMSoLg/Listeners: connect: no such file or directory
+#Fix: unset SSH_AUTH_SOCK
+
+# slirp4netns
+
+# runc
+
+# copy via skopeo
+podman run --privileged --rm -v $HOME/.local/share/containers/storage:/var/lib/containers/storage quay.io/skopeo/stable copy docker://quay.io/buildah/stable containers-storage:quay.io/buildah/stable
+
+# If you’re trying to mount your home directory with --bind /ccs/home/<user>:/ccs/home/<user> in your singularity exec command, it might not work correctly. /ccs/home/user is an alias to /autofs/nccs-svm1_home1/user or /autofs/nccs-svm1_home2/user. You can find out which one is yours with stat /ccs/home/user and then mount your home directory with --bind /autofs/nccs-svm1_home1/user:/ccs/home/user to make /ccs/home/user visible within your container.
+
+# mount
+podman run -it -v outside:inside[:Zz] docker.io/alpine:latest
+podman run -v \$PWD/myvol:/myvol:Z -v /var/lib/mycontainer:/var/lib/containers:Z quay.io/buildah/stable buildah build -t myimage --isolation chroot /myvol"
+
+# compose
+cat> docker-compose.yaml <<-EOF
+version: "3.9"
+services:
+  test:
+    image: ubuntu
+    volumes:
+    - ./test-dir:/opt
+    command: ls /opt
+EOF
+podman-compose up
+
+# mount z/Z
+"z": after a file/dir, means the object has a private unshared label; typically used for files/dirs created by a process running in a container. Objects with the "z" context are confined to the container (not accessible to other containers or host system).
+"Z": after file/dir, is used for shared objects. files/dirs with "Z" flag *are* accessible to other containers and host system. This flag allows multiple containers to share resources and access the same files or directories.
+Ex:
+podman run -it --rm --name nexus2   -v /home/tom/myshares/nexus2:/sonatype-work:Z  -u root sonatype/nexus /bin/sh
+
+# rootless
+https://www.redhat.com/sysadmin/rootless-podman-makes-sense
+podman unshare
+podman run --userns=keep-id --rm -it -v <container>
+
+# rootless network
+slirp4netns provides user-mode networking for unprivileged network namespaces and is required for Podman to run rootless
+
+# network options
+MODE				WHAT_IT_DOES
+bridge			Creates a network stack on the default bridge network
+none				No networking is set up at all
+container:<id>	Uses the same network as another container with ID id
+host				Uses the host’s network stack
+network-id	Uses a user-defined network (which you can create using podman network create ...)
+ns:<path>		Joins a network namespace found at path <path>
+private			Creates a new network namespace for the container
+slirp4netns	Creates a user network stack with slirp4netns (This is the default option for rootless containers.)
+
+# multi arch
+# see https://podman.io/blogs/2021/10/11/multiarch.html
+# manifests... see buildah
+platarch=linux/amd64,linux/ppc64le,linux/arm64,linux/s390x
+$ buildah build --jobs=4 --platform=$platarch --manifest shazam .
+The key options used here are:
+--manifest - Add the resulting image into the named manifest list (shazam), creating it if it doesn’t already exist.
+--platform - Accepts a comma-separated list of platform/architecture tuples (linux/amd64,linux/ppc64le,linux/arm64,linux/s390x).
+--jobs - Optional, causes the builds to execute in parallel using the specified number of threads (4). i.e., the build finishes much faster.
+
+#
+# ERRORS
+#
+# test / troubelshoot
+podman --log-level DEBUG run quay.io/podman/hello
+
+# Error: Cannot connect to Podman. Please verify your connection to the Linux system using `podman system connection list`, ...
+# Fix? : https://github.com/golang/go/issues/52839
+Fix:  podman machine stop
+podman machine rm -f
+podman machine init --now
+
+# Error: unable to connect to Podman. failed to create sshClient: dial unix /private/tmp/com.apple.launchd.WAh1QMSoLg/Listeners: connect: no such file or directory
+Fix: unset SSH_AUTH_SOCK
+
+# Error:# After deleting VM on macOS w 'podman machine stop && podman machine rm',  127.0.0.1:7777 port already bound.
+Fix: Remove the gv-proxy process bound to the port in question.
+For example, if error message refers to 127.0.0.1:7777, then  kill -9 $(lsof -i:7777)
+
+# Error: statfs /my/path/example.txt: no such file or directory: https://github.com/containers/podman/issues/12123
+podman run -v $PWD/example.txt:/tmp/example.txt example
+# If you already have a “image.tar” file created with podman save from earlier that you are trying to replace, you will need to delete it first before running any other podman save to replace it. podman save won’t overwrite the tar file for you.
+
+# Error: overflow $HOME with cache
+# Fix: Not using the --disable-cache flag in your singularity build commands could cause your home directory to get quickly filled by singularity caching image data.
+You can set the cache to a location in /tmp/containers with export SINGULARITY_CACHEDIR=/tmp/containers/<username>/singularitycache if you want to avoid using the --disable-cache flag.
+
+# Error: ERRO[0000] stat /run/user/16248: no such file or directory or Error: Cannot connect to the Podman socket
+# Fix: make sure there is a Podman REST API service running.
+
+# Error: unable to connect to Podman. failed to create sshClient:
+# Connection to bastion host (ssh://vagrant@127.0.0.1:2222/run/podman/podman.sock) failed.:
+# dial tcp 127.0.0.1:2222: connect: connection refused
+Fix: unset  CONTAINER_HOST ; unset  CONTAINER_SSHKEY
+or
+podman machine rm
+or
+pm-clean(){ podman machine ls -q |sed 's/\*$//' | xargs -L2 podman machine rm --force 2>/dev/null; podman machine ls --noheading; }
+
+# Error: failed to connect: dial tcp [::1]:64864: connect: connection refused
+Fix: colima listening on same port ?
+ps -ef | grep gvproxy
+see also
+$ podman machine inspect
+
+# Error: overflow $HOME with cache
+# Fix: Not using the --disable-cache flag in your singularity build commands could cause your home directory to get quickly filled by singularity caching image data.
+You can set the cache to a location in /tmp/containers with export SINGULARITY_CACHEDIR=/tmp/containers/<username>/singularitycache if you want to avoid using the --disable-cache flag.
+
+# Error: ERRO[0000] stat /run/user/16248: no such file or directory or Error: Cannot connect to the Podman socket
+# Fix: make sure there is a Podman REST API service running.
+
+# Error: error creating tmpdir: mkdir /run/user/12341: permission denied,
+# Fix: try logging out and logging back in. If that fails, then after logging in run
+ssh login<number> # where login<number> is the login node you are currently logged in to.
+If all else fails, write to the help@olcf.ornl.gov and we can see if the issue can be fixed from there.
+
+# Error: unable to connect to Podman socket: Get "http://d/v4.2.0/libpod/_ping": dial unix ///var/folders/_v/cjkxld2s4kv_b0r767yfhw2w0000gr/T/podman-run--1/podman/podman.sock: connect: no such file or directory
+# https://github.com/containers/podman/issues/14303 - initialize qemu before machine start to avoid socket error
+qemu-system-x86_64 -machine q35,accel=hvf:tcg -cpu host -display none INVALID_OPTION >> /dev/null 2>&1
+podman machine start
+
+# Error: Hang: Starting VM...
+# Fix: downgrade qemu from 7.0.1 to 6.2.0 -- started working once I ran brew unlink ???
+% brew tap-new lukas/local-qemu
+% brew extract --version=6.2.0 qemu lukas/local-qemu
+% brew uninstall --ignore-dependencies qemu
+% brew install lukas/local-qemu/qemu@6.2.0
+
+
+# Error: OCI runtime error: runc: runc create failed: unable to start container process: unable to setup user: invalid argument
+# Fix: podman  run --user root --tty --interactive --entrypoint bash martinlaurent/ascli:latest
+
+# Error: creating build container: short-name resolution enforced but cannot prompt without a TTY
+# Fix: specify repository full name
+FROM golang:1.17-alpine3.14 as builder --> FROM docker.io/golang:1.17-alpine3.14 as builder
+
+# Error:  podman machine start
+Starting machine "podman-machine-default"
+Waiting for VM ...
+Error: qemu exited unexpectedly with exit code 1, stderr: qemu-system-x86_64: -fw_cfg name=opt/com.coreos/config,file=/Users/copeland
+/.config/containers/podman/machine/qemu/podman-machine-default.ign: can't load /Users/copeland/.config/containers/podman/machine/qemu
+/podman-machine-default.ign: Failed to open file “/Users/copeland/.config/containers/podman/machine/qemu/podman-machine-default.ign”:
+ No such file or directory
+# Fix:
+
+# If you already have a “image.tar” file created with podman save from earlier that you are trying to replace, you will need to delete it first before running any other podman save to replace it. podman save won’t overwrite the tar file for you.
+
+# Error: overflow $HOME with cache
+# Fix: Not using the --disable-cache flag in your singularity build commands could cause your home directory to get quickly filled by singularity caching image data.
+You can set the cache to a location in /tmp/containers with export SINGULARITY_CACHEDIR=/tmp/containers/<username>/singularitycache if you want to avoid using the --disable-cache flag.
+
+# Error: ERRO[0000] stat /run/user/16248: no such file or directory or Error: Cannot connect to the Podman socket
+# Fix: make sure there is a Podman REST API service running.
+
+# Error: error creating tmpdir: mkdir /run/user/12341: permission denied,
+# Fix: try logging out and logging back in. If that fails, then after logging in run
+ssh login<number> # where login<number> is the login node you are currently logged in to.
+If all else fails, write to the help@olcf.ornl.gov and we can see if the issue can be fixed from there.
+
+# If you’re trying to mount your home directory with --bind /ccs/home/<user>:/ccs/home/<user> in your singularity exec command, it might not work correctly. /ccs/home/user is an alias to /autofs/nccs-svm1_home1/user or /autofs/nccs-svm1_home2/user. You can find out which one is yours with stat /ccs/home/user and then mount your home directory with --bind /autofs/nccs-svm1_home1/user:/ccs/home/user to make /ccs/home/user visible within your container.
+
+# Error: podman run quay.io/hello:latest
+#Error: initializing source docker://quay.io/hello:latest: reading manifest latest in quay.io/hello: StatusCode: 404, "<!doctype html>\n<html lang=en>\n<title>404 Not Foun..."
+# Fix: podman machine start
+# or echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf

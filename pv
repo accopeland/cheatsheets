@@ -1,0 +1,99 @@
+# description
+pv: pipe viewer - throughput info for pipes
+
+# install
+brew install pv
+
+# docs
+https://www.ivarch.com/programs/quickref/pv.shtml
+
+# configure
+NA
+
+# options
+-p, --progress	progress bar . If stdin not a file and no -s modifier, progress bar cannot indicate time to to completion
+-t, --timer	timer . display the total elapsed time
+-e, --eta	ETA timer .  attempt to guess, based on previous transfer rates and the data size, time to completion.
+-I, --fineta	ETA timer on, but display the est local time of arrival instead of time left.
+-r, --rate	rate counter . This will display the current rate of data transfer.
+-a, --average-rate average rate counter .  display the average rate of data transfer
+-b, --bytes	total byte counter on. display the total amount of data transferred so far.
+-T, --buffer-percent transfer buffer%. show % of the transfer buffer in use - see caveat under %T in the FORMATTING. Implies -C.
+-A, --last-written NUM  last NUM bytes written - see %nA in the FORMATTING section below. Implies -C.
+-F, --format FORMAT Ignore the options -p, -t, -e, -r, -a, -b, -T, and -A; instead use the format string FORMAT
+-q, --quiet	No output. Useful if the -L option is being used on its own to just limit the transfer rate of a pipe.
+##
+OUTPUT MODIFIERS
+-W, --wait	Wait until the first byte has been transferred before showing any progress information or calculating any ETAs.
+-D, --delay-start SEC	Wait until SEC seconds have passed before showing any progress information,
+-s SIZE, --size SIZE	Assume total amt data transferred is SIZE bytes when calc % and ETAs. suffixes can be used as with -L.
+-l, --line-mode	Instead of bytes, count NL. progress bar will only move when a new line is found,
+-0, --null	Count lines as null terminated. This option implies --line-mode.
+-i SEC, --interval SEC	Wait SEC between updates. default update every sec. Note that this can be a decimal such as 0.1.
+-w WIDTH, --width WIDTH	Assume terminal WIDTH chars wide
+-H HEIGHT, --height HEIGHT Assume terminal HEIGHT rows high.
+-N NAME, --name NAME	Prefix output info with NAME. Useful with -c if complicated pipeline and you want to distinguish parts of it .
+-f, --force	Force output.
+-c, --cursor	Use cursor pos esc seqs instead of carriage returns. useful with -N (name) if using >1 pv invocation in a long pipeline.
+##
+DATA TRANSFER MODIFIERS
+-L RATE, --rate-limit RATE Limit transfer to a max RATE bytes/sec. A suffix of "K","M","G", or "T" can be used
+-B BYTES, --buffer-size BYTES Use xfer buffer of BYTES . suffix "K","M","G", or "T" can be added Implies -C.
+-E, --skip-errors Ignore read errors. The corresponding parts of the output will be null bytes.	-E twice ...
+-S, --stop-at-size If a size was specified with -s, stop once that many bytes have been written
+-d PID[:FD], --watchfd PID[:FD]	Instead of transferring , watch file descriptor FD of process PID, and show its progress.
+-R PID, --remote PID
+##
+GENERAL OPTIONS
+-P FILE, --pidfile FILE Save the process ID of pv in FILE.
+-h, --helpPrint a usage message on standard output and exit successfully.
+-V, --versionPrint version information on standard output and exit successfully.
+##
+FORMATTING
+-F output format is determined by the given format string. the following sequences can be used:
+	%p Progress bar. Expands to fill the remaining space. Should only be specified once. Equivalent to -p.
+	%t Elapsed time. Equivalent to -t.
+	%e ETA as time remaining. Equivalent to -e.
+	%I ETA as local time of completion. Equivalent to -I.
+	%r Current data transfer rate. Equivalent to -r.
+	%a Average data transfer rate. Equivalent to -a.
+	%b Bytes transferred so far (or lines if -l was specified). Equivalent to -b.
+	%T Percentage of the transfer buffer in use. Equivalent to -T. .
+	%nA Show last n bytes written (e.g. %16A for the last 16 bytes).
+	%N Name prefix given by -N. Padded to 9 characters with spaces, and suffixed with :.
+	%% A single %. The format string equivalent of turning on all display switches is `%N %b %T %t %r %a %p %e'.
+##
+COMMON SWITCHES  Some suggested common switch combinations:
+pv -ptebar	progress bar, elapsed time, estimated completion time, byte counter, average rate, and current rate.
+pv -betlap	progress bar, elapsed time, estimated completion time, line counter, and average rate, counting lines instead of bytes.
+pv -t		Show only the elapsed time - useful as a simple timer, e.g. sleep 10m | pv -t.
+pv -pterb	default behaviour: progress bar, elapsed time, estimated completion time, current rate, and byte counter.
+	On MacOS, it may be useful to specify -B 1024 in a pipeline, as this may improve performance.
+
+# network file cp speed
+pv file | nc -w 1 somewhere.com 3000
+
+# transfer file from another process and passing the expected size to pv:
+cat file | pv -s 12345 | nc -w 1 somewhere.com 3000
+
+# using numeric output to feed into the dialog(1) program for a full-screen progress display:
+(tar cf - . | pv -n -s $(du -sb . | awk '{print $1}') \
+  | gzip -9 > out.tgz) 2>&1 \
+  | dialog --gauge 'Progress' 7 70
+
+# Taking an image of a disk, skipping errors:
+pv -EE /dev/your/disk/device > disk-image.img
+
+# Writing an image back to a disk:
+pv disk-image.img > /dev/your/disk/device
+
+# Zeroing a disk -- Note: if input size can't be calculated, and output is a block device, then blk device size used and pv will automatically stop at that size as if -S had been given.
+pv < /dev/zero > /dev/your/disk/device
+
+# (Linux only): Watching file descriptor 3 opened by another process 1234:
+pv -d 1234:3
+
+#(Linux only): Watching all file descriptors used by process 1234:
+pv -d 1234
+# Watch the progress of 'dd' with `pv` and `dialog` (apt-get install pv dialog)
+(pv -n /dev/zero | dd of=/dev/null bs=128M conv=notrunc,noerror) 2>&1 | dialog --gauge "Running dd command (cloning), please wait..." 10 70 0

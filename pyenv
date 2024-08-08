@@ -2,6 +2,12 @@
 syntax: bash
 tags: [ python, environments ]
 ---
+# install pyenv
+brew install pyenv
+
+# homebrew
+To use Homebrew's directories rather than ~/.pyenv add to your profile:  export PYENV_ROOT=/usr/local/var/pyenv
+
 # Install the specified version of Python:
 pyenv install <version>
 
@@ -28,3 +34,10 @@ pyenv versions
 
 # Check the version of python currently in use:
 pyenv version
+
+# init pyenv
+$ echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bash_profile
+
+# To enable shims and autocompletion add to your profile:
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+

@@ -1,0 +1,131 @@
+
+# description
+GNU parallel
+
+# install
+
+# docs
+
+# usage
+
+# config
+
+# w bash functions
+export -f func
+parallel func ...
+
+# examples
+::: = args
+:::: = files
+# http://www.gnu.org/software/parallel/man.html#example__use_a_table_as_input
+parallel -a table_file.tsv --colsep '\t' cmd -o {2} -i {1}
+parallel --number-of-cores
+parallel -S 8/: echo ::: 123
+parallel -v echo ::: 123
+parallel -t echo ::: 123
+parallel -D echo ::: 123
+#
+parallel aplg_reportsummary.sh  ::: ../ALLPATHS/DATA/d*/run*/ASSEMBLIES/test/assembly_stats.report
+parallel -j0  "ssh {} 'hostname; uptime'" :::: ~/Hosts/hosts | paste - -
+parallel -j0  "ssh {} 'hostname; uptime'" ::: $(cut -d/ -f2 ~/.parallel/sshloginfile) | paste - -
+seq 23 | parallel --joblog /tmp/log --sshloginfile tmp/x 'bash -c echo -n $HOST" ";uptime'
+#
+parallel '[ -d {} ] && find {} -name "*README*"' ::: $(head /tmp/bar )
+ls | parallel '[ -d {} ] && tar zcfvp {}.tgz {} 1>{}.idx 2>{}.stderr' &
+
+# example: bash array tsv input parallel
+parallel --colsep ' ' 'ln -sf {2} {1}.{2/}' ::::  <(jamo info raw_normal library $LIB)
+parallel -j1 --colsep ' ' 'bbmap.sh reads=100000 ref=$REF ihist={1}.hist in={2}' ::::  <(jamo info filtered library $LIB)"
+parallel --eta --progress --joblog parallel.log -j66% '[ -d {} ] && tar --ignore-failed-read -hcf {/}.tar {} -X $EXC -vp 1>{/}.idx 2>{/}.stderr' :::  $D "
+parallel --colsep='\t' "datediff -f %H {1} {2}" :::: outages.tsv  | histogram2.pl - 1 1 ; }
+parallel --dry-run --xapply --header --results est_insert_size_bbmap {ref} {lib} ::: ref $REF ::: lib $LIB"
+parallel \"jamo show {}\" :::: <(jfind $S | grep -v '#' | cut -d ' ' -f1 |sort -u )
+parallel "jamo show {} " :::: <(jfind $ID | awk '!/#/&&NR>2 {print $NF}' )
+parallel curl -G --data-urlencode query={} --data search_by=proposal_id -s $RQC_API/search/homesearch ::: "${@:?ids}" \
+
+# pipepart
+# The below reads the entire file into memory then slices records up by
+# 'recstart' and 'blocksize' forcing serial I/O. Especially with a big
+# file, this could be parallelized for better performance  with
+# multiple parallel seeks.
+cat $input_fasta | parallel --pipe --recstart '>' --blocksize $blocksize   'cat > '$tmp_dir'/tmp.$$.split.fna;   tRNAscan-SE -B --thread 0  '$tmp_dir'/tmp.$$.split.fna &>    '$tmp_dir'/tmp.bacterial.$$.out; '
+# Benchmark #1:
+# cat test_data/meta_contigs_1.fasta | parallel --pipe --recstart '>' --blocksize 205972 'cat > /tmp/tmp.6665.split.fna; tRNAscan-SE -B --thread 0 /tmp/tmp.6665.split.fna'
+  Time (mean  ):      3.760 s   0.120 s    [User: 3.381 s, System: 1.012 s] Range (min  max):    3.560 s   4.009 s    10 runs
+# In my testing, below is ~ 4x faster. Without the --blocksize, this should send a single record to each tRNAscan-SE call. Maybe this is what Brian has already done?
+# Benchmark #1:
+parallel -j -16 --tmpdir /tmp --cat --pipepart --recstart '>' tRNAscan-SE -B --thread 0 {} :::: test_data/meta_contigs_1.fasta
+  Time (mean  ):      1.104 s   0.028 s    [User: 7.266 s, System: 2.203 s]
+#
+# --pipepart will do multiple parallel seeks of the input (assumed to
+# be a file) and give a big performance boost over using a pipe which
+# must be read serially.  The --cat does something similar to Marcel's
+# 'cat' but is nice since it passes the TMPFILE name via {} so it
+# allows cleaning up the call a bit. The -j -16 is not really needed
+# unless we need to leave some number of cores unoccupied. I did
+# testing on a login node so told parallel to leave 16 cores alone.
+# --tmpdir is not strictly needed since it defaults to $TMPDIR but it
+# makes it clearer and reminds us we should think about putting big
+# files on ramdisk if possible.
+
+# hidden stash
+/usr/common/usg/utilities/parallel/
+
+# remove extension
+See also: --plus {.} {/} {//} {/.} {#} {%} {n} {=perl expression=}
+{}  Input line.  This replacement string will be replaced by a full line read from the input source. The input source is normally stdin (standard input), but can also be given with --arg-file, :::, or ::::.
+{.} Input line without extension. If the input line contains . after the last /, the last . until the end of the string will be removed and {.} will be replaced with the remaining. E.g. foo.jpg becomes foo, subdir/foo.jpg becomes subdir/foo
+{/} Basename of input line. replacement string will be replaced by the input with the directory part removed.
+{//} Dirname of input line. replacement string will be replaced by the dir of the input line. See dirname(1).
+{/.} Basename of input line without extension. replacement string will be replaced by the input with the directory and extension part removed.  {/.} is a combination of {/} and {.}.
+{#} Sequence number of the job to run. replacement string will be replaced by the sequence number of the job being run. It contains the same number as $PARALLEL_SEQ.
+{%} Job slot number. replacement string will be replaced by the job's slot number between 1 and number of jobs to run in parallel. There will never be 2 jobs running at the same time with the same job slot number.
+{n} Argument from input source n or the n'th argument. See also: {} {n.} {n/} {n//} {n/.}
+{n.} Argument from input source n or the n'th argument without extension.
+
+# remove two extensions:
+ '{= s:\.[^.]+$::;s:\.[^.]+$::; =}'
+ex:
+ ls *.fastq.gz | parallel --rpl '{..} s:\.[^.]+$::;s:\.[^.]+$::;' --dry-run "bbmerge.sh in={} out={..}.merge.fastq.gz"
+ ls tile*fq.gz | parallel --rpl '{..} s:\.[^.]+$::;s:\.[^.]+$::;' shifter --image=bryce911/bbtools:39.06 filterbytile.sh in={} dump={..}.dump
+
+# jamo - 'not in'
+parallel "jamo report select metadata.sequencing_project_id,_id,metadata.sow_segment.final_deliv_product_name, file_owner,file_name where metadata.sequencing_project_id={} and  file_owner nin \( rqc sdm \)" :::: g2904.spids
+
+# jq mashing
+parallel "curl -s $RQC_API/library/info/{} | jq -r '.library_info[]| [.seq_proj_name,.seq_proj_id,.final_deliverable_prod_name]|@csv'" :::: y > y.out
+
+# cluster - modify queue using qalter
+qstat | awk 'NR>2 {print $1}' | parallel "qalter {} -q normal_excl.q"
+
+# mash IMGdb - ~20h
+  find /global/projectb/sandbox/IMG_web/img_web_data_secondary/taxon.fna/ -name "*.fna" | parallel -j 12 "mash sketch -o {/.} {}"
+   #/global/projectb/sandbox/IMG_web/img_web_data_secondary/all.fna.files/
+  mash paste imgdb.21 *.msh
+# fix mash dist v. refseq output
+> awk '{print $2}' mash.out | sed 's/\.\/rcn.*-//;s/\.fna//'
+
+# jat import folder
+jat -no_local_copy importfile legacy_folder 4090882.stderr project_dir_number=4090882  1>stdout 2>stderr
+jat -no_local_copy importfile legacy_folder 4090882.tar project_dir_number=4090882  1>stdout 2>stderr
+jat -no_local_copy importfile legacy_folder 4090882.idx project_dir_number=4090882  1>stdout 2>stderr
+parallel --joblog jat.idx.joblog -j8  "jat -no-local-copy importfile legacy_folder {} project_dir_number={.} 1>jat.{.}.stdout 2>jat.{.}.stderr" ::: *.idx
+jat -no_local_copy importfile legacy_folder 1006464.idx project_dir_number=1006464 1>>jat.1006464.stdout 2>>jat.1006464.stderr
+
+# curl upload ftp pacbio:
+parallel -j 4 "curl -# --ftp-create-dirs -T {} ftp://jgi:SukfejFuo@ftp2.pacificbiosciences.com/Asp/{//}/" ::: dir/files*h5
+
+# fake data example
+paste <(seq 105) <(parallel yes {}'|head -n {#}' ::: {a..n}) <(seq 105| shuf) > example
+
+# perl quoting
+parallel perl -ne \''/^\S+\s+\S+$/ and print $ARGV,"\n"'\' ::: file
+
+# 2 col from paste input
+paste - - < libs.files  | parallel --colsep '\t' --dry-run "reformat.sh in1={1} in2={2} out=$(mktemp).fastq.gz "
+
+# parallel rsync: https://github.com/hjmangalam/parsyncfp
+
+# parallel file copy
+/global/homes/c/copeland/local/bin/fpsync
+regan@genepool11:~regan/mpi$ TMPDIR=/tmp $(which mpirun) --host localhost,gpint100,gpint101 /bin/bash -lc "./BroadcastCopyMPI /tmp/send"

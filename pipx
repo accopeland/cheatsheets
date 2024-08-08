@@ -1,0 +1,17 @@
+# description
+yet another attempt to mitigate totally braindead python installation process. Creates and manages a venv for every single
+thing you install with it. Still better than pip I guess.
+
+# nope -- fucking python PEP668 broke this
+# nope install
+#python3 -m ensurepip
+#python3 -m pip install --user pipx
+
+# install
+brew install pipx
+
+# usage
+pipx install globus-cli
+
+# see also
+uv

@@ -1,3 +1,4 @@
+
 # To create a 2048-bit private key:
 openssl genrsa -out server.key 2048
 
@@ -13,7 +14,7 @@ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 openssl req -text -noout -in server.csr
 
 # To show certificate information for generated certificate
-openssl x509 -text -noout -in server.crt 
+openssl x509 -text -noout -in server.crt
 
 # To get the sha256 fingerprint of a certificate
 openssl x509 -in server.crt -noout -sha256 -fingerprint
@@ -30,12 +31,11 @@ openssl dhparam -outform PEM -out dhparams.pem 2048
 openssl s_client -connect 10.240.2.130:433
 
 # High-quality options for openssl for symmetric (secret key) encryption
-  
-This is what knowledgable people consider a good set of options for 
+This is what knowledgable people consider a good set of options for
 symmetric encryption with openssl to give you a high-quality result.
 Also, always remember that the result is only as good as the password
 you use. You must use a strong password otherwise encryption is meaningless.
-  
+
 openssl enc -e -aes-256-cbc \
   -salt \
   -pbkdf2 \
@@ -53,3 +53,32 @@ openssl enc -d -aes-256-cbc \
   -base64 \
   -in somefile.enc \
   -out somefile # to decrypt
+
+# brew / ssh / OPENSSL problems
+openssl: relocation error: openssl: symbol EVP_mdc2 version OPENSSL_1_1_0 not defined in file libcrypto.so.1.1 with link time reference
+Maybe fix by using brew::ssh ?
+
+# git unable to find remote helper for 'https'
+workaround is to change url from https:// to git://
+fix is OPENSSL insanity
+
+# OPENSSL cert (linuxbrew)
+Downloading https://curl.haxx.se/ca/cacert-2019-10-16.pem
+Already downloaded: /global/homes/c/copeland/.cache/Homebrew/downloads/8bf4ad41646e09d251aab400a9553048bec5e4154ae7b4674f09baebe40bfa6c--cacert-2019-10-16.pem
+Caveats
+A CA file has been bootstrapped using certificates from the system keychain. To add additional certificates, place .pem files in
+/global/u1/c/copeland/.linuxbrew/etc/openssl@1.1/certs
+and run
+>  /global/u1/c/copeland/.linuxbrew/opt/openssl@1.1/bin/c_rehash
+#@
+openssl@1.1 is keg-only, which means it was not symlinked into /global/u1/c/copeland/.linuxbrew, because this is an alternate version of another formula.
+If you need to have openssl@1.1 first in your PATH run:
+echo 'export PATH="/global/u1/c/copeland/.linuxbrew/opt/openssl@1.1/bin:$PATH"' >> ~/.bash_profile
+
+# openssl problems (e.g. R)
+echo 'export PATH="/usr/local/opt/openssl/bin:$PATH"' >> ~/.bash_profile
+##For compilers to find this software you may need to set:
+LDFLAGS=-L/usr/local/opt/openssl/lib
+CPPFLAGS=-I/usr/local/opt/openssl/include
+##For pkg-config to find this software you may need to set:
+PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/opt/openssl/lib/pkgconfig

@@ -41,7 +41,7 @@ jira login # authenticate once , then store in keyring (see config)
 
 # API token -- https://id.atlassian.com/manage/api-tokens
 
-# Personal access token (PAT)--  jira-dev: ***REMOVED***
+# Personal access token (PAT)--  jira-dev: ...
 curl -X POST {{baseUrlOfYourInstance}}/rest/pat/latest/tokens -H "Authorization: Bearer <Token>" -H "Content-Type: application/json" -d '{"name": "tokenName","expirationDuration": 90}'
 
 # date search: resolved > -30d

@@ -1,0 +1,81 @@
+#  description
+Notes on various virtual machine options for macos
+
+# software
+lima
+xhyve/hyve
+vmware
+VirtualBox - With Type 2 hypervisor
+QEMU - Offersing hardware virtualization
+Xen Project - For advanced virtualization
+Parallels
+Wine
+vagrant (Vagrant Manager.app)
+
+# level 2
+singularity
+podman
+docker
+k8s
+minikube
+
+# VirtualBox
+brew info xwmx/taps/vbox
+brew cask virtualbox
+~/VirtualBox VMs
+/Users/copeland/Library/VirtualBox/
+
+# vagrant
+brew install vagrant ✔
+brew install vagrant-manager ✔
+brew install vagrant-vmware-utility
+
+# VMWare
+brew install vmware-fusion
+
+# QEMU
+brew install qemu
+
+# lima
+brew install lima
+
+# xhyve
+brew install xhyve
+
+# singularity
+$HOME/.apptainer/cache by default. The location of the cache can be changed by setting the APPTAINER_CACHEDIR
+singularity cache
+
+# podman
+
+# install miniconda e.g. in vagrant
+        wget -c http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+        chmod +x Miniconda*sh
+        Minconda*sh
+        # or
+        vagrant init continuumio/anaconda3; vagrant up --provider virtualbox
+
+
+# virtualbox networking broken
+        # https://stackoverflow.com/questions/21186549/internet-connection-in-virtualbox-wont-work-mac-os-x-host-windows-xp-guest/46991556#46991556
+        either  choose 'Bridged Adapter' and Wifi
+        or
+        VBoxManage modifyvm ~/VirtualBox\ VMs/alpine/alpine.vbox --natnet1 "192.168/16"
+
+# custom linux kernel - virtualbox : https://www.nathansweet.me/2017/02/03/build-linux-for-virtualbox
+        https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable.git
+        git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+
+# virtual box vms: brew cask install virtualbox
+VirtualBox (gui)
+VBoxManage list vms
+
+
+
+#autoqc
+	# spin
+	I created two RMQ services, one on SPIN (db-rmq.autoqc-rmq-prod.prod-cattle.stable.spin.nersc.org) and one on SVM (http://rqc-rmq.jgi.lbl.gov/).
+	Also, I refactored tfmq with celery and celery has been deployed to production on Apr 16.
+
+#rqc - rqc-local /  vm
+ssh -l accopeland@lbl.gov rqc-local.jgi.lbl.gov

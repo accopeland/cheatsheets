@@ -1,0 +1,68 @@
+# description
+search function behind spotlight on macos
+
+# install
+macos default
+
+# see also
+mdls
+mdutil
+
+# docs
+https://metaredux.com/posts/2019/12/22/mdfind.html
+
+# file contains text
+mdfind cider
+
+# string match name
+mdfind -name foo.jpg bar.tif
+
+# by type and name
+ mdfind kind:image -name bozhidar
+
+# metadata matching (name + file/folder)
+ mdfind "kMDItemFSName = Clojure"
+
+# lookup attributes - https://superuser.com/questions/51122/how-to-search-with-spotlight-more-effectively/412090
+mdls <file>
+
+# keywords
+# To find:	Use:
+Aliases		kind:alias
+Applications	kind:application, kind:applications, kind:app
+Audio		kind:audio
+Bookmarks	kind:bookmark, kind:bookmarks
+Browser history	kind:history
+Contacts	kind:contact, kind:contacts
+E-mail messages	kind:email, kind:emails, kind:mail message
+Folders		kind:folder, kind:folders, kind:fol
+Fonts		kind:font, kind:fonts
+iCal Events	kind:event, kind:events
+iCal To-Dos	kind:todo, kind:todos, kind:to do
+Images		kind:image, kind:images
+JPEG files	kind:jpeg
+Keynote files	kind:keynote
+Movies		kind:movie, kind:movies
+MP3 files	kind:mp3
+Music		kind:music
+Numbers docs	kind:numbers
+Pages documents	kind:pages
+PDF files	kind:pdf, kind:pdfs
+PowerPoint file	kind:powerpoint
+Preference pane	kind:preference, kind:preferences
+Presentations	kind:presentation, kind:presentations
+QuickTime files	kind:quicktime
+TIFF files	kind:tiff
+Word documents	kind:word
+
+# examples
+mdfind . -onlyin ~/Pictures
+mdfind 'kMDItemFSContentChangeDate == $time.this_week(-1)'
+mdfind 'kMDItemTextContent == "*expose*"cd' (ignore case and diacritics)
+mdfind 'kMDItemFSSize >= 5000 && kMDItemFSSize <= 5005)'
+mdfind 'kMDItemFSContentChangeDate >= $time.iso(2012-04-13T13:44Z)'
+mdfind 'kMDItemFSCreationDate >= $time.now(-3600)'
+mdfind 'kMDItemKind == "*movie" && kMDItemPixelHeight >= 720'
+
+# see attributes of file w/out changing db
+mdimport -t -d2 ~/Downloads/MacVim.dmg

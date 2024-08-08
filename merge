@@ -1,0 +1,27 @@
+# description
+List of diff and merge tools
+
+# diff tools
+vimdiff
+gvimdiff - almost identical to vimdiff but uses Linux GUI for Vim, refer to vimdiff
+nvimdiff
+opendiff
+diffoscope
+meld
+xxdiff - requires x11
+kdiff3 - KDE ?
+kompare - KDE ?
+meld
+
+# windows only?
+tortoisemerge
+winmerge
+
+# mac
+https://gist.github.com/miner/e73fc98a83a8fe05d9ef000d46d68a9f
+FileMerge - Need XCode SDK
+
+# vim -- https://gist.github.com/karenyyng/f19ff75c60f18b4b8149
+$ git config merge.tool vimdiff
+# set editor to display common ancestor BASE while we examine LOCAL and REMOTE changes with the following setting:
+$ git config merge.conflictstyle diff3

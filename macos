@@ -1,0 +1,90 @@
+# preferences
+list of all preferences in text file: https://github.com/mathiasbynens/dotfiles/blob/main/.macos
+
+# preferences cli
+https://github.com/mathiasbynens/dotfiles/blob/main/.macos
+
+# sdk path
+xcrun --show-sdk-path
+
+# preferences customization
+> defaults write com.apple.LaunchServices LSQuarantine -bool false
+> /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user
+> defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+> defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+> defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+> defaults write com.googlecode.iterm2 PromptOnQuit -bool false
+>$ defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false         # For VS Code
+
+# fix blurry fonts mojave: defaults write -g CGFontRenderingFontSmoothingDisabled -bool NO
+defaults -currentHost write -globalDomain AppleFontSmoothing -int 2 # 0 for no font smoothg
+
+# startup items
+/Library/LaunchAgents
+/Library/LaunchDaemons
+~/Library/LaunchAgents
+~/Library/Application Support
+System Preferences -> Users and Groups -> Login Items
+/Users/~/Library/LaunchAgents
+/Library/LaunchAgents
+/System/Library/LaunchAgents
+
+# quarantine
+xattr -l PasswordSafe.app/Contents/MacOS/*
+# if output includes "com.apple.quarantine" then file(s) are quarantined... FIX?
+xattr -d com.apple.quarantine JavaApplicationStub
+
+# quarantine / signing -- cannot be opened because the developer cannot be verified.Open Finder.
+Locate the app you’re trying to open.
+Control+Click the app.
+Select Open.
+Click Open.
+The app should be saved as an exception in your security settings, allowing you to open it in the future.
+
+# file standard
+XDG_CONFIG_HOME ▶︎ ~/Library/Preferences/
+XDG_DATA_HOME ▶︎ ~/Library/
+XDG_CACHE_HOME ▶︎ ~/Library/Caches/
+
+# compiler stuff: https://developer.apple.com/download/more/
+
+# old java :  https://support.apple.com/kb/DL1572?locale=en_US
+
+# upgrades : https://support.apple.com/en-us/HT211683
+https://commons.lbl.gov/display/itdivision/2019/11/26/IT+Known+Issues+with+Latest+macOS+Catalina
+https://developer.apple.com/download/more/
+
+# gdb
+https://timnash.co.uk/getting-gdb-to-semi-reliably-work-on-mojave-macos/
+csrutil enable --without debug
+DYLD_SHARED_REGION=avoid gdb <prog>
+
+# strace
+ sudo dtruss -f -t open cheat
+
+# gentoo : https://wiki.gentoo.org/wiki/Project:Prefix
+
+# macos unminimize / unzoom - https://apple.stackexchange.com/questions/26182/keyboard-shortcut-to-unhide-or-unminimize-a-window-in-os-x
+You can also ⌘+Tab, keep holding ⌘, release tab, press option, release ⌘
+cmd-tab -> cmd-arrow -> arrow -> enter
+
+# check binary os version compatibility:  otool -l ../bin/go | grep -B1 -A3 MIN_MAC
+MACOSX_DEPLOYMENT_TARGET or -mmacosx-version-min
+# make CXXFLAGS="-mmacosx-version-min=10.10" <target or other make params>
+MACOSX_DEPLOYMENT_TARGET=10.7 cc bar.c -c
+$ otool -l bar.o | sed -n '/LC_VERSION/,/^Load/p'
+      cmd LC_VERSION_MIN_MACOSX
+  cmdsize 16
+  version 10.7
+      sdk n/a
+Load command 2
+
+# dtrace : https://8thlight.com/blog/colin-jones/2017/02/02/dtrace-gotchas-on-osx.html
+also
+> ktrace trace ...
+
+# dtrace - list all macos probes: sudo dtrace -l
+
+# openssl linking: https://medium.com/@timmykko/using-openssl-library-with-macos-sierra-7807cfd47892
+
+# compiler stuff: https://developer.apple.com/download/more/

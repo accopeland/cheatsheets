@@ -1,0 +1,25 @@
+# description
+Build tool
+
+# docs
+https://mesonbuild.com/Quick-guide.html
+
+# install
+$ pip3 install --user meson
+brew install meson ## ?
+
+# troubleshooting  -- meson: No such file or directory Description: The default
+installation prefix for the python pip module installation is not included in
+your shell environment PATH. The default prefix for python pip installation
+modules is located under /usr/local.
+
+**Resolution: This issue can be resolved by altering the default shell environment PATH to include /usr/local/bin. **
+
+# troubleshooting -- bad or missing python
+look for stragglers installs with *._pth files esp. easy_install in site-packages
+
+#compiling
+ cd /path/to/source/root
+$ meson setup builddir && cd builddir
+$ meson compile
+$ meson test

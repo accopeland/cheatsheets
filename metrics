@@ -1,0 +1,16 @@
+---
+syntax: bash
+tags: [ dev ]
+---
+
+# collection of toools for gathering stats /  metrics
+
+metricbeat
+riemann
+prometheus
+sysdig
+
+grafana
+kibana
+
+link to network stats, ioo stats , cpu stats, cgroup stats

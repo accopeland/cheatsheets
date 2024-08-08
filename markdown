@@ -1,3 +1,32 @@
+# description - markdown and associated tools
+
+# doc
+TODO
+
+# markdown to pdf
+md2pdf ./**/*.md   # then pdfunite ./**/*.pdf
+
+# convert to html, pdf, etc.
+mkdocs
+mdbook
+readthedocs
+- pandoc	# depends on ghc
+	markdown,textile,html,docbook,latex,mediawiki,docx,odt,epub,pdf(latex),beamer,man,texinfo,rst
+	convert files from one markup format into another, pandoc is your swiss-army knife. Pandoc can convert documents in markdown, reStructuredText, textile, HTML, DocBook, LaTeX, MediaWiki markup, OPML, Emacs Org-Mode, Txt2Tags, Microsoft Word docx, EPUB, or Haddock markup t
+
+# viewers
+mmark
+mdless
+R -e "markdown::markdownToHTML('markdown_example.md', 'markdown_example.html')"
+bat
+mdless
+glow
+
+# to pdf :  npm install -g markdown-pdf
+markdown-pdf README.md -o README.pdf
+#
+pandoc README.md -o README.pdf
+
 # headers
 # (without double qutation marks("))
 "# h1 header"
@@ -37,7 +66,7 @@ Sub-bullets can be done with 2+ spaces or 1 tab
   a. Lettered  <-- there is mixed support for this format
 4. Fourth
   i. using roman numerals  <-- there is mixed support for this format
-  ii. more stuff 
+  ii. more stuff
 
 ## check list
 There is limited support for rendering check lists:
@@ -45,7 +74,6 @@ There is limited support for rendering check lists:
     - [ ] incomplete sub-task
     - [x] complete sub-task
 - [x] complete task
-
 
 # code
 ## code block with 4 spaces/1 tab
@@ -62,10 +90,14 @@ or a code block (optionally specifying the language, more details here: https://
 alias ltr='ls -ltr'
 alias latr='ls -latr'
 ```
+# code - use 4 spaces/1 tab
+regular text
+        code code code
+or:
+Use the `printf()` function
 
 ## key bindings
 <kbd>⌘F</kbd>
-
 # hr's (horizontal rules) - three or more of the following
 ***
 ---
@@ -79,16 +111,20 @@ This is [an example](http://example.com "Title") inline link.
 Assuming you have a heading called `# My First Heading` then link is the case-insensitive string with spaces replaced by dashes:
 [Visible Link Text](#my-first-heading "Hover-text link title")
 
+This is [an example](http://example.com "Title") inline link.
+
 # image
 ![Alt Text](/path/to/file.png)
 
-# formatting
+# italic
 Italic:
 *em* _em_
 
-Bold: 
+# bold
+Bold:
 **strong** __strong__
 
+# strikethrough
 ~~strikethrough~~
 
 # Tables
@@ -98,8 +134,8 @@ The alignment applies to the table data, not the header.
 
 Left-aligned Stuff | Right-aligned Stuff | Center-aligned Stuff
 | :--- | ---: | :---:
-Some left stuff   | Some right stuff  | Some center stuff 
-Some left stuff   | Some right stuff  | Some center stuff 
+Some left stuff   | Some right stuff  | Some center stuff
+Some left stuff   | Some right stuff  | Some center stuff
 
 ## Special Characters in Tables
 First Header  | Second Header

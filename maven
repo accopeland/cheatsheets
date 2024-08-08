@@ -1,2 +1,55 @@
+# description
+maven java build tool
+
+# install
+brew install maven
+
+# docs
+https://maven.apache.org/guides/getting-started/
+
 # To manually download artifacts:
 mvn org.apache.maven.plugins:maven-dependency-plugin:get -Dartifact=org.apache.geronimo.specs:specs:1.2 -Dpackaging=pom -Dtransitive=false
+
+# pom.xml
+pom.xml file is the core of a maven project's configuration; config file containing majority of information to build a project.
+POM is huge and complex.
+
+# options
+validate: confirm project is correct and all necessary information is available
+compile: compile source code
+test: test compiled code using some unit testing framework.
+package: package compiled code in its distributable format, such as a JAR.
+integration-test: process and deploy the package if necessary into an environment where integration tests can be run
+verify: run any checks to verify the package is valid and meets quality criteria
+install: install package into the local repository, for use as a dependency in other projects locally
+deploy: in an integration or release environment, copy final pkg to remote repo .
+
+# setup
+cd bbtool-38.42
+mvn -B archetype:generate -DgroupId=com.bbtools.app -DartifactId=bbtools -DarchetypeVersion=1.4
+
+# basic dir structure
+my-app
+|-- pom.xml
+`-- src
+    |-- main
+    |   `-- java
+    |       `-- com
+    |           `-- mycompany
+    |               `-- app
+    |                   `-- App.java
+    `-- test
+        `-- java
+            `-- com
+                `-- mycompany
+                    `-- app
+                        `-- AppTest.java
+
+# compile
+mvn compile
+
+# manually download artifacts:
+mvn org.apache.maven.plugins:maven-dependency-plugin:get -Dartifact=org.apache.geronimo.specs:specs:1.2 -Dpackaging=pom -Dtransitive=false
+
+# create jar
+mvn package

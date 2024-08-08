@@ -1,0 +1,172 @@
+# description
+julia plotting library
+
+# docs
+https://docs.makie.org/stable/
+
+# install
+] add Makie CairoMakie GLMakie
+
+# basics
+Figure - basic container
+  f = Figure(backgroundcolor = :tomato, size = (800, 300))
+Axis - next most common thing to add
+  ax = Axis(f[1, 1],  title = "A Makie Axis",  xlabel = "The x label", ylabel = "The y label")
+Geoms e.g. lines, ...
+  lines!(ax, x, y)o
+
+# shorthand
+figure, axis, lineplot = lines(x, y)
+figure
+
+# pass figure, axis to plot command
+scatter(x, y; figure = (; size = (400, 400)), axis = (; title = "Scatter plot", xlabel = "x label") )
+
+# Geom args
+lines(x,y,...
+lines(xs, fun(),...
+lines([Point(x,y), Point(x1,y1),...],...
+
+# layers
+f, ax, l1 = lines(x, sin)
+l2 = lines!(ax, x, cos)
+f
+
+# plot types
+abline
+lines
+arc, arrows
+band
+boxplot
+barplot
+bracket
+contour{3d,f}
+crossbar
+datashader
+density
+ecdfplot
+errorbars
+heatmap
+hexbin
+hist
+hline,vline,hspan, vspan
+mesh
+image
+meshscatter
+pie
+qqplot , qqnorm
+rangebars
+scatter
+series
+spy
+streamplot
+surface
+violin
+voronoiplot - generate a cell for each position similar to heatmap, however cells not restricted to rectangles.
+waterfall
+wireframe
+# mutating
+Note that you cannot pass figure and axis keywords to mutating plotting functions like lines! or scatter!
+
+# colors
+juliagraphics.github.io/Colors.jl
+
+# modify attributes post plotting
+ can also manipulate most plot attributes afterwards with the syntax plot.attribute = new_value.
+sc1.marker = :utriangle
+sc1.markersize = 20
+sc2.color = :transparent
+sc2.markersize = 20
+sc2.strokewidth = 1
+sc2.strokecolor = :purple
+f
+
+# colorrange - limit colormap to some input range
+x = range(0, 10, length=100)
+scatter(x, sin,
+    markersize = range(5, 15, length=100),
+    color = range(0, 1, length=100),
+    colormap = :thermal,
+    colorrange = (0.33, 0.66)
+)
+
+#  misc
+axislegend()
+current_figure()
+
+# subplots
+using CairoMakie
+x = LinRange(0, 10, 100)
+y = sin.(x)
+fig = Figure()
+lines(fig[1, 1], x, y, color = :red)
+lines(fig[1, 2], x, y, color = :blue)
+lines(fig[2, 1:2], x, y, color = :green)
+fig
+
+# subplots with tiles
+using CairoMakie
+fig = Figure()
+ax1 = Axis(fig[1, 1])
+ax2 = Axis(fig[1, 2])
+ax3 = Axis(fig[2, 1:2])
+fig
+
+# legend
+Legend(fig[1:2, 2], [l1, l2], ["sin", "cos"])
+
+
+# colorbar
+Colorbar(fig[1, 2], hm)
+
+
+# grid layout
+ga = f[1, 1] = GridLayout()
+gb = f[2, 1] = GridLayout()
+gcd = f[1:2, 2] = GridLayout()
+gc = gcd[1, 1] = GridLayout()
+gd = gcd[2, 1] = GridLayout()
+
+# link axes
+linkxaxes(a1, a2,...)
+linkyaxes(a3, a5,...)
+
+# limits
+xlims
+ylims
+
+# ticks
+axmain.xticks = 0:3:9
+
+# adjust axes spacing in grid layout
+colgap!(ga, 10)
+rowgap!(ga, 10)
+
+# scenes
+scene = Scene(;
+    # clear everything behind scene
+    clear = true,
+    # the camera struct of the scene.
+    visible = true,
+    # ssao and light are explained in more detail in `Documetation/Lighting`
+    ssao = Makie.SSAO(),
+    # Creates lights from theme, which right now defaults to `
+    # set_theme!(lightposition=:eyeposition, ambient=RGBf(0.5, 0.5, 0.5))`
+    lights = Makie.automatic,
+    backgroundcolor = :gray,
+    size = (500, 500);
+    # gets filled in with the currently set global theme
+    theme_kw...
+)
+
+# image
+
+# camera
+
+# events
+
+# projections
+
+# translate, rotate, scale
+
+#

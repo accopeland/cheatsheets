@@ -4,6 +4,9 @@ tags: [ database ]
 # To connect to a database:
 mysql -h <host> -u <username> -p
 
+# Run query from command line
+mysql --defaults-group-suffix=aws -e 'select 1 from dual;'
+
 # To backup all databases:
 mysqldump --all-databases --all-routines -u <username> -p > ~/dump.sql
 
@@ -38,3 +41,60 @@ SHOW PROCEDURE STATUS;
 
 # To check stored function:
 SHOW FUNCTION STATUS;
+
+# date ordering
+sam_ship_approve_date < sam_receive_date < sam_qc_date < sow_item_qc_date < alq_create_date < seg_create_date
+  < lib_create_date < sdm_seq_start_date < sdm_seq_complete_date < rqc_seq_unit_qc_date
+(datediff(sam_receive_date, sam_ship_approve_date)) as app2rcv,
+(datediff(sam_receive_date, sam_qc_date)) as rcvs2qc,
+(datediff(sam_qc_date, alq_create_date)) as sqc2alq,
+(datediff(alq_create_date,lib_create_date)) as alq2lc,
+(datediff(lib_create_date,pr_create_date)) as lc2pr,
+(datediff(pr_create_date,pool_create_date)) as pr2pool,
+(datediff(pool_create_date,sdm_seq_start_date)) as poo2seq,
+(datediff(sdm_seq_start_date,sdm_seq_complete_date)) as seq,
+(datediff(sdm_seq_complete_date,rqc_seq_unit_qc_date)) as seq2suqc,
+(datediff(rqc_seq_unit_qc_date,sow_item_qc_date)) as suqc2sow,
+(datediff(sow_item_qc_date,sp_orig_complete_date)) as suqc2spc
+
+sow_item_qc_date - before segment creation. After sample qc. If it passes SOW gets scheduled for an aliquot.
+rqc_status_date - date that the seq qc analysis is submitted with either “usable” or “bad”.
+sdm_seq_start_date - sdm_seq_complete dates
+rqc_seq_unit_date
+This order works when there is a single pass from start to finish. Rework will mess this order up.
+
+# histogram
+select floor(datediff(sam_receive_date, sam_ship_approve_date)/30)*30 as app2rcv, count(*)
+
+# cumulative with correlated subquery
+select date, (select sum(u.value) from t as u  where u.date<=t.date) from t
+
+# describe
+desc some_table
+SHOW COLUMNS FROM table_name;
+EXPLAIN table_name;
+
+# csv
+TABLE tableName
+INTO OUTFILE 'path/outputFile.csv'
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+ESCAPED BY ''
+LINES TERMINATED BY 'n';
+
+# .my.cnf
+# see https://dev.mysql.com/doc/refman/8.0/en/option-files.html
+mysql --defaults-group-suffix=scidbro ...
+
+# forward
+* mysql port forward
+  # https://myopswork.com/transparent-ssh-tunnel-through-a-bastion-host-d1d864ddb9ae
+  ssh -i mymaster.pem  ec2-user@10.0.2.56 -o "proxycommand ssh -W %h:%p -i mymaster.pem ec2-user@mybastion.elb.amazonaws.com"
+  see ~/.ssh/config ProxyCommand LocalForward
+  see ~/.aliases rqct()
+
+# transpose - column output
+\G
+
+# pager
+mysql> pager less -S

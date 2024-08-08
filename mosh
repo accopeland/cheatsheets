@@ -1,0 +1,18 @@
+# install
+brew install mosh
+https://mosh.org/#getting
+
+# description
+Mosh: the mobile shell
+Mobile shell that supports roaming and intelligent local echo.
+Like SSH secure shell, but allows mobility and more responsive and robust.
+
+# usage
+
+
+# cori - on a cori login node do:
+locally install mosh: https://mosh.org/#getting
+module load python
+mamba create --prefix $HOME/.local/conda/mosh --channel conda-forge --yes mosh
+echo "mosh --server $HOME/.local/conda/mosh/bin/mosh-server $USER@cori01-224.nersc.gov"
+Then on your local machine, copy and paste the output of that echo command into your local terminal.

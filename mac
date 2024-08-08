@@ -1,0 +1,27 @@
+# description
+Various notes and tools for mac
+
+# setting defaults
+duti
+
+# sys interface
+m
+
+# keymaps
+karabiner
+
+# uninstall sophos
+cd /Library/Application Support/Sophos/opm-sa/Installer.app/Contents/MacOS/tools
+sudo ./InstallationDeployer --remove --ui --tamper_password '...'
+## if uninstall sophos fails
+sudo /usr/bin/dscl . -delete /Users/_Sophos  #Delete the user by running the command:
+sudo ./InstallationDeployer --remove --ui --tamper_password '...'
+Run the uninstall command from your product.
+Note: If no prompt says Terminal would like to.... continue with these steps:
+cp /usr/bin/dscl ~/
+sudo ~/dscl . -delete /Users/_Sophos
+sudo ./InstallationDeployer --remove --ui --tamper_password '...'
+Note:InstallationDeployer must be run as root when the --ui option is not specified.
+Without --ui , admin authentication will be requested through the user interface.
+
+

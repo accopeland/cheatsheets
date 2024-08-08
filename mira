@@ -1,0 +1,31 @@
+* mira command lines
+    mira --project=bmurdochii --job=genome,denovo,accurate,454,solexa -GE:not=4 -OUT:oetc=yes >&log_assembly.not=4.txt
+    # limits:
+    # Sanger 5-10M reads
+    # 454 5-15M reads (ideal 20-50x)
+    # Illumina 15-20M reads (ideal 30-50x)
+    #
+    # for illumina shoot for 50x
+    #  -CL:pecbph=27 SOLEXA_SETTINGS -SK:bph=27:pr=99:mhpr=100
+    mira --project=0800 --job=mapping,genome,normal,solexa --fastq -SB:bft=gbf >&0800_Illumina_log_assembly.txt
+    # This worked great to reduce debris and worked fine with my highly repeated sequences with different strains.
+    mira --project=New_JCV332 --job=denovo,genome,normal,454 454_SETTINGS -AS:mrl=80:bdq=12  -LR:mxti=yes -AL:egp=yes -ED:ace=yes -CL:emrc=yes  -CL:mrcr=14 -CL:smrc=40  -DP:ure=yes -CL:pvlc=no  COMMON_SETTINGS -SK:mnr=yes:nrr=10 -highlyrepetitive  -AS:nop=4:urd=yes:urdsip=3:sd=yes -CL:pec=no  -CL:ascdc=off -SK:mmhr=100 >logfile
+    #You could try to convince MIRA that all differences it sees are SNPs and not bases markibng a repeat: -CO:asir=yes
+    # If want to keep the "--job=genome", you could trick MIRA into setting repeat thresholds which are very high like this: -SK:fexn=50:fer=60:fehr=70:fecr=80
+    $ mira --project=EC1623 --job=denovo,genome,accurate,solexa -GE:not=4 -fastq SOLEXA_SETTINGS -GE:tismin=180:tismax=540 >log.assembly.txt
+    # pacbio
+    mira --project=yourname --job=genome,denovo,accurate,pacbio,solexa
+    # mapping
+    mira --project=cjejuni_demo -fasta --job=denovo,genome,accurate,sanger SANGER_SETTINGS -LR:rns=TIGR -CL:bsqc=yes | tee log_assembly.txt
+    mira --project=first_Norm1_vs_combined454 --job=mapping,est,accurate,solexa -SB:lb=yes:sbuip=1:bft=fasta COMMON_SETTINGS -GE:not=1 -SK:mchr=40 96 SOLEXA_SETTINGS -CO:msr=yes
+    # mapping (step 1 - create strain file: http://assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html#sect_sxa_generating_the_strain_name_data)
+    mira --project=0800 --job=mapping,genome,normal,solexa --fastq -SB:bft=gbf:bsn=TheRefStrain:lsd=yes >&0800_Illumina_log_assembly.txt"
+    # mapping step 2:
+    # mapping step 3:
+     convert_project -f maf -t fasta 0800_out.maf 0800split
+    # mira mapping assembly -
+    mira --project=<projname>         --job=mapping,genome,accurate,solexa -AS:nop=1 -SB:bsn=<refname>:bft=<fasta|gbf|caf>:bbq=30 SOLEXA_SETTINGS -SB:ads=yes:dsn=<projname> >&log_assembly.txt
+    mira --fastq --project=<projname> --job=mapping,genome,accurate,solexa -SB:lsd=yes:bsn=<refname>:bft=<fasta|gbf|caf>  >&log_assembly.txt
+    # sff_extract *.sff
+    # ln -s <sff_extract.out> <names mira likes>
+    mira --project=tmagn --job=denovo,genome,draft,454 --fasta COMMON_SETTINGS -GE:not=8 454_SETTINGS -CL:msvs=yes -GE:tismin=900:tismax=3200 >&log_assembly.txt &

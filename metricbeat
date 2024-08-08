@@ -1,0 +1,12 @@
+---
+syntax: bash
+tags: [ dev ]
+---
+
+# description
+Metricbeat comes with internal modules that collect metrics from services like Apache, Jolokia, NGINX, MongoDB, MySQL, PostgreSQL, Prometheus, and more.
+
+# install
+brew install metricbeat
+
+# usage

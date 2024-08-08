@@ -1,0 +1,10 @@
+# description
+Minizinc constraint solver
+
+# solvers
+cbc
+cgl
+clp
+coinutils
+gecode
+osi

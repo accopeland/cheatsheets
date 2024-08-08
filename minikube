@@ -1,8 +1,46 @@
+# docs
+https://itnext.io/goodbye-docker-desktop-hello-minikube-3649f2a1c469
+
+# install
+  curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-hyperkit && chmod +x docker-machine-driver-hyperkit && sudo mv docker-machine-driver-hyperkit /usr/local/bin/ && sudo chown root:wheel /usr/local/bin/docker-machine-driver-hyperki
+t && sudo chmod u+s /usr/local/bin/docker-machine-driver-hyperkit
+
+# cleanup previous installs
+  sudo rm  /var/db/dhcpd_leases
+  minikube delete
+
+# start up
+  minikube start --logtostderr --v=3 --vm-driver=hyperkit
+  minikube start --vm-driver hyperkit  -v 1
+
+# cluster
+  kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.10 --port=8080
+  kubectl expose deployment hello-minikube --type=NodePort
+  kubectl get pod
+  minikube log
+  minikube stop
+  minikube delete
+
+# install minikube
+brew install hyperkit
+brew install kubectl
+brew install minikube
+brew install docker
+minikube start
+
+# config
+minikube config set cpus 6
+minikube config set memory 12g
+
 # To start with virtualbox driver:
 minikube start --vm-driver=virtualbox
 
-# To configure docker environment variables:
-minikube docker-env
+# the same more explicit
+minikube start --kubernetes-version=v1.23.1 --driver=hyperkit --container-runtime=docker
+minikube kubectl get nodes
+
+# Delete all of the minikube clusters:
+minikube delete --all
 
 # To start view the dashboard in a browser:
 minikube dashboard
@@ -12,3 +50,74 @@ minikube service list
 
 # To start a service in a browser:
 minikube service <service>
+
+# To get a list of the currently set config properties:
+minikube config view
+
+# Browse the catalog of easily installed Kubernetes services:
+minikube addons list
+
+# To configure docker environment variables:
+minikube docker-env
+
+# Tell Docker CLI to talk to minikube's VM
+eval $(minikube docker-env)
+#
+# Save IP
+echo "`minikube ip` docker.local" | sudo tee -a /etc/hosts > /dev/null
+#
+# Test docker is running
+docker info
+docker run hello-world
+
+# mounting volumes is a 2 step process
+minikube mount /myvolume:/outside
+# then something like this should work
+docker run --rm -v /outside:/inside dbest/bestdocker:latest /bin/sh
+
+# Error: troubleshooting hang @  🏃 Updating the running hyperkit "minikube" VM ...
+disable VPN
+minikube delete
+# or
+rm -rf /Users/copeland/.minikube/
+rm -rf /Users/copeland/.kube/
+minikube start --driver=hyperkit   --kubernetes-version=v1.23.1 --container-runtime=docker
+
+# interact w cluster
+kubectl get po -A # or minikube kubectl -- get po -A
+
+# create deployment
+minikube kubectl -- create deployment hello-minikube --image=k8s.gcr.io/echoserver:1.4
+minikube kubectl -- expose deployment hello-minikube --type=NodePort --port=8080
+minikube service hello-minikube  # or minikube kubectl -- port-forward service/hello-minikube 7080:8080
+
+# list pods
+minikube kubectl -- get pods
+
+# env vars
+MINIKUBE_HOME - (string) path for .minikube state/configuration.
+MINIKUBE_IN_STYLE - (bool) should emoji and colors appear in minikube.
+CHANGE_MINIKUBE_NONE_USER - (bool) autochange ownership of ~/.minikube to the value of $SUDO_USER
+MINIKUBE_ENABLE_PROFILING - (int, 1 enables it) enables trace profiling
+MINIKUBE_SUPPRESS_DOCKER_PERFORMANCE - (bool) suppress Docker performance warnings when Docker is slow
+
+# bpf
+minikube start --iso-url https://storage.googleapis.com/minikube-performance/minikube.iso
+
+# driver
+docker
+qemu
+podman
+ssh
+hyperkit
+
+# --container-runtime
+docker
+cri-o
+containerd
+
+# --base-image=...
+TODO
+
+# --dry-run=t|f
+TODO

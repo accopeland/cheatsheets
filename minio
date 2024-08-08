@@ -1,0 +1,88 @@
+# podman
+podman run -p 9000:9000 -p 9001:9001 quay.io/minio/minio server /data --console-address ":9001"
+
+# git
+https://github.com/minio/minio.git
+
+# macos / homebrew
+brew install minio/stable/minio
+minio server /data
+
+# linux binary
+wget https://dl.min.io/server/minio/release/linux-amd64/minio
+chmod +x minio
+./minio server /data
+
+# server
+http://127.0.0.1:9000 # log in with the root credentials.
+
+# usage
+mc alias set myminio http://10.249.0.144:9000 minioadmin minioadmin
+mc admin info myminio
+mc mb /tmp/copeland/m-tst/bucket1
+mc ls myminio/bucket1
+mc --version
+mc cp   /tmp/copeland/m-tst/bucket1/sciclone_* myminio/bucket1
+mc cp  /tmp/copeland/m-tst/sciclone_* myminio/bucket1
+mc admin info alias
+mc admin info myminio
+mc ls myminio
+mc ls myminio/bucket1
+mc mb play/b00
+mc cp z  play/b00
+mc cp biffile   play/b00/10M
+mc cp bigfile   play/b00/10M
+mc cp bigfile  myminio bucket2
+
+# aws-cli
+https://docs.min.io/docs/aws-cli-with-minio
+aws configure # set up keys
+aws configure set default.s3.signature_version s3v4
+aws --endpoint-url https://play.min.io:9000 s3 ls  # list buckets
+aws --endpoint-url https://play.min.io:9000 s3 ls s3://mybucket  # bucket contents
+aws --endpoint-url https://play.min.io:9000 s3 mb s3://mybucket # bucket create
+aws --endpoint-url https://play.min.io:9000 s3 rm s3://mybucket/argparse-1.2.1.tar.gz # remove ojb from bucket
+aws --endpoint-url https://play.min.io:9000 s3 rb s3://mybucket # remove_bucket
+
+# s3 cmd
+install minio server
+Install S3cmd from http://s3tools.org/s3cmd
+edit configuration in ~/.s3cfg
+s3cmd mb s3://mybucket  # make bucket
+s3cmd put newfile s3://testbucket # copy to bucket
+s3cmd get s3://testbucket/newfile # copy from bucket
+s3cmd sync newdemo s3://testbucket # sync dir to bucket
+s3cmd sync  s3://testbucket otherlocalbucket # sync bucket with local
+s3cmd ls s3:// # list bucket
+s3cmd ls s3://testbucket/ # bucket contents
+s3cmd rb s3://mybucket # rm bucket
+
+# server iptables firewall rules
+iptables -A INPUT -p tcp --dport 9000:9010 -j ACCEPT
+service iptables restart
+
+# server upw firewall rules
+ufw allow 9000
+
+# kubernetes / kubectl
+#
+#
+# Examples
+EXAMPLES:
+  1. Start MinIO server on "/home/shared" directory.
+     $ minio server /home/shared
+
+  2. Start single node server with 64 local drives "/mnt/data1" to "/mnt/data64".
+     $ minio server /mnt/data{1...64}
+
+  3. Start distributed MinIO server on an 32 node setup with 32 drives each, run following command on all the nodes
+     $ minio server http://node{1...32}.example.com/mnt/export{1...32}
+
+  4. Start distributed MinIO server in an expanded setup, run the following command on all the nodes
+     $ minio server http://node{1...16}.example.com/mnt/export{1...32} \
+            http://node{17...64}.example.com/mnt/export{1...64}
+
+  5. Start distributed MinIO server, with FTP and SFTP servers on all interfaces via port 8021, 8022 respectively
+     $ minio server http://node{1...4}.example.com/mnt/export{1...4} \
+           --ftp="address=:8021" --ftp="passive-port-range=30000-40000" \
+           --sftp="address=:8022" --sftp="ssh-private-key=${HOME}/.ssh/id_rsa"

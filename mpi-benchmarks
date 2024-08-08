@@ -1,0 +1,85 @@
+# description
+intel-mpi-benchmarks
+
+# see also
+OMB / OSU micro benchmarks # spack intsall osu-micro-benchmarks
+
+# install
+spack install intel-mpi-benchmarks
+
+# docs
+https://www.intel.com/content/www/us/en/docs/mpi-library/user-guide-benchmarks/2021-2/command-line-control.html#GUID-8C79EABC-B987-4FD6-B32D-0D8B45DB0206
+
+# usage
+salloc -A $JGI_ORG_GROUP -v -p dori -N 4 -n 256 --mem-bind=local /bin/bash
+mpirun -np 14 IMB-IO P_Read_shared -npmin 7
+mpirun -np 4 IMB-IO P_Read_shared
+
+mpirun -np 16 IMB-MPI1 -multi 0 bcast
+
+
+
+# IO
+#
+# latency
+#
+# throughput
+
+# UniRandom - msg passing
+Unidirectional message passing between random pairs of ranks. Pairs are selected randomly for each message transfer. It is an MPI imbalanced application, where different ranks do different amount of work.
+
+# PingPong
+message passing between two ranks in each pair of ranks.
+
+# PingPing
+message passing between two ranks in each pair of ranks.
+Measured pattern:The ranks are broken into pairs: (0, N/2), (1, N/2 + 1), (2, N/2 + 2) and so on. The number of ranks N must be even.
+
+# Parallel transfer
+Sendrecv
+Exchange
+Uniband
+Biband
+Multi-PingPong
+Multi-PingPing
+Multi-Sendrecv
+Multi-Exchange
+Multi-Uniband
+Multi-Biband
+
+# Bcast -- benchmark for MPI_Bcast.
+The root process broadcasts X bytes to all other processes. The root of the operation is changed round-robin.
+
+# Allreduce -- benchmark for the MPI_Allreduce
+It reduces a vector of length L = X/sizeof(float) float items. The MPI data type is MPI_FLOAT. The MPI operation is MPI_SUM.
+
+# Biband -- measures the cumulative bandwidth and message rate values.
+ the first half of ranks communicates with the second half using MPI_Isend/MPI_Recv/MPI_Wait calls. In case of the odd number of processes, one of them does not participate in the message exchange. The bunch of MPI_Isend calls are issued by each rank in the first half of ranks to its counterpart from the second half of ranks, and vice versa. The number of messages issued at each iteration step is defined with the MAX_WIN_SIZE constant. The same buffer is used for every send event in the iteration.
+MPI Routines: MPI_Isend MPI_Irecv MPI_Wait
+
+# Exchange -- each process exchanges data with both left and right neighbor in the chain.
+Exchange is a communication pattern that often occurs in grid splitting algorithms (boundary exchanges). The group of processes is similar to a periodic chain
+MPI routines: MPI_Isend/MPI _Waitall, MPI_Recv
+
+# Uniband --  measures the cumulative bandwidth and message rate values.
+the first half of ranks communicates with the second half using MPI_Isend/MPI_Recv/MPI_Wait calls. In case of the odd number of processes, one of them does not participate in the message exchange. The bunch of MPI_Isend calls are issued by each rank in the first half of ranks to its counterpart from the second half of ranks. The number of messages issued at each iteration step is defined with the MAX_WIN_SIZE constant. The same buffer is used for every send event in the iteration.
+MPI Routines: MPI_Isend MPI_Irecv MPI_Wait
+
+# Unirandom
+
+# IMB-MPI1 -- MPI_Isend
+IMB-MPI1 PingPing uses MPI_Isend, MPI_Recv, and MPI_Wait
+
+# Corandom
+measure a coherent message passing between random ranks.
+Measured pattern:Coherent random message passing pattern:  It is an MPI balanced application, where each rank does the same amount of work.
+MPI routines: MPI_Irecv, MPI_Send, MPI_Wait
+
+# Birandom -- measure a bidirectional message passing between random ranks.
+Measured pattern: Bidirectional message passing pattern between random ranks. Pairs are selected randomly for each message transfer. It is an MPI imbalanced application, where different ranks do different amount of work.
+MPI routines:MPI_Irecv, MPI_Send, MPI_Wait
+
+# Uniband -- measures the cumulative bandwidth and message rate values.
+To achieve this, the first half of ranks communicates with the second half using MPI_Isend/MPI_Recv/MPI_Wait calls. In case of the odd number of processes, one of them does not participate in the message exchange. The bunch of MPI_Isend calls are issued by each rank in the first half of ranks to its counterpart from the second half of ranks, and vice versa. The number of messages issued at each iteration step is defined with the MAX_WIN_SIZE constant. The same buffer is used for every send event in the iteration.
+Measured pattern: (MAX_WIN_SIZE \*MPI_Isend)/(MAX_WIN_SIZE \*MPI_Irecv)/Waitall
+MPI routines: MPI_Isend/MPI_Recv/MPI_Wait

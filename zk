@@ -1,0 +1,40 @@
+# description
+A plain text note-taking assistant using markdown
+
+# docs
+https://github.com/mickael-menu/zk
+
+# install
+brew install zk
+
+# init
+zk init
+
+# config
+see .zk/config.toml
+
+# new
+$ zk new --title "An interesting concept"
+
+# list notes
+$ zk list --tag "recipe" --match "pizza -pineapple"
+
+# fzf integration
+
+# aliases -- see config
+[alias]
+edit = "zk edit --interactive $@"
+journal = 'zk new "$ZK_NOTEBOOK_DIR/journal"'
+alias = "zk list --quiet --format path --delimiter0 $@ | xargs -0 <EXTERNAL COMMAND>"
+ls = "zk list $@"
+ed = "zk edit $@"
+n = "zk new $@"
+recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
+paths = "zk list --quiet --format \"'{{path}}'\" --delimiter ' ' $@"
+nt = 'zk new --title "$*"'
+bl = "zk list --link-to $@"
+
+
+# edit
+$ zk edit --interactive --match "recipe pizza -pineapple"
+zk edit -i -m "recipe pizza -pineapple"

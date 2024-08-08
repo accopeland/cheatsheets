@@ -1,0 +1,25 @@
+# description
+smarter cd with fuzzy matching directory hash
+
+# install
+cargo install zoxide
+
+# docs
+https://github.com/ajeetdsouza/zoxide
+
+# deps
+fzf
+
+# config
+zoxide_init
+
+# change key
+zoxide --cmd z  # use z to cd
+...
+
+# use
+cd foo
+zoxide add foo
+zoxide add bar
+z bar
+z <spc><tab>

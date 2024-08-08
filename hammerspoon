@@ -1,0 +1,138 @@
+# hotkey
+hyper = {"cmd", "alt", "ctrl", "shift"}
+
+# stops working:
+tccutil reset All org.hammerspoon.Hammerspoon
+
+# config
+~/.hammerspoon/init.lua
+
+# modify keys
+...
+
+# view keys
+# ...
+
+# keys
+cmd-sh-c-Q 		supervisor
+alt-sh-/		help
+cmd-sh-c-R		reload
+
+# alt (razer keyboard)
+win
+
+# network
+cap+shift+win+alt-p
+
+# resize
+opt-r <-> esc
+tab : help
+spc : next/prev monitor
+c : center
+f : fullscreen
+- : shrink
+= : stretch
+a : left
+s : down
+d : right
+k : top 1/2
+h : left 1/2
+l : right 1/2
+j : bottom 1/2
+y : nw
+u : sw
+o : ne
+i : se
+
+# keys2
+alt-c : clipsM show
+alt-A : appM cheat sheet
+alt-tab : hints
+alt-d : aria2
+alt-g : hammerspoon search
+alt-h : manual
+alt-i : countdown
+alt-r : resize
+alt-s : cheat sheet
+alt-t : clock
+alt-z : console
+sh-alt-v : browser typist
+# move window to next monitor
+opt-r-spc
+
+# keybindings
+cmd-sh-c-R		reload
+opt-a			appM modal
+opt-r			move / resize windows
+opt-tab			window hints
+-- opt-c		clip
+-- opt-d		aria2
+opt-g			search
+-- opt-h 		manual
+-- opt-s		cheatsheetM
+-- opt-v		browser link
+opt-z			console
+-- opt-i		countdown
+--opt-t 		clock
+
+# Resize: opt-r+ ..
+esc 			Deactivate resizeM
+q 			Deactivate resizeM
+tab 			Toggle Cheatsheet
+a 			Move Leftward
+d 			Move Rightward
+w 			Move Upward
+s 			Move Downward
+h 			Lefthalf of Screen
+l 			Righthalf of Screen
+k 			Uphalf of Screen
+j 			Downhalf of Screen
+y 			NorthWest Corner
+o 			NorthEast Corner
+u 			SouthWest Corner
+i 			SouthEast Corner
+f 			Fullscreen
+c 			Center Window
+= 			Stretch Outward
+- 			Shrink Inward
+sh-H 			Move Leftward
+sh-L 			Move Rightward
+sh-K 			Move Upward
+sh-J 			Move Downward
+left 			Move to Left Monitor
+right 			Move to Right Monitor
+up 			Move to Above Monitor
+down 			Move to Below Monitor
+space 			Move to Next Monitor
+[ 			Undo Window Manipulation
+] 			Redo Window Manipulation
+` 			Center Cursor
+
+
+# AppM
+opt-a			Activate appM
+esc			Deactivate appM
+
+# CheatSHeet: opt-s
+esc 			Deactivate cheatsheetM
+Q 			Deactivate cheatsheetM
+tab 			Toggle Cheatsheet
+
+# Clipshow: opt-c
+esc			Deactivate clipshowM
+Q 			Deactivate clipshowM
+
+# ???
+N 			Save this Session
+R 			Restore last Session
+B 			Open in Browser
+S 			Search with Bing
+M 			Open in MacVim
+F 			Save to Desktop
+H 			Search in Github
+G 			Search with Google
+L 			Open in Sublime Text
+
+# Countdown
+Q 			Deactivate countdownM
+esc			Deactivate countdownM

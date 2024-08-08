@@ -1,0 +1,208 @@
+# homebrew github token dd7b38e2da43334a644ba894a1abfc7a47cd6a58
+	create API token on https://github.com/settings/tokens
+	set the environment variable HOMEBREW_GITHUB_API_TOKEN
+	leaving all of the scopes unchecked is very reasonable!
+	add to your ~/.bash_profile file.
+	export HOMEBREW_GITHUB_API_TOKEN=gh...
+
+# github tokens
+	see https://hub.github.com/hub.1.html#configuration
+	curl/w/opt : gh...
+	homebrew:
+	GITHUB_TOKEN=gh...
+
+# vscode homebrew
+	visual-studio-code-insiders
+	visual-studio-code
+
+# homebrew edit
+	HOMEBREW_EDITOR
+
+# brew versions:
+	brew tap homebrew/cask-versions
+	brew cask install java6 # need for passwordsafeSWT
+	jenv add /Library/Java/JavaVirtualMachines/openjdk-14.0.2.jdk/Contents/Home/
+	jenv global 1.6
+
+# homebrew irb : brew irb <<<'Formula["gcc"].prefix_linked?'
+	HOMEBREW_NO_ENV_FILTERING=1 brew install --force-bottle <whatever bottles are still being bad> for the rest.
+	brew install --use-gcc ...
+
+# homebrew compile fails: https://www.tundraware.com/TechnicalNotes/Divorce-Your-Linux-Admin/
+
+# homebrew tap info : brew tap-info dflemstr/tools
+
+# homebrew clang - to get (bottled) clang++ 3.7
+	$ brew install llvm
+	It is then available under:
+	/usr/local/opt/bin/clang++
+	The formula also notes:
+	To link to libc++, something like the following is required:
+	  CXX="clang++-3.7 -stdlib=libc++"
+	  CXXFLAGS="$CXXFLAGS -nostdinc++ -I/usr/local/opt/llvm37/lib/llvm-3.7/include/c++/v1"
+	  LDFLAGS="$LDFLAGS -L/usr/local/opt/llvm37/lib/llvm-3.7/lib"
+
+# homebrew compiler
+	- Homebrew looks for cc using MacOS.locate (Normally /usr/bin/cc)
+	- If missing, /usr/bin/cc, then next cc in path is found e.g. /usr/local/bin/cc
+	- Next,  value of default_cc is matched against several patterns to determine the default compiler. Since the cc that was found matches /^gcc/, default_compiler returns :gcc, which inside of Homebrew always represents gcc-4.2.
+
+# homebrew reverse deps:
+	~/scripts/brew-revdeps.py
+	brew uses --installed
+
+# homebrew ssl problems : "SSLRead() return error -9806" in OSX using brew
+	$ brew remove git
+	$ brew remove curl
+	$ brew install openssl
+	$ brew install --with-openssl curl
+	$ brew install --with-brewed-curl --with-brewed-openssl git
+	o you should use brew install --with-curl --with-openssl git in the last step instead
+
+# homebrew formula from pull request
+	brew install https://raw.github.com/ColinHebert/homebrew/538a99cc06a8f40b6ebcf2f4f8fd44d563c672cd/Library/Formula/emacs.rb
+
+# homebrew octave problems - installing the gui fails with arpack errors instead use
+	brew install --without-gui octave
+
+# homebrew cask
+	brew cask info <pkg>
+	brew cask install <pkg>
+	open ~/Applications/"pkg.app"
+
+# homebrew remove old versions
+	brew cleanup -n
+
+# homebrew pip error fix
+	if you see stuff like
+	   return self._vengine.load_library()
+	  File "/Users/copeland/Library/Python/2.7/lib/python/site-packages/cffi/vengine_cpy.py", line 155, in load_library
+	    raise ffiplatform.VerificationError(error)
+	cffi.ffiplatform.VerificationError: importing '/Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so': dlopen(/Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so, 2): Library not loaded: /usr/local/lib/libssl.1.0.0.dylib
+	  Referenced from: /Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so
+		  Reason: image not found
+	# then the fix is
+	> brew install --upgrade openssl; brew unlink openssl && brew link openssl --force
+	# or perhaps
+	pip install cryptography --upgrade --force-reinstall --no-use-wheel
+
+# homebrew update error
+	Stashing your changes:
+	UU octave.rb
+	octave.rb: needs merge
+	octave.rb: unmerged (8b377d72104597205cf5c680ffbf2d2e34885dc1)
+	fatal: git-write-tree: error building trees
+	Cannot save the current index state
+	Error: Failed to update tap: homebrew/science
+	#
+	cd `brew --cellar`
+	git reset --hard HEAD
+	brew upgrade <formula>
+	# or for a tap
+	cd /usr/local/Library/Taps/homebrew/homebrew-science
+	#git reset --hard HEAD
+	git check <form>
+
+# homebrew create
+	https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Formula-Cookbook.md#formula-cookbook
+	brew create https://example.com/foo/bar/baz-1.23.tar.gz
+
+	# monkeying around with sourceforge mirrors
+	remove trailing whitespace and add version if needed
+	to modify configure files use 'inreplace' , FILE, A, WITH_B
+	to modify makefile pass args to make command
+
+	brew fetch formula which also displays the SHA1 and SHA256 v
+	ENV.append "LIBS", "-losxfuse"
+
+	# debug
+	~/Library/Caches/Homebrew/`
+	# python dependencies - homebrew-pypi-poet
+	> pip install homebrew-pypi-poet
+	> poet -f <somepypkg>
+
+# homebrew create
+	brew update # required in more ways than you think (initializes the brew git repository if you don't already have it)
+	cd `brew --repository`
+	# Create a new git branch for your formula so your pull request is easy to
+	# modify if any changes come up during review.
+	git checkout -b <some-descriptive-name>
+	git add Library/Formula/foo.rb
+	git commit
+
+# homebrew create  - cmake
+	def install
+		mkdir "build" do
+			system "cmake", "-G", "Unix Makefiles", "..", *std_cmake_args
+			system "make"
+			system "make", "install"
+		end
+	end
+
+# homebrew fix git sync issues
+	cd /usr/local/Library
+	git pull origin master
+
+# homebrew python - brew python pip
+	https://github.com/Homebrew/homebrew/wiki/Homebrew-and-Python
+	basically just use pip
+
+# homebrew blast+
+	--with-dll
+	--without-gnutls
+	--without-debug
+	--with-mt
+
+# homebrew ruby
+	> brew unlink ruby193
+	Unlinking /usr/local/Cellar/ruby193/1.9.3-p551... 21 symlinks removed
+	copeland@acopeland:~/local> brew link ruby
+	Linking /usr/local/Cellar/ruby/2.2.2... 1053 symlinks created
+
+# homebrew git download issues
+	# seem to be due to ruby problems and fix by adjusting path
+	export PATH='/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+	echo $PATH
+	brew install brew-cask # for example
+
+# homebrew versions ruby
+	brew tap homebrew/versions
+	brew search ruby
+	brew install ruby192
+	brew switch <formula> <version>
+
+# homebrew particular version (https://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula)
+	check if version is installed, if yes
+	 brew switch prodigal 2.6.2
+	otherwise go to repo and id checkout or
+	brew versions <ID>
+	then checkout old version
+	cd $( brew --prefix )
+	# Checkout some old formula
+	$ git checkout 6b8d25f Library/Formula/postgresql.rb
+	$ brew install postgresql
+	# brew install postgresql@9.5
+
+# homebrew ruby
+	export PATH=$(brew --prefix ruby)/bin:$PATH
+	rubygems
+	# Method 1 - have gems install into /usr/local
+	echo "gem: -n/usr/local/bin" >> ~/.gemrc
+	sudo gem update --system
+	# Method 2 - install everything into Homebrew prefix
+	echo "export GEM_HOME='$(brew --prefix)'" >> ~/.bashrc
+	# Method 3 - use RVM
+
+# homebrew deps - find dependencies
+	brew uses --installed bibtex2html
+	brew info bibtex2html
+	brew deps hevea
+
+# brew
+	brew install --enable-cxx --enable-fortran https://raw.github.com/Homebrew/homebrew-dupes/master/gcc.rb
+	brew --env
+	brew --config
+	brew tap homebrew/science
+
+# homebrew browser
+	BROWSER If set, and HOMEBREW_BROWSER

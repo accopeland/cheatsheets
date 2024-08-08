@@ -1,0 +1,13 @@
+# documentation
+
+# install
+
+# config
+
+# notes
+# [Lazy evaluation] makes it practical to modularize a program as a generator that constructs a large number of possible answers, and a selector that chooses the appropriate one.
+
+# definitions
+Functors are generalized loops:  [ f x | x <- xs];
+Applicatives are generalized nested loops:  [ (x,y) | x <- xs, y <- ys];
+Monads are generalized dynamically created nested loops:  [ (x,y) | x <- xs, y <- k x].

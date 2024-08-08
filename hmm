@@ -1,0 +1,52 @@
+# tools
+	hhsuite3
+	mmseqs2
+	hmmer3
+
+# hmmer
+git clone https://github.com/EddyRivasLab/hmmer
+git clone https://github.com/EddyRivasLab/easel
+
+# performance
+does not scale to >4 threads
+should see 10000-30000 Mc/sec
+
+# cmsearch
+	git clone https://github.com/EddyRivasLab/infernal
+	cd infernal
+	git clone https://github.com/EddyRivasLab/hmmer
+	git clone https://github.com/EddyRivasLab/easel
+	autoconf
+
+# hmmscan vs hmmsearch (2011 : https://cryptogenomicon.org/2011/05/27/hmmscan-vs-hmmsearch-speed-the-numerology/)
+	- Pfam is about 1 GB of data
+	-  when comparing lots of seqs to lots of models use hmmsearch
+	-  to search 300 million ~200nt metagenomic reads against Pfam use hmmsearch
+
+# hhsuite
+https://github.com/soedinglab/hh-suite
+
+# hhblits
+HHblits  claims to be 20x faster than HMMER and considerably  more  sensitive  than  HMMER3 and PSI-BLAST
+HHblits is an accelerated HHsearch that is fast enough to iteratively  search through millions of profile  HMMs
+
+# hhsearch - searches a query profile HMM hrough database of target profile HMMs.
+
+# hhsuite dbs
+hhm format not really convertible from hmm format
+http://wwwuser.gwdg.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/
+
+
+# pfam / xfam
+
+# hmmpgmd \ /hmmer/src/hmmpgmd_client_example.pl \ hmmc2
+(1) Generate an hmmpgmd format file, including map file, from a FASTA format
+    file, for example using the HMMER/Easel tool esl-reformat:
+  prompt% esl-reformat --id_map my.hmmpgmd.map hmmpgmd my.fasta > my.hmmpgmd
+(2) Start the hmmpgmd master/worker, run the following commands:
+  prompt% hmmpgmd --master --seqdb my.hmmpgmd
+  prompt% hmmpgmd --worker 127.0.0.1 --cpu 4
+(3) Run this client to connect to the master
+(4) Submit one query to hmmpgmd for each sequence in the query file, retrieve results
+    from the master, then unpack the custom (and undocumented) binary. Examples of
+    unpacking the binary are seen in the unpackXXX() functions.

@@ -1,0 +1,65 @@
+# description
+Google cloud
+
+# see also
+gcp
+gcs
+gcloud
+terraform
+
+# install
+wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-414.0.0-darwin-x86_64.tar.gz
+
+# docs
+https://cloud.google.com/sdk/docs/install-sdk
+
+# credentials  / login
+gcloud auth application-default login  # saves to
+	$HOME/.config/gcloud/application_default_credentials.json
+gcloud auth print-access-token
+curl -X GET -H "Authorization: Bearer $(gcloud auth print-access-token)"  "https://cloudresourcemanager.googleapis.com/v3/projects/<PROJID>"
+
+# config
+gcloud init [--console-only]
+
+# authentication
+gcloud alpha services api-keys create --display-name=DISPLAY_NAME
+
+# console
+https://console.cloud.google.com/welcome?project=jgi-gaag
+
+# ssh gcp
+gcloud cloud-shell ssh
+
+# pricing
+https://cloud.google.com/compute/all-pricing
+https://cloud.google.com/products/calculator#id=4abdee71-b201-4e73-89f1-9e6cd0335d0d
+
+# billing -- 015426-0B5674-83F27C
+ gcloud beta billing projects describe jgi-gaag
+billingAccountName: billingAccounts/015426-0B5674-83F27C
+billingEnabled: true
+name: projects/jgi-gaag/billingInfo
+projectId: jgi-gaag
+
+# blastdb on gcp --  ncbi docker : https://github.com/ncbi/blast_plus_docs
+docker run --rm ncbi/blast update_blastdb.pl --showall pretty --source gcp
+
+# blast databases on cloud
+GCP: https://ncbi.github.io/blast-cloud/blastdb/available-blastdbs-gcp.html
+NCBI: docker run --rm -it ncbi/blast update_blastdb.pl --showall pretty --source NCBI [GCS]
+
+# health checks
+gcloud compute health-checks create tcp test-health-chk  --port 80
+
+# permissions / compute
+compute.instance.*
+compute.firewalls.*
+
+# genomics
+gcloud beta lifesciences pipelines run \
+    --regions us-west1 \
+    --command-line 'samtools index ${BAM} ${BAI}' \
+    --docker-image "gcr.io/cloud-lifesciences/samtools" \
+    --inputs BAM=gs://genomics-public-data/NA12878.chr20.sample.bam \
+    --outputs BAI=gs://PROJECT_ID-life-sciences/NA12878.chr20.sample.bam.bai

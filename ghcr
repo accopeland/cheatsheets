@@ -1,0 +1,27 @@
+# description
+notes on dealing with github container registry (ghcr.io)
+
+# login -- github_ghcr_login()
+source ~/.config/github/rw-github-pat-20241016
+echo $GITHUB_RW  | docker login ghcr.io -u accopeland --password-stdin
+
+# personal access token
+MUST USE CLASSIC / fine-grained will not work
+settings
+developer
+create new
+package.read
+package.write
+
+# permissions -- Push images: Requires the following permissions
+read:packages
+write:packages
+delete:packages
+
+# build
+podman build -t latest -f Dockerfile
+
+# push
+<logout>
+github_ghcr_login()
+podman push 5dd467fce50b ghcr.io/accopeland/lja:latest

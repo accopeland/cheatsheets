@@ -1,0 +1,18 @@
+# description
+
+# install
+
+# update
+gcloud components update
+
+# docs
+
+# config
+gcloud config list
+
+# auth --  obtain new credentials.
+$ gcloud auth login
+
+
+# reauth -- If you have already logged in with a different account, run:
+$ gcloud config set account ACCOUNT

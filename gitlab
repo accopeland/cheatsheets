@@ -1,0 +1,123 @@
+# password
+???
+LDAP
+
+# configure to use personal access token
+ git remote set-url origin https://user:token@code.jgi.doe.gov/qaqc/autoqc.git
+
+# ssh configuration
+- copy pub key to gitlab
+- ssh -Tv git@gitlab.com
+
+# gitlab user name (REGISTRY_USER_
+ - can't contain spaces
+ - get from url
+ - accopeland
+
+#  access token
+https://gitlab.com/profile/personal_access_tokens
+
+# eks
+gitlab_terraform_eks: PAT see pwsafe
+
+# registry search
+podman search registry.fedoraproject.org/
+
+# gitlab repos
+git clone https://accopeland@gitlab.com/JGI/<name>
+
+# getting started with gitlab ci
+Create .gitlab-ci.yml
+See http://docs.gitlab.com/ce/ci/yaml/README.html#tags
+The :jobname is arbitrary
+Workflow
+- git pull
+- <edit>
+- git add .
+- git commit -m " a message"
+- git push
+
+# local runnner (homebrew gitlab-ci-multi-runner)
+# reg token: M..
+# see https://docs.gitlab.com/runner/install/osx.html
+gitlab-ci-multi-runner register
+# use 'shell'
+gitlab-runner install
+gitlab-runner start  382cdfb2
+gitlab-runner stop  382cdfb2
+
+# dori gitlab runner
+/clusterfs/jgi/groups/gentech/homes/svc-ga/.gitlab-runner/config.toml
+https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/jaws-dap-analysis/-/snippets/28
+
+# jgi
+ ~/Repos/jamo-docker/.ci-functions/README.md
+
+# running gitlab registry containers
+docker run registry.gitlab.com/accopeland/gitlab-ci-tst
+
+# basic stuff
+git clone https://accopeland@gitlab.com/JGI/Tony-sandbox
+
+# example in Tony-sandbox
+variables:
+  GIT_STRATEGY: clone
+  GITLAB: registry.gitlab.com
+  SHIFTER: registry.services.nersc.gov:8443
+  REGISTRY_USER: JGI
+  APPLICATION: Tony-sandbox
+  RELEASE_TAG: $CI_BUILD_REF_NAME
+stages:
+  - deploy
+deploy:
+  stage: deploy
+  tags:
+    - nersc
+    - spin
+    - docker
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $GITLAB
+    - if [ "$RELEASE_TAG" == "master" ]; then export RELEASE_TAG=latest; fi
+    - export DOCKER_IMAGE=`echo $REGISTRY_USER/$APPLICATION:$RELEASE_TAG | tr 'A-Z' 'a-z'` # must be lowercase!
+    - echo "Build/deploy $DOCKER_IMAGE"
+
+    - docker build -t $GITLAB/$DOCKER_IMAGE .
+    - docker push $GITLAB/$DOCKER_IMAGE
+    - echo "Pushed $GITLAB/$DOCKER_IMAGE"
+
+    - docker tag $GITLAB/$DOCKER_IMAGE $SHIFTER/$DOCKER_IMAGE
+    - docker push $SHIFTER/$DOCKER_IMAGE
+    - echo "Pushed $SHIFTER/$DOCKER_IMAGE"
+
+# containers -- Adding images to the GitLab Container Registry
+how to add Docker images to GitLab Container Registry ( not hub.docker.com)
+use local_registry.gitlab.yml for the .gitlab-ci.yml.
+
+# gitlab-ci.yml example: GitLab Container Registry
+image: docker:20.10.17
+stages:
+  - build
+variables:
+  IMAGE: $CI_REGISTRY_IMAGE
+  TAG: "1.0.2"
+ build:
+  tags:
+    - docker-build
+  stage: build
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE:${TAG} .
+    - docker push $IMAGE:${TAG}
+## Identical to the previous example, you should replace the TAG. Please note that the other variables are already set up for you.
+## Then after git push, the pipeline will add the container to "Packages & Registries" -> "Container Registry".
+
+# pull image from doejgi container repo @ gitlab
+echo "<your-password>" | podman login library.jgi.doe.gov:5050 -u <username> --password-stdin ## code.jgi.doe.gov 'password' and correct username
+docker pull library.jgi.doe.gov:5050/official-jgi-workflows/jaws-docker-builder:1.0.0
+
+# gitlab container registry
+https://stackoverflow.com/questions/75897187/how-to-enable-gitlab-container-registry-and-push-docker-image-in-it
+https://docs.gitlab.com/ee/administration/packages/container_registry.html#configure-container-registry-under-an-existing-gitlab-domain
+
+# Error: git remote add origin https://code.jgi.doe.gov/ACCopeland/test-registry.git
+# Fix: Settings->Repository->Protected Branches->Expand-> Disable

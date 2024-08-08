@@ -1,0 +1,149 @@
+# description
+keyboard shortcuts, tips and tricks for google sheets
+
+# notes
+https://support.google.com/docs/answer/181110?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Cmac-shortcuts
+
+# help
+Show_keyb_shortcuts	⌘+/
+
+# Basics
+Select-col	Ctrl+Spc
+Select-row	Sh+Spc
+Select-all	⌘+a | ⌘+Sh+Spc
+Undo	⌘+z
+Redo	⌘+y |⌘+Sh+z|Fn+F4
+Find	⌘+f
+Find_and_replace	⌘+Sh+h
+Fill_range	⌘+Enter
+Fill_down	⌘+d
+Fill_right	⌘+r
+Save	⌘+s
+Open	⌘+o
+Print	⌘+p
+Copy	⌘+c
+Cut	⌘+x
+Paste	⌘+v
+Paste_values_only	⌘+Sh+v
+Insert_new_sheet	Sh+Fn+F11
+Compact_controls	Ctrl+Sh+f
+Input_tools_on/off	⌘+Sh+k
+Select_input_tools	⌘+Opt+Sh+k
+Tool_finder	Opt+/
+Select_current_region_around_selected_cell	⌘+Sh+* |Ctrl+Sh+*
+Display_or_hide_menus	⌘+Opt+R | Ctrl+Sh+F
+
+# Format
+Bold ⌘+b | ⌘+2 | Ctrl+2
+Underline ⌘+u | ⌘+4 | Ctrl+4
+Italic	⌘+i | ⌘+3| Ctrl+3
+Strikethrough ⌘+Sh+x| ⌘+5| Ctrl+5
+Center_align	⌘+Sh+e
+Left_align	⌘+Sh+l
+Right_align	⌘+Sh+r
+Apply_top_border	Opt+Sh+1
+Apply_right_border	Opt+Sh+2
+Apply_bottom_border	Opt+Sh+3
+Apply_left_border	Opt+Sh+4
+Remove_borders	Opt+Sh+6
+Apply_outer_border Opt+Sh+7 | ⌘+Sh+7 | Ctrl+Sh+7
+
+Insert_link	⌘+k
+Insert_time	⌘+Sh+;
+Insert_date	⌘+;
+Insert_date_and_time	⌘+Opt+Sh+;
+Format_as_decimal	Ctrl+Sh+1
+Format_as_time	Ctrl+Sh+2
+Format_as_date	Ctrl+Sh+3
+Format_as_currency	Ctrl+Sh+4
+Format_as_percentage	Ctrl+Sh+5
+Format_as_exponent	Ctrl+Sh+6
+Clear_formatting	⌘+\
+Navigate_spreadsheet
+
+Move_to_beginning_of_row	Fn+LArrow
+Move_to_beginning_of_sheet	⌘+Fn+LArrow
+Move_to_end_of_row	Fn+RArrow
+Move_to_end_of sheet	⌘+Fn+RArrow
+Scroll_to_active_cell	⌘+Backspace
+Move_to_next_sheet Opt+DownArrow
+
+MacBook: Opt+RArrow
+
+Move_to_previous_sheet Opt+UpArrow
+
+MacBook: Opt+LArrow
+
+Display_list_of_sheets	Opt+Sh+k
+Open_hyperlink	Opt+Enter
+Open_Explore ⌘+Opt+Sh+i
+
+Go_to_side_panel	⌘+Opt+. | ⌘+Opt+,
+Move_focus_out_of_spreadsheet	Ctrl+⌘+Sh+m
+Move_to_quicksum(when a range of cells is selected)	Opt+Sh+q
+Move focus_to_popup(for links, bookmarks, and images)	holding Ctrl+⌘,e,p
+Open_drop-down_menu_on_filtered_cell	Ctrl+⌘+r
+Open_revision_history	⌘+Opt+Sh+h
+Close_drawing_editor	⌘+Esc | Sh+Esc
+Show_"Go_to_range"_dialog	Ctrl+G
+Find_and_replace_with_Find_tab_selected	Ctrl+F
+
+# Notes and COmments
+Insert/edit_note	Sh+F2
+Insert/edit_comment	⌘+Opt+m
+Open_comment_discussion_thread	⌘+Opt+Sh+a
+Enter_current_comment	holding_Ctrl+⌘,e,c
+Move_to_next_comment	holding Ctrl+⌘,n,c
+Move_to_previous_comment	holding Ctrl+⌘,p,c
+
+# Use_keyboard_shortcuts_on_selected_comments
+Reply_to_current_comment	R
+Move_to_next_comment	J
+Move_to_previous_comment	K
+Resolve_current_comment	E
+Exit_current_comment	U
+
+# Menus
+File_menu	Ctrl+Opt+f
+Edit_menu	Ctrl+Opt+e
+View_menu	Ctrl+Opt+v
+Insert_menu	Ctrl+Opt+i
+Format_menu	Ctrl+Opt+o
+Data_menu	Ctrl+Opt+d
+Tools_menu	Ctrl+Opt+t
+Open_insert_menu	⌘+Opt+= (with cells selected)
+Open delete_menu	⌘+Opt+- (with cells selected)
+Form_menu(present when the spreadsheet is connected to a form)	Ctrl+Opt+m
+Add-ons_menu	Ctrl+Opt+n
+Help menu	Ctrl+Opt+h
+Sheet_menu(copy, delete, and other sheet actions)	Opt+Sh+s
+Context menu ⌘+Sh+\ | Sh+F10
+
+Table_col_menu	⌘+Opt+\
+
+# Rows / Cols
+Insert_rows_above ⌘+Opt+= (with rows selected)Ctrl+Opt+i,r,r
+Insert_rows_below	Ctrl+Opt+i,r,b
+Insert_cols to_the_left  ⌘+Opt+= (with cols selected)Ctrl+Opt+i,c,c
+Insert_cols_to_the_right	Ctrl+Opt+i,c,o
+Delete_rows	⌘+Opt+- (with rows selected)Ctrl+Opt+e,,d
+Delete_cols	⌘+Opt+- (with cols selected)Ctrl+Opt+e,,e
+Hide_row	⌘+Opt+9
+Unhide_row	⌘+Sh+9
+Hide_col	⌘+Opt+0
+Unhide_col	⌘+Sh+0
+Group_rows_or_cols	Opt+Sh+RArrow
+Ungroup_rows_or_cols	Opt+Sh+LArrow
+Expand_grouped_rows_or_cols	Opt+Sh+DownArrow
+Collapse_grouped_rows_or_cols	Opt+Sh+UpArrow
+
+# Formulas
+Show_all_formulas	Ctrl+~
+Insert_array_formula	⌘+Sh+Enter
+Collapse_an_expanded_array_formula	⌘+e
+Show/hide_formula_help(when_entering_a_formula)	Sh+Fn+F1
+Full/compact_formula_help(when_entering_a_formula)	Fn+F1
+Absolute/relative_references(when_entering_a_formula)	Fn+F4
+Toggle_formula_result_previews(when_entering_a_formula)	Fn+F9
+Resize_formula_bar(move_up_or_down)	Ctrl+Opt+Up_and_Ctrl+Opt+Down
+Toggle_formula_range_selection_(when_entering_a_formula) F2 | Ctrl+e

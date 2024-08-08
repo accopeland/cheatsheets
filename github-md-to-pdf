@@ -1,0 +1,8 @@
+---
+syntax: bash
+tags: [ dev util ]
+---
+git clone  https://github.com/iterative/dvc.org.git
+npm i -g md-to-pdf
+md-to-pdf dvc.org/content/docs/user-guide/**/*.md
+fd . -e pdf -x pdfunite {} ./user-guide.pdf

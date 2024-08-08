@@ -1,0 +1,22 @@
+# system version
+ldd --version
+
+# error: /lib64/libc.so.6: version `GLIBC_2.18' not found (required by .../libstdc++.so.6)
+# strings /usr/lib64/libc.so.6 | grep ^GLIBC_
+FIX:  LD_LIBRARY_PATH=
+
+# error: version `GLIBCXX_3.4.9' not found
+FIX:  LD_LIBRARY_PATH=
+NB. First matching will be used even if
+  (1) it's the wrong version and produces error
+  (2) the correct version is later in path
+
+# gcc / glibc
+strings $GCCLIBPATH/libstdc++.so.6 | grep -i glibc
+gcc-4.4.0: GLIBCXX_3.4.11
+gcc-4.4.1: GLIBCXX_3.4.12
+gcc-4.4.2: GLIBCXX_3.4.13
+gcc-4.6.3: GLIBCXX_3.4.16
+
+# gcclibpath ...
+see function gcc_libpaths()

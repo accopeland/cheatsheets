@@ -1,0 +1,143 @@
+# description
+cross-platform  curses-based monitoring tool that aims to present a maximum of information in a minimum of space, ideally
+fitting in a classic 80x24 terminal or larger for more details. It can adapt dynamically to the displayed information  depending  on  the
+terminal size.  It can also work in client/server mode.  Remote monitoring can be performed via a terminal or web interface.
+
+# see also
+bpytop
+btm (Bottom)
+fzf_ps
+htop
+top
+btop
+bashtop
+vtop
+ytop
+Atmonitor
+
+# install
+pip install --user glances
+brew install glances
+
+# docs
+
+# config
+
+# ...
+
+
+# client/server
+
+# web
+
+# filter
+ENTER Set the process filter.
+ On macOS use CTRL-H to delete filter.
+ Filter is a regular expression pattern:
+ gnome: matches all processes starting with the gnome string
+ .*gnome.*: matches all processes containing the gnome string
+E Erase current process filter
+
+# processes
+/ Switch between process command line or command name
+a Sort process list automatically
+c Sort processes by CPU usage
+i Sort processes by I/O rate
+k Kill selected process (need right) - Only in standalone mode.
+m Sort processes by MEM usage
+M Reset processes summary min/max
+u Sort processes by USER
+p Sort processes by name
+t Sort process by CPU times (TIME+)
+z Show/hide processes stats
+LEFT Navigation left through process sort
+RIGHT Navigation right through process sort
+UP Up in the processes list
+DOWN Down in the processes list
+
+# app monitor
+A Enable/disable Application Monitoring Process
+
+# network
+n Show/hide network stats
+b Switch between bit/s or Byte/s for network I/O
+I Show/hide IP module
+K Show/hide TCP connections
+T View network I/O as combination
+U View cumulative network I/O
+
+# disk
+B View disk I/O counters per second
+d Show/hide disk I/O stats
+R Show/hide RAID plugin
+
+# cloud
+C Enable/disable cloud stats
+
+# docker
+D Enable/disable Docker stats
+
+# stats
+F5 Refresh stats in curses user interface
+e Enable/disable top extended stats
+
+# filesystem
+f Show/hide file system and folder monitoring stats
+F Switch between file system used and free space
+
+# graph
+g Generate graphs for current history
+S Enable/disable spark lines
+
+# gpu
+G Enable/disable GPU stats
+6 Enable/disable mean GPU mode
+
+# help
+h Show/hide the help screen
++ Increase selected process nice level / Lower the priority (need right) - Only in standalone mode.
+- Decrease selected process nice level / Higher the priority (need right) - Only in standalone mode.
+
+# log
+l Show/hide log messages
+w Delete finished warning log messages
+x Delete finished warning and critical log messages
+
+# time
+N Show/hide current time
+
+# ports
+P Enable/Disable ports stats
+
+# quit
+q|ESC|C-c Quit current Glances session
+
+# irq
+Q Show/hide IRQ module
+
+# history
+r Reset history
+
+# sensor
+s Show/hide sensors stats
+
+# wifi
+W Show/hide Wifi module
+
+# mode
+0 Enable/disable Irix/Solaris mode
+1 Switch between global CPU and per-CPU stats
+
+# view
+2 Enable/disable left sidebar
+3 Enable/disable the quick look  module
+4 Enable/disable all but quick look and  load module
+5 Enable/disable top menu (QuickLook, CPU, MEM, SWAP  and LOAD)
+9 Switch UI theme between black  and white
+
+# browser
+# In the Glances client browser (accessible through the --browser command line argument):
+ENTER Run the selected server
+UP Up in the servers list
+DOWN Down in the servers list
+q|ESC Quit Glances

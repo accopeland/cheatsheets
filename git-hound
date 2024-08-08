@@ -1,0 +1,15 @@
+# description
+git-hound search for bad stuff in commit (see also pre-commit hooks)
+
+# install
+- https://github.com/ezekg/git-hound
+
+# removing secrets (and big files) from history
+- https://rtyley.github.io/bfg-repo-cleaner/
+
+# docs
+- https://www.claudiobernasconi.ch/2021/06/04/how-to-remove-secrets-from-git-history/
+- https://fabianlee.org/2019/03/24/git-bfg-for-removing-secrets-from-entire-git-history/
+
+# gitignore
+.githound.yml ???

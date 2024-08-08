@@ -1,0 +1,66 @@
+# description
+Notes on the globus data transfer toolkit
+
+# install
+
+# find endpoints
+globus endpoint search dtn
+
+# nersc / perlmutter
+access Perlmutter Scratch ; new endpoint .
+It can be accessed from 6acb4921-e899-4367-bda2-54a351aab227 and is named "NERSC Perlmutter jgi_dna Collab".
+https://app.globus.org/file-manager/collections/6acb4921-e899-4367-bda2-54a351aab227/overview
+
+# activate
+globus endpoint activate 8409a10b-de09-4670-a886-2c0b33f0fe25 #| esnet@globusid.org | ESnet Sun
+
+# ls
+globus ls 8409a10b-de09-4670-a886-2c0b33f0fe25 # esnet@globusid.org | ESnet Sun
+
+# copy -- transfer : only between endpoints
+globus transfer ...
+
+# globus-cli
+https://github.com/globus/globus-cli
+pipx install globus-cli
+globus login --no-local-server (if no X or web server open)
+
+# globus portal ipynb
+git clone https://github.com/globus/globus-sample-data-portal.git
+cd globus-jupyter-notebooks/
+source venv/bin/activate
+pip install -r requirements.txt
+. ./venv/bin/activate
+jupyter-notebook SDK.ipynb
+deactivate
+
+# root trust certificates
+/Applications/Globus Connect Personal.app/Contents/MacOS/etc/ca
+/var/lib/globus-connect-server/grid-security/certificates
+
+# globus-url-copy
+globus-url-copy -cd -r -p 8 -udt -concurrency
+        #
+        -fast
+        -cd
+        -r
+        -vb
+        -tcp-bs 4MB
+        -p 8
+        -udt
+        -concurrency <n>
+
+# gdrive / lbnl (GoogleGlobusDrive) accopeland@globus.id / accopeland@lbl.gov --  does not support team drive
+https://commons.lbl.gov/display/itdivision/GDrive+Access+Via+Globus
+https://commons.lbl.gov/display/google/Google+Drive
+https://github.com/prasmussen/gdrive
+https://wikihub.berkeley.edu/display/istrit/Research+Data+Storage%2C+Part+II%3A+unlimited+storage+on+Google+Drive
+https://www.globus.org/connectors/google-drive
+
+# globus / gdrive
+globus ls -al b6534bbc-5bb1-11e9-bf33-0edbf3a4e7ee
+globus ls -al 6aab24f8-a49e-11e7-adda-22000a92523b
+globus ls 2254580c-a230-456e-afa1-2f823555d32f
+globus ls -l 2254580c-a230-456e-afa1-2f823555d32f:'/External Assembly Projects'
+
+# globus-cli: https://docs.globus.org/cli/examples/

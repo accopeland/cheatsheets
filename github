@@ -1,0 +1,33 @@
+
+# github tokens
+run github_init()
+export GITHUB_TOKEN=gh...
+see https://hub.github.com/hub.1.html#configuration
+curl/w/opt : gh...
+
+# homebrew github token
+HOMEBREW_GITHUB_TOKEN=
+see brew_init()
+
+# cp git repo to github
+create repo name @ github
+# on local
+create dir ; add files; create gitignore;
+echo "# acc-dotfiles" >> README.md
+git init
+git add  .
+git commit -m "first commit"
+git remote add origin https://github.com/accopeland/acc-dotfiles.git
+git push -u origin master
+# edit
+git commit -a -m "new comments"
+# repeat
+
+#  git repo
+git config --global url."https://".insteadOf git://
+git config --global url.https://github.com/.insteadOf git://github.com/
+
+# ghcr.io
+$ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+> Login Succeeded
+docker push ghcr.io/NAMESPACE/IMAGE_NAME:latest  ##Pushing container images

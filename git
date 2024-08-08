@@ -2,49 +2,50 @@
 tags: [ vcs ]
 ---
 # To set your identity:
-git config --global user.name <name>
-git config --global user.email <email>
+$ git config --global user.name <name>
+$ git config --global user.email <email>
+or edit ~/.gitconfig
 
 # To set your editor:
-git config --global core.editor <editor>
+$ git config --global core.editor <editor>
 
 # To enable color:
-git config --global color.ui true
+$ git config --global color.ui true
 
 # To stage all changes for commit:
-git add --all
+$ git add --all
 
 # To stash changes locally, this will keep the changes in a separate changelist
 # called stash and the working directory is cleaned. You can apply changes
 # from the stash anytime
-git stash
+$ git stash
 
 # To stash changes with a message:
-git stash push -m <message>
+$ git stash push -m <message>
 
 # To list all the stashed changes:
-git stash list
+$ git stash list
 
 # To apply the most recent change and remove the stash from the stash list:
-git stash pop
+$ git stash pop
 
 # To apply any stash from the list of stashes. This does not remove the stash
 # from the stash list
-git stash apply stash@{6}
+$ git stash apply stash@{6}
 
 # To commit staged changes:
-git commit -m <message>
+$ git commit -m <message>
 
 # To edit previous commit message:
-git commit --amend
+$ git commit --amend
 
 # Git commit in the past
-git commit --date="`date --date='2 day ago'`"
-git commit --date="Jun 13 18:30:25 IST 2015"
+$ git commit --date="`date --date='2 day ago'`"
+$ git commit --date="Jun 13 18:30:25 IST 2015"
 # more recent versions of Git also support --date="2 days ago" directly
 
 # To change the date of an existing commit:
-git filter-branch --env-filter \
+$ git filter-branch --env-filter \
     'if [ $GIT_COMMIT = 119f9ecf58069b265ab22f1f97d2b648faf932e0 ]
      then
          export GIT_AUTHOR_DATE="Fri Jan 2 21:38:53 2009 -0800"
@@ -52,163 +53,444 @@ git filter-branch --env-filter \
      fi'
 
 # To remove staged and working directory changes:
-git reset --hard
+$ git reset --hard
 
 # To go 2 commits back:
-git reset --hard HEAD~2
+$ git reset --hard HEAD~2
 
 # Checkout the fb branch, and rebase from <remote>
-git reset --hard <remote>/<branch>
+$ git reset --hard <remote>/<branch>
 
 # To revert first/initial commit on a branch:
 # Running git reset --hard HEAD~1 will give error:
 # fatal: ambiguous argument 'HEAD~1': unknown revision or path not in the working tree.
-git update-ref -d HEAD
+$ git update-ref -d HEAD
 
 # To remove untracked files:
-git clean -f -d
+$ git clean -f -d
 
 # To remove untracked and ignored files:
-git clean -f -d -x
+$ git clean -f -d -x
+
+# remove 'deleted' files e.g. after an 'rm'
+$ git add -u # bulk operation
 
 # To push to the tracked master branch:
-git push origin master
+$ git push origin master
 
 # To push to a specified repository:
-git push git@github.com:<username>/<repo>.git
+$ git push git@github.com:<username>/<repo>.git
 
 # Tags: Tag a commit
-git tag -a <tag> <commit> -m "<commit message>"
+$ git tag -a <tag> <commit> -m "<commit message>"
 
 # Tags: To push a tag to remote:
-git push origin <tagname>
+$ git push origin <tagname>
 
 # Tags: To delete a tag <tagname> on remote
-git push --delete origin <tagname>
+$ git push --delete origin <tagname>
 
 # Tags: To delete a tag locally
-git tag -d <tagname>
+$ git tag -d <tagname>
 
 # To force a push:
-git push -f
+$ git push -f
 
 # Branches: To delete the branch <branch>:
-git branch -D <branch>
+$ git branch -D <branch>
 
 # Branches: To delete a local <branch>:
-git branch -d <branch>
+$ git branch -d <branch>
 
 # Branches: To delete a remote branch <branch>:
-git push --delete origin <branch>
+$ git push --delete origin <branch>
 
 # Branches: To delete all branches on remote that are already merged:
-git branch --merged | egrep -v "(^*|main|dev)" | xargs git branch -d
+$ git branch --merged | egrep -v "(^*|main|dev)" | xargs git branch -d
 
 # Branches: To make an exisiting branch track a remote branch:
-git branch -u upstream/foo
+$ git branch -u upstream/foo
 
 # To see who commited which line in a file:
-git blame <file>
+$ git blame <file>
 
 # To sync a fork with the master repo:
-git remote add upstream git@github.com:<username>/<repo>.git # Set a new repo
-git remote -v                                                # Confirm new remote repo
-git fetch upstream                                           # Get branches
-git branch -va                                               # List local - remote branches
-git checkout master                                          # Checkout local master branch
-git checkout -b new_branch                                   # Create and checkout a new branch
-git merge upstream/master                                    # Merge remote into local repo
-git show 83fb499                                             # Show what a commit did.
-git show 83fb499:path/fo/file.ext                            # Shows the file as it appeared at 83fb499.
-git diff branch_1 branch_2                                   # Check difference between branches
-git log                                                      # Show all the commits
-git status                                                   # Show the changes from last commit
+$ git remote add upstream git@github.com:<username>/<repo>.git # Set a new repo
+$ git remote -v                                                # Confirm new remote repo
+$ git fetch upstream                                           # Get branches
+$ git branch -va                                               # List local - remote branches
+$ git checkout master                                          # Checkout local master branch
+$ git checkout -b new_branch                                   # Create and checkout a new branch
+$ git merge upstream/master                                    # Merge remote into local repo
+$ git show 83fb499                                             # Show what a commit did.
+$ git show 83fb499:path/fo/file.ext                            # Shows the file as it appeared at 83fb499.
+$ git diff branch_1 branch_2                                   # Check difference between branches
+$ git log                                                      # Show all the commits
+$ git status                                                   # Show the changes from last commit
 
 # To view the commit history of a set of files:
-git log --pretty=email --patch-with-stat --reverse --full-index -- Admin\*.py > Sripts.patch
+$ git log --pretty=email --patch-with-stat --reverse --full-index -- Admin\*.py > Sripts.patch
 
 # To import commits from another repo:
-git --git-dir=../some_other_repo/.git format-patch -k -1 --stdout <commit SHA> | git am -3 -k
+$ git --git-dir=../some_other_repo/.git format-patch -k -1 --stdout <commit SHA> | git am -3 -k
 
 # To view commits that will be pushed:
-git log @{u}..
+$ git log @{u}..
 
 # To view changes that are new on a feature branch:
-git log -p feature --not master
-git diff master...feature
+$ git log -p feature --not master
+$ git diff master...feature
 
 # To perform an interactive rebase for the prior 7 commits:
-git rebase -i @~7
+$ git rebase -i @~7
 
 # To diff files WITHOUT considering them a part of git:
 # This can be used to diff files that are not in a git repo!
-git diff --no-index path/to/file/A path/to/file/B
+$ git diff --no-index path/to/file/A path/to/file/B
 
 # To pull changes while overwriting any local commits:
-git fetch --all
-git reset --hard origin/master
+$ git fetch --all
+$ git reset --hard origin/master
 
 # To pull down a remote branch, but rebase any locally differing commits onto
 # the top of the incoming commits:
-git pull <remote> <branch> --rebase
+$ git pull <remote> <branch> --rebase
 
 # To update all submodules:
-git submodule update --init --recursive
+$ git submodule update --init --recursive
 
 # To perform a shallow clone to only get latest commits:
 # (helps save data when cloning large repos)
-git clone --depth 1 <remote-url>
+$ git clone --depth 1 <remote-url>
 
 # To unshallow a clone:
-git pull --unshallow
+$ git pull --unshallow
 
 # To create a bare branch (one that has no commits on it):
-git checkout --orphan branch_name
+$ git checkout --orphan branch_name
 
 # To checkout a new branch from a different starting point:
-git checkout -b master upstream/master
+$ git checkout -b master upstream/master
 
 # To remove all stale branches (ones that have been deleted on remote): So if
 # you have a lot of useless branches, delete them on Github and then run this:
-git remote prune origin
+$ git remote prune origin
 
 # To prune all remotes at once:
-git remote prune $(git remote | tr '\n' ' ')
+$ git remote prune $(git remote | tr '\n' ' ')
 
 # Revisions can also be identified with :/text
 # So, this will show the first commit that has "cool" in their message body
-git show :/cool
+$ git show :/cool
+
+# undo -- see https://github.blog/2015-06-08-how-to-undo-almost-anything-with-git/
 
 # To undo parts of last commit in a specific file:
-git checkout -p HEAD^ -- /path/to/file
+$ git checkout -p HEAD^ -- /path/to/file
 
 # To revert a commit and keep the history of the reverted change as a separate revert commit:
-git revert <commit SHA>
+$ git revert <commit SHA>
 
 # To pick a commit from a branch to current branch. This is different than
 # merge as this just applies a single commit from a branch to current branch:
-git cherry-pick <commit SHA1>
+$ git cherry-pick <commit SHA1>
 
 # Change author of a commit:
-git commit --amend --author="Author Name <email@address.com>"
+$ git commit --amend --author="Author Name <email@address.com>"
 
 # The GPG key used for signing your commits
-git config --global user.signingkey 0A46826A
+$ git config --global user.signingkey 0A46826A
 
 # Sign new tags:
-git tag -s v1.5 -m 'my signed 1.5 tag'
+$ git tag -s v1.5 -m 'my signed 1.5 tag'
 
 # Sign a commit:
-git commit -a -S -m 'Signed commit'
+$ git commit -a -S -m 'Signed commit'
 
 # check any signatures it finds and list them in its output:
-git log --pretty="format:%h %G? %aN %s"
+$ git log --pretty="format:%h %G? %aN %s"
 
 # Defined the key to use for signing commits:
-git config user.signingkey [KEYID]
+$ git config user.signingkey [KEYID]
 
 # Set signing of commits globally:
-git config --global commit.gpgsign true
+$ git config --global commit.gpgsign true
 
 # To list unstracked files:
-git ls-files --others --exclude-standard
+$ git ls-files --others --exclude-standard
+
+# credentials
+brew tap microsoft/git
+brew install --cask git-credential-manager-core
+brew upgrade git-credential-manager-core
+$ git credential-manager configure
+
+# Error: warning: remote HEAD refers to nonexistent ref, unable to checkout
+Fix: git clone -b master <repo>
+
+# push operations -- bypass gitlab UI
+$ git push \
+        -o merge_request.create \
+        -o merge_request.target=dev \
+        -o merge_request.merge_when_pipeline_succeeds \
+        -o merge_request.remove_source_branch \
+        --set-upstream origin dev-patch1
+
+# forgot to create branch -- https://lostechies.com/derickbailey/2010/06/08/git-d-oh-i-meant-to-create-a-new-branch-first/
+ git branch mytopicbranch
+ git reset --hard origin/master   ##@ git reset 2f7efb32 --hard
+
+ # Error: fatal: Not possible to fast-forward, aborting.
+ # Fix:
+
+# Error: fatal: not a git repository (or any parent up to mount point /)
+# Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+# Fix: not in a git dir
+
+# gitignore
+see ~/scripts/gitignore-
+
+# big files
+java -jar bfg.jar --strip-blob-bigger-than 200M my-repo.git
+
+# create commit from diffs
+$ git checkout branch_a #Start out on the branch with the code we want
+$ git branch tmp #create tmp branch same as branch_a (so that we don't change our local branch_a state during the operation)
+$ git checkout tmp  #working directory has all the code that we want, on tmp branch
+$ git reset --soft branch_b # Change head to branch we want. All delta btwn current source and branch_b now staged for commit
+$ git checkout branch_b  # Move away from tmp, so our commit will go directly to branch_b
+$ git status  # Now you can examine the proposed commit
+$ git commit  # Add the delta we want to the branch
+$ git diff branch_A..branch_b  # Sanity check that the branches have the same content now (should return an empty line)
+$ git branch -D tmp  # Remove tmp, we don't need it anymore
+
+# fetch v pull -- http://longair.net/blog/2009/04/16/git-fetch-and-merge/
+$ git fetch command only copies changes into your local Git repo.
+$ git pull copies changes from a remote into your working directory, and merges while git fetch does not
+
+# merge
+$ git merge
+$ git status
+$ git diff # when merge fails to see issues
+edit as needed
+$ git diff what/ever/is/messed/up
+$ git merge
+
+# mergetool
+$ git mergetool
+
+# https://gist.github.com/5310/d46b4d7fd69741a118717d28f2d9d789
+# name of the current banch and nothing else (for automation)
+$ git rev-parse --abbrev-ref HEAD
+
+# all commits that your branch have that are not yet in master
+$ git log master..<HERE_COMES_YOUR_BRANCH_NAME>
+
+# setting up a character used for comments
+$ git config core.commentchar <HERE_COMES_YOUR_COMMENT_CHAR>
+
+# fixing fatal: Could not parse object after unsuccessful revert
+$ git revert --quit
+
+# view diff with inline changes
+$ git diff --word-diff=plain master
+
+# view quick stat of a diff
+$ git diff --shortstat master
+$ git diff --numstat master
+$ git diff --dirstat master
+
+# undo last just made commit
+$ git reset HEAD~
+
+# list last 20 hashes in reverse
+$ git log --format="%p..%h %cd %<(17)%an %s" --date=format:"%a %m/%d %H:%M" --reverse -n 20
+
+# list commits between dates
+$ git log --format="%p..%h %cd %<(17)%an %s" --date=format:"%a %m/%d %H:%M" --reverse --after=2016-11-09T00:00:00-05:00 --before=2016-11-10T00:00:00-05:00
+
+# try a new output for diffing
+$ git diff --compaction-heuristic ...
+          --color-words ...
+
+#enable more thorough comparison
+$ git config --global diff.algorithm patience
+
+# restoring a file from a certain commit relative to the latest
+$ git checkout HEAD~<NUMBER> -- <RELATIVE_PATH_TO_FILE>
+
+# restoring a file from a certain commit relative to the given commit
+$ git checkout <COMMIT_HASH>~<NUMBER> -- <RELATIVE_PATH_TO_FILE>
+
+# restoring a file from a certain commit
+$ git checkout <COMMIT_HASH> -- <RELATIVE_PATH_TO_FILE>
+
+# creating a diff file from unstaged changes for a specific folder
+$ git diff -- <RELATIVE_PATH_TO_FOLDER> changes.diff
+
+# applying a diff file
+  go to the root directory of your repository
+    run:
+$ git apply changes.diff
+
+# show differences between last commit and currrent changes:
+$ git difftool -d
+
+# referring to:
+last commits ... HEAD~1 ...
+last 3 commits ... HEAD~3 ...
+
+# show the history of changes of a file
+$ git log -p -- ./Scripts/Libs/select2.js
+
+#ignoring whitespaces
+$ git rebase --ignore-whitespace <BRANCH_NAME>
+
+#pulling for fast-forward only (eliminating a chance for unintended merging)
+$ git pull --ff-only
+
+# list of all tags
+$ git fetch
+$ git tag -l
+
+# archive a branch using tags
+$ git tag <TAG_NAME> <BRANCH_NAME>
+$ git push origin --tags
+you can delete your branch now
+
+# get a tagged branch
+$ git checkout -b <BRANCH_NAME> <TAG_NAME>
+
+# list of all branches that haven't been merged to master
+$ git branch --no-merge master
+
+# enable more elaborate diff algorithm by default
+$ git config --global diff.algorithm histogram
+
+# list of all developers
+$ git shortlog -s -n -e
+
+# display graph of branches
+$ git log --decorate --graph --all --date=relative
+or
+$ git log --decorate --graph --all --oneline
+
+ #remembering the password
+$ git config --global credential.helper store
+$ git fetch
+the first command tells git to remember the credentials that you are going to provide for the second command
+
+# path to the global config
+C:\Users\Bykov\.gitconfig
+
+# example of a global config
+[user]
+    email = *****
+    name = Aleksey Bykov
+    password = *****
+[merge]
+    tool = p4merge
+[mergetool "p4merge"]
+    cmd = p4merge.exe \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
+    path = \"C:/Program Files/Perforce\"
+    trustExitCode = false
+[push]
+    default = simple
+[diff]
+    tool = meld
+    compactionHeuristic = true
+[difftool "p4merge"]
+    cmd = p4merge.exe \"$LOCAL\" \"$REMOTE\"
+    path = C:/Program Files/Perforce/p4merge.exe
+[difftool "meld"]
+    cmd = \"C:/Program Files (x86)/Meld/Meld.exe\" \"$LOCAL\" \"$REMOTE\"
+    path = C:/Program Files (x86)/Meld/Meld.exe
+
+# viewing differences between current and other branch
+$ git difftool -d BRANCH_NAME
+
+#viewing differences between current and stash
+$ git difftool -d stash
+
+# viewing differences between several commits in a diff tool
+$ git difftool -d HEAD@{2}...HEAD@{0}
+
+# view all global settings
+$ git config --global -l
+
+# delete tag
+$ git tag -d my-tag
+$ git push origin :refs/tags/my-tag
+
+# pushing tags
+$ git push --tags
+
+# checking the history of a file or a folder
+$ git log -- <FILE_OR_FOLDER>
+
+# disabling the scroller
+$ git --no-pager <...>
+
+# who pushed last which branch
+$ git for-each-ref --format="%(committerdate) %09 %(refname) %09 %(authorname)"
+
+# deleting remote branch
+$ git push origin :<BRANCH_NAME>
+
+# deleting remote branch localy
+$ git branch -r -D <BRANCH_NAME>
+
+# or to sync with the remote
+$ git fetch --all --prune
+
+# deleting local branch
+$ git branch -d <BRANCH_NAME>
+
+# list actual remote branchs
+$ git ls-remote --heads origin
+
+# list all remote (fetched) branches
+$ git branch -r
+
+# list all local branches
+$ git branch -l
+
+# find to which branch a given commit belongs
+$ git branch --contains <COMMIT>
+
+# updating from a forked repository
+$ git remote add upstream https://github.com/Microsoft/TypeScript.git
+$ git fetch upstream
+$ git rebase upstream/master
+
+# Error: warning: remote HEAD refers to nonexistent ref, unable to checkout
+# Fix: git clone -b <master> <url>
+
+# convert large files
+$ bfg --convert-to-git-lfs *.fastq.gz  && git reflog expire --expire=now --all && git gc --prune=now --aggressive
+
+# view blob
+$ git cat-file blob 040cc2784a647c961
+
+# submodules workflow
+$ git clone --recurse-submodules <repository-url> # Clone main repository, including submodules.
+$ git submodule update --init --recursive # ensure all submodules are up-to-date.
+$ vim  ... # Make necessary changes in the main repository.
+$ git add <files> # Commit changes.
+$ git commit -m "Describe changes in the main repo"
+$ cd main/repo/submodule1 # Go to submodule dir to make changes. [Checkout New Branch (Optional):]
+$ git checkout -b <new-branch> # Make changes in the submodule.
+$ git add <files> # Commit changes in the submodule.
+$ git commit -m "Describe changes in the submodule"
+$ [git push origin <new-branch>]
+$ cd main/repo # Update submodule refs in main repo....Return to the root directory of the main repository.
+$ git add <submodule-path> #Update the main repository to point to the new commit in the submodule.
+$ git commit -m "Update submodule to new commit"
+##===Repeat for all  Submodules
+## Create Patches (If Needed)
+$ git format-patch -1 <commit-hash> -o ../patches/  # Generate patches for the changes made in each submodule.
+$ git format-patch -1 <commit-hash> -o ./patches/   #Generate patches for the main repository changes.
+$ git submodule update --remote --merge  # Regularly synchronize submodules with their remote repositories.
+
+# change remote
+$ git remote set-url origin https://github.com/accopeland/spack.git

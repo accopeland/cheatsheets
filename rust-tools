@@ -1,0 +1,17 @@
+# ripgrep
+brew install ripgrep
+giithub:// ...
+cargo install ripgrep
+
+# fd
+github://...
+cargo install fd
+
+# llvmenv
+cargo install llvmenv
+
+# frawk
+cargo install frawk
+https://github.com/ezrosent/frawk
+
+# rustup

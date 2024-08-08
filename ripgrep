@@ -1,0 +1,60 @@
+# description
+ripgrep fast grep for code in rust
+
+# install
+cargo install ripgrep
+brew install ripgrep
+
+# docs
+
+# config
+
+# alterntatives
+http://grep.app
+grep
+ack
+sift - works w binary files; supports multiline search, regex, exclude lists, lookahead/behind, (6x faster than grep)
+pt - platinum searcher
+ag - silver searcher
+rg - ripgrep (rust)
+nrgrep
+agrep
+fgrep
+sgrep  - search in structured text (html, xml, ...)
+semgrep
+ugrep
+
+# speed
+rg >> ag > git grep > sift > pt > ack
+
+# searching for strings in code and files
+ugrep (https://github.com/Genivia/ugrep)
+ack
+pt // much faster than ack
+rg much faster than pt
+
+# rg depth: rg --max-depth 1
+
+# rg colors
+red, blue, green, cyan, magenta, yellow, white and black. Styles are limited to nobold, bold, nointense, intense, nounderline or underline.
+flag is {type}:{attribute}:{value}.
+	{type} should be one of path, line, column or match.
+	{attribute} can be fg, bg or style.
+	{value} is either a color (for fg and bg) or a text style. A special format, {type}:none, will clear all color settings for {type}.
+#For example, the following command will change the match color to magenta and the background color for line numbers to yellow:
+rg --colors 'match:fg:magenta' --colors 'line:bg:yellow' foo.
+
+# matching / not maching by file type:
+rg -cH ' gi ' -T=java -T=sh -T=txt jgi-rqc*
+
+# ignore files:
+rg  -g '!boost*' -cH stat
+
+# exclude:
+rg -t perl -l -g '!*legacy'  jgi-rqc*
+
+# find files :
+rg -cH <name>
+
+# regex
+https://docs.rs/regex/1.10.3/regex/#syntax

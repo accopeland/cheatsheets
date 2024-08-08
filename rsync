@@ -29,4 +29,7 @@ rsync -avz --rsync-path="sudo rsync" user@<src> <dest>
 
 # Rsync only symlinks and preserve them as symlinks (dont follow them):
 find /path/to/files -type l -print | \
-  rsync -av --files-from=- /path/to/files user@targethost:/dest_path
+rsync -av --files-from=- /path/to/files user@targethost:/dest_path
+
+# faster  -- use aes*, check ciphers w ssh -Q cipher
+rsync -aHAXxv --numeric-ids --progress -e "ssh -T -c 3des-cbc  -o Compression=no -x"  copeland@dtn03.nersc.gov:/global/dna/dm_archive/sdm/pacbio/00/28/47/pbio-2847.29248.bc1016_BAK8B_OA--bc1016_BAK8B_OA.ccs.bam r.bam

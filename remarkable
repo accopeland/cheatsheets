@@ -1,0 +1,70 @@
+# description
+Notes on remarkable 2 tablet
+
+# docs
+
+# ssh
+Settings > Help > Copyrights and licenses > General information (scroll down).
+
+# recovery
+https://remarkable.guide/tech/recovery.html#remarkable-2-recovery
+
+# IP address
+Connect your device to Wifi, or with a USB cable to your computer.
+On your device, open the Menu from the main page.
+Select “Settings”. -> Help -> “Copyright and licenses”.
+You will find your password and the IP addresses you can use to access your device underneath the “GPLv3 Compliance” header.
+
+# pocket sync . . .
+
+# gdrive sync
+        code:   https://github.com/bsdz/google-drive-remarkable-sync
+        googleapp: https://script.google.com/home/projects/1GkpkUZEXeIgtTwa0WK2qsy2aGRec-_Vvq98AQOUw_SZPSn5op0qR4Bxa/edit
+        1timecode:  https://my.remarkable.com/device/connect/mobile
+
+# xochitl
+QT-App which is a toolchain/lib for developing windows and works on most platforms. This app basically runs in fullscreen on the reMarkable (though there isn't really a window manager to begin with).
+
+# 3rd party
+https://remarkablewiki.com/devel/start
+https://github.com/reHackable/awesome-reMarkable
+
+# xochitl
+        $ systemctl disable --now xochitl
+        $ systemctl disable --now remux
+        $ systemctl enable --now tarnish
+
+# koboreader
+        /home/root/.local/share/remarkable/xochitl
+        # Note: reMarkable firmware updates will delete KOReader's systemd units so you will have to run
+        # cp -v koreader/*.service /etc/systemd/system/ again after every update
+
+# dvk patches
+        # install
+        sh -c "$(wget https://raw.githubusercontent.com/ddvk/remarkable-hacks/master/patch.sh -O-)"
+        # remove
+        systemctl stop xochitl
+        rm -fr .cache/remarkable/xochitl/qmlcache/*
+        cp /home/rmhacks/xochitl.version /usr/bin/xochitl #where version is the current device version
+        systemctl start xochitl
+
+# onetime code: https://my.remarkable.com/connect/mobile
+
+# tools
+        https://github.com/reHackable/awesome-reMarkable
+        https://github.com/GjjvdBurg/paper2remarkable
+        google sync: https://github.com/bsdz/google-drive-remarkable-sync
+        -- https://script.google.com/home (00GDrive)
+        https://github.com/glidergeek/pocket2rm
+
+# note / reading / bookmarking
+        pocket
+        feedly
+        instapaper
+        innoreader / pocket
+        roam
+        notion
+        readwise / kindle notes
+        anki
+        remarkable tablet
+        paperpile

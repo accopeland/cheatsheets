@@ -1,0 +1,164 @@
+# rmlint
+Find duplicates and create script to rm them, fast
+rmlint finds space waste and other broken things on your filesystem and offers to remove it.
+It is especially good at finding duplicates and offers a big variety of options to handle them.
+
+# docs
+https://rmlint.readthedocs.io/en/latest/tutorial.html#copying-unique-files
+
+# install
+brew install rmlint
+
+# see also
+jdupes / fdupes
+ssdeep
+
+# usage
+  rmlint [OPTION…] [TARGET_DIR_OR_FILES …] [//] [TAGGED_TARGET_DIR_OR_FILES …] [-]
+  Main opts
+  -d, --max-depth=N                    Specify max traversal depth
+  -S, --rank-by=[dlamprxDLAMPRX]       Select originals by given  criteria
+  -y, --sort-by=[moansMOANS]           Sort rmlint output by given criteria
+  -T, --types=T                        Specify lint types
+  -s, --size=m-M                       Specify size limits
+  -o, --output=FMT[:PATH]              Add output (override default)
+  -O, --add-output=FMT[:PATH]          Add output (add to defaults)
+  -n, --newer-than-stamp=PATH          Newer than stamp file
+  -N, --newer-than=STAMP               Newer than timestamp
+  -c, --config=FMT:K[=V]               Configure a formatter
+  -C, --xattr=                         Enable xattr based caching
+  -g, --progress                       Enable progressbar
+  -v, --loud                           Be more verbose (-vvv for much more)
+  -V, --quiet                          Be less verbose (-VVV for much less)
+  -Y, --replay=path/to/rmlint.json     Re-output a json file
+  --equal=PATHS                        Test for equality of PATHS
+  -W, --no-with-color                  Be not that colorful
+  -r, --hidden                         Find hidden files
+  -f, --followlinks                    Follow symlinks
+  -F, --no-followlinks                 Ignore symlinks
+  -p, --paranoid                       Use more paranoid hashing
+  -x, --no-crossdev                    Do not cross mountpoints
+  -k, --keep-all-tagged                Keep all tagged files
+  -K, --keep-all-untagged              Keep all untagged files
+  -m, --must-match-tagged              Must have twin in tagged dir
+  -M, --must-match-untagged            Must have twin in untagged dir
+  -b, --match-basename                 Only find twins with same basename
+  -e, --match-extension                Only find twins with same extension
+  -i, --match-without-extension        Only find twins with same basename minus extension
+  -D, --merge-directories              Find duplicate directories
+  -j, --honour-dir-layout              Only find directories with same file layout
+  -z, --perms=[RWX]+                   Only use files with certain permissions
+  -L, --no-hardlinked                  Ignore hardlink twins
+  --keep-hardlinked                    Keep hardlink that are linked to any original
+  --partial-hidden                     Find hidden files in duplicate folders only
+  -Z, --mtime-window=T                 Consider duplicates only equal when mtime differs at max. T seconds
+  --backup                             Do create backups of previous result files
+  --dedupe                             Dedupe matching extents from source to dest (if filesystem supports)
+  --dedupe-xattr                       Check extended attributes to see if the file is already deduplicated
+  --dedupe-readonly                    (--dedupe option) even dedupe read-only snapshots (needs root)
+  --is-reflink                         Test if two files are reflinks (share same data extents)
+  --gui                                If installed, start the optional gui with all following args
+  --hash                               Work like sha1sum for all supported hash algorithms (see also --hash --help)
+  -q, --clamp-low=P                    Limit lower reading barrier
+  -Q, --clamp-top=P                    Limit upper reading barrier
+
+# change def of original vs duplicate: https://rmlint.readthedocs.io/en/latest/tutorial.html#paranoia-mode
+-S <option>:
+m	keep lowest mtime (oldest)
+M	keep highest mtime (newest)
+a	keep first alphabetically
+A	keep last alphabetically
+p	keep first named path
+P	keep last named path
+d	keep path with lowest depth
+D	keep path with highest depth
+l	keep path with shortest basename
+L	keep path with longest basename
+r	keep paths matching regex
+R	keep path not matching regex
+x	keep basenames matching regex
+X	keep basenames not matching regex
+h	keep file with lowest hardlink count
+H	keep file with highest hardlink count
+o	keep file with lowest number of hardlinks outside of the paths traversed by rmlint.
+O	keep file with highest number of hardlinks outside of the paths traversed by rmlint.
+
+# by size
+
+# flagging origninals
+Sometimes you have a path that only contains originals (or backups). You can flag directories using separator (//) between the duplicate and original paths.
+Every path after the // is considered “tagged” and will be treated as an original. Tagging always takes precedence over the -S options above.
+e.g.
+$ rmlint a // b
+ls b/file
+rm a/file
+
+# duplicate dirs
+rmlint fake -D -S a
+
+# Deduplicate all png pictures that were not modified in the last 24 hours:
+$ find ~ -iname '*.png' ! -mtime 0 | rmlint -
+
+# only check files between 20 MB and 1 Gigabyte:
+$ rmlint --size 20M-1G
+# short form (-s) works just as well:
+$ rmlint -s 20M-1G
+# only check files bigger than 4 kB:
+$ rmlint -s 4K
+# only check files smaller than 1234 bytes:
+$ rmlint -s 0-1234
+# Find empty files and handle them as duplicates:
+$ rmlint -T df --size 0-1
+
+# uniques: given a folder from which you want to extract one copy of each file by content; unique files, AND also original files - but not duplicates
+# This command produces two files:
+#  - unique_files: Files that have a unique checksum in the directory.
+#  - original_files: Files that have the "is_original" field set to true in the json output.
+# The '.[1:-1]' part is for filtering the header and footer part of the json response.
+$ rmlint t -o json -o uniques:unique_files |  jq -r '.[1:-1][] | select(.is_original) | .path' | sort > original_files
+
+
+# large files
+Consecutive runs of rmlint can be speed up by using --xattr.
+$ rmlint large_dataset/ --xattr
+$ rmlint large_dataset/ --xattr
+
+# replay
+$ rmlint real-large-dir --progress
+# ... lots of output ...
+$ cp rmlint.json large.json  # Save json, so we don't overwrite it.
+$ rmlint --replay large.json real-large-dir
+# ... same output, just faster ...
+$ rmlint --replay large.json --size 2M-512M --sort-by sn real-large-dir
+# ... filter stuff; and rank by size and by size and groupsize ....
+$ rmlint --replay large.json real-large-dir/subdir
+# ... only show stuff in /subdir ...
+
+# Find all files on /media/portable that can be safely deleted:
+  $ rmlint --keep-all-tagged --must-match-tagged /media/portable // ~
+  # check the shellscript looks ok:
+  $ less ./rmlint.sh # or use gedit or any other viewer/editor
+  # run the shellscript to delete the redundant backups
+  $ ./rmlint.sh
+  # run again (to delete empty dirs)
+  $ rmlint -km /media/portable // ~
+  $ ./rmlint.sh
+  # see what files are left:
+  $ tree /media/portable
+  # recover any files that you want to save, then you can safely reformat the drive
+
+# types: -T --types="list" (default: defaults):
+"list" is a comma-sep lint types or groups (other seps like semicolon or space also work). One of the following can be specified at the beginning of the list:
+all: Enables all lint types.
+defaults: Enables all lint types, but nonstripped.
+minimal: defaults minus emptyfiles and emptydirs.
+minimaldirs: defaults minus emptyfiles, emptydirs and duplicates, but with duplicatedirs.
+none: Disable all lint types [default].
+Any of the following lint types can be added individually, or deselected by prefixing with a -:
+badids, bi: Find files with bad UID, GID or both.
+badlinks, bl: Find bad symlinks pointing nowhere valid.
+emptydirs, ed: Find empty directories.
+emptyfiles, ef: Find empty files.
+nonstripped, ns: Find nonstripped binaries.
+duplicates, df: Find duplicate files.
+duplicatedirs, dd: Find duplicate directories.

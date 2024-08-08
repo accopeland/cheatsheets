@@ -1,0 +1,51 @@
+
+# random
+
+# dd
+# Read from {/dev/urandom} 2*512 Bytes and put it into {/tmp/test.txt}
+# Note: At the first iteration, we read 512 Bytes.
+# Note: At the second iteration, we read 512 Bytes.
+dd if=/dev/urandom of=/tmp/test.txt count=2 bs=512
+
+# sort - sort a file randomly:
+sort -R <file>
+
+#julia
+# N.B. have to force rd = rand(20000,1) to be a vector
+# N.B. range works for Date but need to specify step = Day()
+julia> df = DataFrame(Date = sort(rand(Date(2020,1,1,):Day(1):Date(2020,11,11),20000)), RawHrs =rd[:,1])
+julia> sleep(Math.random() * 3 + 2); // Random sleep between 2s and 5s
+
+# create random hash
+openssl rand -base64 10
+openssl rand -base64 12
+shuf -zer -n20  {A..Z} {a..z} {0..9}
+tr -dc 'A-Za-z0-9!"#$%&'\''()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 13  ; echo
+head /dev/urandom | tr -dc A-Za-z0-9 | head -c10
+https://onlinehashtools.com/generate-random-sha256-hash
+
+# http://createrandom.com/md5
+
+# random numbers
+$ od -An -N2 -i /dev/random
+$ echo $RANDOM
+$(( ( RANDOM % 10 )  + 1 ))
+grep -m1 -ao '[0-9]' /dev/urandom | sed s/0/10/ | head -n1
+
+# create large test file ;
+dd if=/dev/RANDOM of=bigfile bs=1m count=1k
+dd of=bigassfile bs=1M count=0 seek=10000
+truncate -s 10G foo
+fallocate -s 5G bar
+mkfile 10G bigfile
+
+# sql / postgres
+CREATE OR REPLACE FUNCTION random_between(low INT ,high INT) RETURNS INT AS
+$$
+BEGIN
+   RETURN floor(random()* (high-low + 1) + low);
+END;
+$$ language 'plpgsql' STRICT;
+
+# R
+sample_frac(df,rate,replace=TRUE) # random sample

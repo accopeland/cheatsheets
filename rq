@@ -1,0 +1,23 @@
+# description
+Another record format parser / query tool written in rust
+Record Query - A tool for doing record analysis and transformation
+
+# docs
+https://github.com/dflemstr/rq
+
+# install
+cargo install record-query
+curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git dflemstr/rq
+
+# formats
+Format	Read	Write
+Apache Avro	✔️	✔️
+CBOR	✔️	✔️
+JSON	✔️	✔️
+MessagePack	✔️	✔️
+Google Protocol Buffers	✔️	✖️
+YAML	✔️	✔️
+TOML	✔️	✔️
+Raw (plain text)	✔️	✔️
+CSV	✔️	✔️
+

@@ -1,0 +1,195 @@
+# description
+yet another attempt to manage python installs and environments in rust
+automatically install Python interpreters, install packages from package indexes, manage virtualenvs behind the scenes and more.
+
+# install
+curl -sSf https://rye-up.com/get | bash
+
+# docs
+https://rye-up.com/guide/shims/
+
+# config
+rye config --show-path
+~/.rye/config.toml
+RYE_HOME
+
+# config.toml
+file that influences how Rye operates. Today very little configuration is available there.
+For available config keys see Config File.
+
+# /self
+Rye uses a lot of Python tools internally. These are maintained in an internal virtualenv stored in this location.
+
+# /py
+In this folder Rye stores the different toolchains. Normally those are folders containing downloaded Python distributions, but they can also be symlinks or special reference files.
+
+# /shims
+This folder contains shim binaries. These binaries are for instance the python executable which automatically proxies to the current virtualenv or globally installed tools.
+
+# usage
+rye init myproj
+cd myproj
+rye sync
+rye add "flask>=2.0"
+rye list
+rye remove flask
+rye add black
+rye sync
+rye run black
+. .venv/bin/activate
+deactivate
+
+# inspect project
+rye show
+
+# run
+rye run myproj
+
+# executable projects
+rye init --script my-project
+cd my-project
+
+# update
+rye self update
+
+# uninstall
+rye self uninstall
+
+
+# virtual
+rye_init
+rye init --virtual
+rye add mkdocs
+rye sync
+rye run mkdocs
+
+# installing deps (sync, lock)
+# Rye supports two systems to manage dependencies: uv and pip-tools.
+# currently defaults to pip-tools but can use uv ( uv will become the default choice once it stabilzes as it offers significantly better performance.)
+# In order to download dependencies rye creates two files ('requirements.lock' and 'requirements-dev.lock').
+# These are not real lockfiles but they fulfill a similar purpose until a better solution has been implemented.
+
+# sync
+# update lockfiles as well as the virtualenv. If you only want to update the lockfiles, then rye lock can be used.
+#
+
+# lock
+#
+
+# workspaces
+# feature allowing work with multiple pkgs that have dependencies to each other.
+# A workspace is declared by setting the tool.rye.workspace key a pyproject.toml. Afterwards all projects within that workspace share a singular virtualenv.
+
+# pyproject.toml --
+#
+# project.dependencies
+# manage dependencies. works exactly like you expect for pyproject.toml, however Rye can modify entries with 'rye add' and 'rye remove'
+[project]
+dependencies = [
+    "mkdocs~=1.4.3",
+    "mkdocs-material~=9.1.12",
+    "pymdown-extensions~=9.11",
+]
+
+# project.scripts
+# specifies scripts to be generated and installed into the venv during sync. These scripts will invoke the configured entry point.
+[project.scripts]
+my-hello-script = 'hello:main' # generate a script my-hello-script that will call the main function of the hello module.
+Scripts can be installed using rye sync and run using rye run:
+$ rye sync
+$ rye run my-hello-script
+Hello from hello!
+
+# tool.rye.dev-dependencies
+# similar to project.dependencies but holds dev only deps. These can be added here automatically via rye add --dev.
+[tool.rye]
+dev-dependencies = ["black~=23.3.0"] #Dev dependencies are installed automatically unless --no-dev is passed to sync.
+
+# tool.rye.excluded-dependencies
+# special key containing deps which are never installed, even if pulled in as indirect deps.
+# These are added here automatically with rye add --excluded.
+[tool.rye]
+excluded-dependencies = ["cffi"]
+
+#tool.rye.lock-with-sources
+# When enabled all lock and sync operations in project or workspace operate as if '--with-sources' is passed.
+# all lock files contain the full source references. Note that this can create lock files that contain credentials if the sources have credentials included in the URL.
+[tool.rye]
+lock-with-sources = true
+
+# tool.rye.managed
+# key specifying that this project is managed by Rye.
+# primarily affects automatic creation of venvs.
+# Rye will not try to initialize a virtualenv when using shims without this flag. It can be forced enabled in the global config.
+[tool.rye]
+managed = true
+
+# tool.rye.virtual
+# set to true when rye init is invoked with the --virtual flag.
+# if `true` the project is declared as a virtual project, a special mode which doesn't install the package, but only deps.
+# useful if you are not creating a Python project, but you depend on Python software.
+[tool.rye]
+virtual = true
+For more information consult the Virtual Project Guide.
+
+# tool.rye.sources
+# array of tables with sources used for locating dependencies.
+# This lets you use indexes other than PyPI. These sources can also be configured in the main config.toml config file with the same syntax.
+[[tool.rye.sources]]
+name = "default"
+url = "http://pypi.org/simple/"
+For more information about configuring sources see Dependency Sources.
+
+# tool.rye.scripts
+# key used to register custom scripts exposed via rye run.
+# Each key is a script, and each value is the configuration for that script.
+# Normally the value is an object with different keys with the most important key being `cmd` which holds the command to execute.
+# However if only cmd is set, then the object is optional. cmd itself can either be set to a string or an array of arguments.
+[tool.rye.scripts]
+# These three options are equivalent:
+devserver = "flask run --app ./hello.py --debug"
+devserver-alt = ["flask", "run", "--app", "./hello.py", "--debug"]
+devserver-explicit = { cmd = "flask run --app ./hello.py --debug" }
+The following keys are possible for a script:
+
+#cmd
+# command to execute. either a string or an array of arg. In either case shell specific interpolation is unavailable.
+# The command will invoke one of the tools in the virtualenv if it's available there.
+[tool.rye.scripts]
+devserver = { cmd = "flask run --app ./hello.py --debug" }
+http = { cmd = ["python", "-mhttp.server", "8000"] }
+
+# env
+# key can be used to provide environment variables with a script:
+[tool.rye.scripts]
+devserver = { cmd = "flask run --debug", env = { FLASK_APP = "./hello.py" } }
+
+# env-file
+# similar to env but sets env vars by pointing to a file to be loaded (relative to the pyproject.toml):
+[tool.rye.scripts]
+devserver = { cmd = "flask run --debug", env-file = ".dev.env" }
+
+# chain
+# special key instead of cmd to make a command invoke multiple other commands.
+# Each command will be executed one after another. If any of the commands fails, the rest of the commands won't be executed and the chain fails.
+[tool.rye.scripts]
+lint = { chain = ["lint:black", "lint:flake8" ] }
+"lint:black" = "black --check src"
+"lint:flake8" = "flake8 src"
+
+# call
+# special key that instead of cmd to make a command invoke python functions or modules.
+# The format is one of the three following formats:
+<module_name>: equivalent to python -m <module_name>
+<module_name>:<function_name>: runs <function_name> from <module_name> and exits with the return value
+<module_name>:<function_name>(<args>): passes specific arguments to the function
+#Extra arguments provided on the command line are passed in sys.argv.
+[tool.rye.scripts]
+serve = { call = "http.server" }
+help = { call = "builtins:help" }
+hello-world = { call = "builtins:print('Hello World!')" }
+
+# tool.rye.workspace
+#When a table with that key is stored, then a project is declared to be a workspace root. By default all Python projects discovered in sub folders will then become members of this workspace and share a virtualenv. Optionally the members key (an array) can be used to restrict these members. In that list globs can be used. The root project itself is always a member.
+[tool.rye.workspace]
+members = ["mylib-*"]

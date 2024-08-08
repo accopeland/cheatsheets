@@ -1,0 +1,89 @@
+# description
+The rust programming languange and tools
+
+# install  -- choose one or the other
+##1 homebrew
+brew install rustup
+rustup-init
+##2 rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup update
+
+# update
+rustup update
+
+# config
+Rustup metadata and toolchains installed into :  /global/homes/c/copeland/.rustup (RUSTUP_HOME)
+Cargo home directory at: /global/homes/c/copeland/.cargo (CARGO_HOME)
+cargo, rustc, rustup and other commands added to:  /global/homes/c/copeland/.cargo/bin (PATH)
+
+# uninstall i
+rustup self uninstall
+
+# docs
+https://www.rust-lang.org/learn/get-started
+
+# book
+mdls  "Crust of Rust - Atomics and Memory Ordering-rMGWeSjctlY.webm"
+https://gitlab.com/carols10cents/rust-next-40-years
+
+# utils
+cargo, rustc, rustup
+
+# update rust
+rustup update
+rustup update stable
+/Users/copeland/.rustup  #This can be modified with the RUSTUP_HOME environment variable.
+
+# cargo
+/Users/copeland/.cargo #The Cargo home directory can be modified with the CARGO_HOME environment variable.
+cargo, rustc, rustup
+/Users/copeland/.cargo/bin
+
+# update cargo pkg
+cargo install nu # perhaps need rustup update
+
+# update all cargo installs
+cargo install --list
+cargo install $(cargo install --list | egrep '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+
+# config - 	 modify PATH in
+/Users/copeland/.profile
+/Users/copeland/.bash_profile
+/Users/copeland/.bashrc
+/Users/copeland/.zshenv
+
+# uninstall
+uninstall at any time with rustup self uninstall
+
+# tools
+starship - prompt
+fd - simple , fast  alternative to find in rust
+rg - ripgrep
+gutenberg
+
+# nbindgen
+create nim bindings for rust libs
+
+# host triple
+default host triple: x86_64-apple-darwin
+default toolchain: stable (default)
+       profile: default
+  modify PATH variable: yes
+
+# build
+cargo build ...
+
+# rustup toolchain
+rustup show
+rustup toolchain install nightly
+rustup default nightly
+
+# bootstrap -- bootstrap version matched to specific rust version
+# how to figure this out ?
+# https://github.com/rust-lang/rust/blob/master/RELEASES.md
+# see source code ?
+
+# checksums
+wget https://static.rust-lang.org/dist/2019-02-16/channel-rust-nightly.toml
+

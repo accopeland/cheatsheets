@@ -1,0 +1,49 @@
+# what
+https://rclone.org/drive/
+
+# install
+yum install rclone
+
+# usage gdrive
+rclone -L --fast-list -v --update copy  Desktop/Presentations/2011/ gdrive:Presentations/2011-Presentations/
+
+# rclone  - google team drive cli
+rclone lsd 'MPN:External Assembly Projects/NCBI SRA Asm/MPN/Ga0119810'
+clientID: 226181168696-o9au7uimlft2444m1t958e7eare905rb.apps.googleusercontent.com
+secret: w...
+
+# config
+~/.config/rclone/rclone.conf
+
+# remotes
+rclone listremotes
+
+# create gdrive
+rclone config create paperpile drive config_is_local=false
+rclone config create paperpile drive
+
+# listing
+rclone lsd paperpile:
+
+# reconnect - does not seem to work
+rclone config reconnect paperpile
+
+# delete
+rclone config delete paperpile
+
+# long listing
+rclone lsl paperpile:Paperpile
+
+# config - manual edit
+vim ~/.config/rclone/rclone.conf
+
+rclone lsl paperpile:Paperpile/"Starred Papers"
+
+# copy to icloud
+rclone copy  paperpile:Paperpile/"Starred Papers"/ ~/Library/Mobile\ Documents/com~apple~CloudDocs/Paperpile-bak/"Starred Papers"/
+
+# copy gdrive to gdrive across accounts
+rclone copy gdrive-lbl:Paperpile/"All Papers"/ mydrive:Paperpile/"All Papers"/
+
+# size
+rclone size paperpile:Paperpile/"All Papers"/

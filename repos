@@ -1,0 +1,131 @@
+
+#GAA:
+https://code.jgi.doe.gov/gaa
+Fungal https://code.jgi.doe.gov/gaa/jgi-fungal-asm jgi-fungal-asm
+https://code.jgi.doe.gov/gaa/metag_cromwell.git
+https://code.jgi.doe.gov/gaa/jgi_meta_wdl_set.git
+WDL  https://code.jgi.doe.gov/BFoster/jgi_meta_wdl
+MG/MT https://code.jgi.doe.gov/BFoster/jgi_meta
+MG 5.0 annotation https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/img-omics.git -b master
+Deprecated
+https://foster505@bitbucket.org/berkeleylab/jgi-mga.git # Brian's MG assembly jgi_mga_meta_rqc.py
+https://bitbucket.org/berkeleylab/jgi-mga
+https://bitbucket.org/berkeleylab/jgi-mt/
+https://bitbucket.org/berkeleylab/jgi-meta/
+https://bitbucket.org/berkeleylab/jgi-ml
+git@bitbucket.org:wandreopoulos/rnaseq_microbe.git
+
+#USA
+https://code.jgi.doe.gov/user-support-analysis
+https://code.jgi.doe.gov/user-support-analysis/rna-count
+https://code.jgi.doe.gov/user-support-analysis/bisulfite-seq
+https://code.jgi.doe.gov/user-support-analysis/long-read-rna
+https://code.jgi.doe.gov/user-support-analysis/reseq
+https://code.jgi.doe.gov/user-support-analysis/smrna-seq
+https://code.jgi.doe.gov/user-support-analysis/jgi-exome
+https://code.jgi.doe.gov/user-support-analysis/drop-seq
+https://code.jgi.doe.gov/user-support-analysis/dap-seq
+https://code.jgi.doe.gov/user-support-analysis/chip-seq
+Deprecated?
+https://bitbucket.org/account/user/berkeleylab/projects/JGIUS
+
+#QAQC: https://code.jgi.doe.gov/qaqc
+
+#Genome Analysis
+https://code.jgi.doe.gov/qaqc/ga-tools (db connection, jat_check, ap_tool)
+https://code.jgi.doe.gov/qaqc/ga-autoqc
+https://code.jgi.doe.gov/qaqc/thresher (qc tool)
+https://code.jgi.doe.gov/qaqc/ga-web (GA website: https://ga.jgi.lbl.gov)
+https://code.jgi.doe.gov/qaqc/rqc-finalizer
+
+#RQC
+https://code.jgi.doe.gov/qaqc/jgi-rqc-pipeline
+https://code.jgi.doe.gov/qaqc/jgi-rqc (/global/dna/projectdirs/PI/rqc/prod/ )
+https://code.jgi.doe.gov/qaqc/jgi-rqc-web
+https://code.jgi.doe.gov/qaqc/autoqc-data # autoqc thresholds
+https://code.jgi.doe.gov/qaqc/autoqc # autoqc code
+Deprecated?
+https://bitbucket.org/berkeleylab/jgi-rqc # rqc (/global/dna/projectdirs/PI/rqc/prod/ )
+https://bitbucket.org/berkeleylab/jgi-rqc-autoqc # stephans code rqc autoqc
+https://bitbucket.org/berkeleylab/jgi-rqc-autoqc-data # stephans code rqc-autoqc-data
+https://bitbucket.org/berkeleylab/jgi-qaqc
+https://bitbucket.org/berkeleylab/jgi-gaag
+https://bitbucket.org/berkeleylab/jgi-bbtools
+
+#Portal
+https://bitbucket.org/berkeleylab/jgi-portal-libraries
+https://bitbucket.org/berkeleylab/jgi-genome-portal
+
+#SDM
+https://bitbucket.org/htandra/jgi-kbase-es
+https://bitbucket.org/berkeleylab/jgi-lapinpy
+https://bitbucket.org/berkeleylab/jgi-sdm-ncbi
+https://bitbucket.org/berkeleylab/jgi-sdm-pacbio
+https://bitbucket.org/berkeleylab/jgi-sdm-kbase
+https://bitbucket.org/berkeleylab/jgi-sdm-illumina
+https://bitbucket.org/berkeleylab/jgi-sdm-common
+https://bitbucket.org/berkeleylab/jgi-jrm
+
+#DW
+https://bitbucket.org/berkeleylab/jgi-its-warehouse
+
+#PMOS
+https://bitbucket.org/berkeleylab/jgi_pmos_ariel
+https://bitbucket.org/berkeleylab/jgi_pmos_caliban
+https://bitbucket.org/berkeleylab/jgi_pmos_uam
+Deprecated?
+https://bitbucket.org/berkeleylab/jgi_pmos_tools
+
+#IMG
+https://code.jgi.doe.gov/official-jgi-workflows/wdl-specific-repositories/img-omics
+
+#JGI WDL
+https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/img-omics.git
+https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/jgi-metagenome-assembly.git
+https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/jaws-dap-analysis.git
+Deprecated
+https://gitlab.com/jgi-doe/wdl-tasks.git
+https://code.jgi.doe.gov/user-support-analysis/ci-function
+
+#JAWS
+https://code.jgi.doe.gov/advanced-analysis/jaws-client.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-cromwell.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-site.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-monitor.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-dashboard.git
+https://code.jgi.doe.gov/advanced-analysis/schedule-robot-cori.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-pool-manager.git
+https://code.jgi.doe.gov/advanced-analysis/jaws-rpc.git
+https://code.jgi.doe.gov/advanced-analysis/schedule-robot-tahoma.git
+https://code.jgi.doe.gov/advanced-analysis/schedule-robot-jgi.git
+
+# JAMO / JAT
+https://bitbucket.org/berkeleylab/jgi-jamo
+bitbucket.org:berkeleylab/jgi-jat # jat
+https://bitbucket.org/berkeleylab/jgi-jat/src/77feb4aeb025050c41a4471db53ed031401f9355/templates
+https://foster505@bitbucket.org/berkeleylab/jgi-mga.git # Brian's MG assembly jgi_mga_meta_rqc.py
+
+# misc
+https://bitbucket.org/wandreopoulos/singlecelldb/
+https://bitbucket.org/wandreopoulos/jgi-rqc-16s-library/
+
+# deprecated
+jigsaw -
+https://bitbucket.org/berkeleylab/jgi-auto-qc  # Michael's autoqc code
+https://bitbucket.org/berkeleylab/jgi_itagger # itagger
+https://accopeland@bitbucket.org/berkeleylab/jgi-rqc-autoqc-data.git # autoqc
+bitbucket.org:berkeleylab/jgi-gaag.git
+
+# MISC
+https://github.com/accopeland/MDM_SAG/tree/master/contaminated
+
+# public WDL
+topmed: https://github.com/DataBiosphere/topmed-workflows/blob/master/aligner/functional-equivalence-wdl/FunctionalEquivalence.wdl
+biowdl: https://github.com/biowdl (~/Repos/Other/biowdl)
+gatk:
+containers: https://dockstore.org/search?_type=workflow&descriptorType=wdl&searchMode=files
+https://github.com/broadinstitute/warp/tree/develop/pipelines/skylab
+
+# CWL
+https://inutano.github.io/cwl-metrics/
+https://view.commonwl.org

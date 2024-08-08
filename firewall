@@ -1,0 +1,11 @@
+# Show Status
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+
+# Enable
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+
+# Disable (Default)
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off
+
+# Add application to firewall
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /path/to/file

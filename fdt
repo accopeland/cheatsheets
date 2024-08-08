@@ -1,0 +1,99 @@
+#description
+FDT is an Application for Efficient Data Transfers which is capable of reading and writing at disk speed over wide area networks (with standard TCP). It is written in Java, runs an all major platforms and it is easy to use.
+
+FDT is based on an asynchronous, flexible multithreaded system and is using the capabilities of the Java NIO libraries. Its main features are:
+
+Streams a dataset (list of files) continuously, using a managed pool of buffers through one or more TCP sockets.
+Uses independent threads to read and write on each physical device
+Transfers data in parallel on multiple TCP streams, when necessary
+Uses appropriate-sized buffers for disk I/O and for the network
+Restores the files from buffers asynchronously
+Resumes a file transfer session without loss, when needed
+
+# docs
+http://monalisa.cern.ch/FDT/documentation_fdt.html
+
+# install
+wget http://monalisa.cern.ch/FDT/lib/fdt.jar
+
+# example
+Client/Server mode
+start FDT server on remote. ( The default settings port:54321, on client and server ).
+-S is used to disable the standalone mode, which means that the server will stop after the session will finish
+[remote computer]$ java -jar fdt.jar -S
+client started on local specifying source file, remote address and destination directory
+[local computer]$ java -jar fdt.jar -c <remote_address>
+ -d /home/remoteuser/destinationDir /home/localuser/local.data
+OR
+[local computer]$ java -jar fdt.jar -c <remote_address> -d destinationDir ./local.data
+Secure Copy (SCP) mode
+In this mode the server will be started on the remote system automatically by the local FDT client using SSH.
+[local computer]$ java -jar fdt.jar /home/localuser/local.data
+ remoteuser@<remote_address>:/home/remoteuser/destinationDir
+OR
+[local computer]$ java -jar fdt.jar ./local.data remoteuser@<remote_address>:destinationDir
+If the remoteuser parameter is not specified the local user, running the fdt command, will be used to login on the remote system
+
+# ddcopy
+ truncate -s 1G 1G
+[accopeland@ln001 ~]$ java -cp ~/local/bin/fdt.jar lia.util.net.common.DDCopy if=1G of=copy-1G
+ Total Transfer: 1,024 MBytes ( 1073741824 bytes )
+ Time: 1 seconds
+ Avg Speed: 560.482 MB/s
+[accopeland@ln001 ~]$ java -cp ~/local/bin/fdt.jar lia.util.net.common.DDCopy if=1G of=copy-1G
+ Total Transfer: 1,024 MBytes ( 1073741824 bytes )
+ Time: 0 seconds
+ Avg Speed: 1.185 GB/s
+
+#
+Server: java -jar fdt.jar [ OPTIONS ]
+Client: java -jar fdt.jar [ OPTIONS ] -c <host> [file1 …]|[-fl <fileList>] -d <destinationDirectory>
+SCP: java -jar fdt.jar [ OPTIONS ] [[[user@][host1:]]file1 [[[user@][host2:]]file2
+Coordinator: java -jar fdt.jar [OPTIONS] -dIP <destination-ip> -dp <destination-port> -sIP <source-ip> -p <source-port> -d <destinationDirectory> [-fl <fileList>] -coord
+List Files: java -jar fdt.jar [OPTIONS] -c <host> -ls <ls-path>
+Agent: java -jar fdt.jar [OPTIONS] -c <host> -tp <transfer,ports,separated,with,comma> -agent
+Session log: java -jar fdt.jar [OPTIONS] -c <host> -d <destinationDirectory> -sID <session-ID>
+
+# default params
+-P=4,
+-limit=-1,
+-ka=120,
+-S=,
+user.home=/clusterfs/jgi/groups/gentech/homes/accopeland,
+user.dir=/tmp/accopeland,
+-v=,
+user.name=accopeland,
+path.separator=:,
+-ss=-1,
+file.separator=/,
+file.encoding=UTF-8,
+LastParams=[],
+-limitDelay=300,
+-bs=1048576
+
+
+# agent -- Agent can use Server and Client options, because at any time Agent can be Server or Client
+In order to use third party copy feature with FDT there have to be two FDT
+launched in agent mode. In Agent mode the FDT will start listening for
+incoming client connections on . In Agent mode the client will listen for
+coordinator message with task. After receiving coordinator message Agent will
+try to send message to destination Agent requesting to open socket for
+transfer session. Destination Agent will take one transfer port from pool and
+open port for that session and then informs source Agent that transfer job can
+be started. At this pont first agent now has session ID and it sends it to the
+coordinator, that later coordinator could see that FDT session log file from
+remote Agent. After finishing task Agent will close transfer port and return
+it to the transfer ports pool.
+#
+-p <portNo> TCP port (for the server it is the port used to listen on; for the client the port to connect to). [54321]
+-tp <transfer-ports> specifies the TCP port lis to be used for transfer sessions. Ports are separated with comma.
+-agent Option for FDT to run as agent.
+#
+Common options used for FDT Coordinator mode :
+-d <dstDir> The destination directory used to copy files.
+-fl <fileList> a list of files. Must have only one file per line.
+-dIP <destination-ip> destination Agent IP address.
+-sIP <source-ip> source Agent IP address.
+-dp <destination-port> destination agent message channel port.
+-p <source-port> source agent message channel port.
+-coord Option for FDT to run as coordinator.

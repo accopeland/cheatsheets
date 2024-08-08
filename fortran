@@ -1,0 +1,14 @@
+
+# test program
+#include <limits.h>
+#include <stdio.h>
+
+int main() {
+  printf(" Maximum int: %X (%u bytes)\n",INT_MAX,sizeof(int));
+  printf("Maximum long: %lX (%u bytes)\n",LONG_MAX,sizeof(long));
+  return 0;
+}
+
+# sizeof types
+32bit system : c_long = 4 bytes = c_int
+64bit system: c_long = 8 bytes = c_double

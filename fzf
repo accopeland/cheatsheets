@@ -1,11 +1,31 @@
+# description
+fuzzy finder ... interactive search cli in go
+
+# repo
+https://github.com/junegunn/fzf
+
+#  install
+go get -u github.com/junegunn/fzf
+
+#  upgrading
+https://github.com/junegunn/fzf#upgrading-fzf
+
+# repo
+https://github.com/junegunn/fzf
+
+# docs
+...
+
+#  alternatives and related tools
+fd
+sk -m
+peco (go)
+
 # To fuzzy find files in current directory
 fzf
 
 # To fuzzy find a file and cat it
 cat $(fzf)
-
-# Case sensitive search
-fzf +i
 
 # Case insensitve search
 fzf -i
@@ -19,8 +39,104 @@ fzf --preview "file {}"
 # Find files from find command and preview it with fzf
 find . -type f -name "*.txt" | fzf --preview "head {}"
 
-# Display border around fzf output 
+# Display border around fzf output
 fzf --border sharp
 
 # Output only selected files and pipe it to a file
 find . -type f "*.txt" | fzf --multi > output.txt
+
+# repo
+https://github.com/junegunn/fzf
+
+#  command key
+<cmd> **<TAB>
+e.g. cd **<TAB>
+
+#  multi selection
+FZF_DEFAULT_OPTS+="--multi --no-height --extended"
+
+#  change default source so fzf (w/o pipe) will use fd instead of find
+export FZF_DEFAULT_COMMAND='fd --type f'
+
+#  follow symbolic links and include hidden files:
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+
+#  Use ~~ as the trigger sequence instead of the default **
+export FZF_COMPLETION_TRIGGER='~~'
+
+# Options to fzf command
+export FZF_COMPLETION_OPTS='--border --info=inline'
+
+# Note: FZF_DEFAULT_COMMAND is not used by shell integration due to the slight difference in requirements.
+
+#  control keys
+C-t triggers fzf and pastes the selected file onto the command line,
+ALT-c changes into the selected directory.
+C-r - Paste the selected command from history onto the command-line;
+C-r C-r - see commands in chronological order (toggles sort by relevance)
+
+# Key bindings for command-line. The install script will setup the following key bindings for bash, zsh, and fish.
+Set FZF_CTRL_T_COMMAND to override the default command
+Set FZF_CTRL_T_OPTS to pass additional options
+Set FZF_CTRL_R_OPTS to pass additional options
+Set FZF_ALT_C_COMMAND to override the default command
+Set FZF_ALT_C_OPTS to pass additional options
+
+# Search syntax
+Unless otherwise specified, fzf starts in "extended-search mode" where you can type in multiple search terms delimited by spaces. e.g. ^music .mp3$ sbtrkt !fire
+Token	Match type	Description
+sbtrkt	fuzzy-match	Items that match sbtrkt
+'wild	exact-match (quoted)	Items that include wild
+^music	prefix-exact-match	Items that start with music
+.mp3$	suffix-exact-match	Items that end with .mp3
+!fire	inverse-exact-match	Items that do not include fire
+!^music	inverse-prefix-exact-match	Items that do not start with music
+!.mp3$	inverse-suffix-exact-match	Items that do not end with .mp3
+
+# examples
+vim ~/**<tab> : fzf_compgen_path() with prefix (~/) as the first argument
+cd foo**<tab> : fzf_compgen_dir() with  prefix (foo) as the first argument
+
+# F1 to open file with less without leaving fzf
+# C-Y to copy line to clipboard and abort fzf (requires pbcopy)
+fzf --bind 'f1:execute(less -f {}),ctrl-y:execute-silent(echo {} | pbcopy)+abort'
+
+# Update list of processes by pressing CTRL-R
+FZF_DEFAULT_COMMAND='ps -ef' \
+fzf --bind 'ctrl-r:reload($FZF_DEFAULT_COMMAND)' --header 'Press CTRL-R to reload' --header-lines=1 --height=50% --layout=revers
+
+# Switch between sources by pressing CTRL-D or CTRL-F
+FZF_DEFAULT_COMMAND='find . -type f' fzf --bind 'ctrl-d:reload(find . -type d),ctrl-f:reload($FZF_DEFAULT_COMMAND)' --height=50% --layout=reverse
+
+# ripgrep interactive integration
+The following example uses fzf as the selector interface for ripgrep. We bound
+reload action to change event, so every time you type on fzf, the ripgrep
+process will restart with the updated query string denoted by the placeholder
+expression {q}. Also, note that we used --disabled option so that fzf doesn't
+perform any secondary filtering.
+INITIAL_QUERY=""
+RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case "
+FZF_DEFAULT_COMMAND="$RG_PREFIX '$INITIAL_QUERY'"
+fzf --bind "change:reload:$RG_PREFIX {q} || true" --ansi --disabled --query "$INITIAL_QUERY" --height=50% --layout=reverse
+
+#  Preview window
+When the --preview option is set, fzf automatically starts an external process
+with the current line as the argument and shows the result in the split window.
+Your $SHELL is used to execute the command with $SHELL -c COMMAND. The window
+can be scrolled using the mouse or custom key bindings.
+ {} is replaced with the single-quoted string of the focused line
+fzf --preview 'cat {}'
+
+# PIDs completion is provided for kill command.
+# In this case, there is no trigger sequence; just press the tab key after the kill command.
+# Can select multiple processes with <TAB> or <Shift-TAB> keys
+kill -9 <TAB>
+
+# Host names: For ssh and telnet commands, fuzzy completion for hostnames is provided. The names are extracted from /etc/hosts and ~/.ssh/config.
+ssh **<TAB>
+telnet **<TAB>
+
+# environment vars / functions
+unset **<TAB>
+export **<TAB>
+unalias **<TAB>

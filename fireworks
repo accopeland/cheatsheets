@@ -1,0 +1,22 @@
+install:
+	 git clone git@github.com:materialsproject/fireworks.git
+	# or via pip
+	pip install FireWorks
+
+start:
+	mongod --logpath /Users/copeland/mongo_data/logs/log --dbpath /Users/copeland/mongo_data
+
+running:
+	lpad fw_job.yaml
+
+* Remote runner
+	 cat > my_lpad_testing.yaml
+	host: ds049170.mongolab.com
+	port: 49170
+	name: fireworks
+	username: test_user
+	password: testing123
+	> lpad -l my_lpad_testing.yaml get_wflows
+
+* tutorial code
+	copeland@acopeland:/usr/local/lib/python2.7/site-packages/fw_tutorials/firetask>

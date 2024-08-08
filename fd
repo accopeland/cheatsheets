@@ -1,3 +1,10 @@
+# fd  fd-find
+https://github.com/sharkdp/fd
+.gitignore aware
+
+# install fd
+cargo install fd-find
+
 # Simple search:
 fd <search query>
 
@@ -15,3 +22,140 @@ fd -H <search query>
 
 # Excluding specific files or directories:
 fd -E <file or directories which should be excluded> <search query>
+
+# usage
+fd [OPTIONS] [--] [pattern] [path]...
+    <pattern>
+            the search pattern which is either a regular expression (default) or a glob pattern (if
+            --glob is used). If no pattern has been specified, every entry is considered a match. If
+            your pattern starts with a dash (-), make sure to pass '--' first, or it will be
+            considered as a flag (fd -- '-foo').
+
+#    -i, --ignore-case
+#    -g, --glob            Perform a glob-based search instead of a regular expression search.
+#        --regex           Perform a regular-expression based search (default). This can be used to override --glob.
+#    -F, --fixed-strings   Treat pattern as literal string instead of a regexp.
+#
+#    -l, --list-details    Use a detailed listing format like 'ls -l'. '--exec-batch ls -l'
+#    -L, --follow          Using this flag, symbolic links are also traversed. Flag can be overriden with --no-follow.
+#    -d, --max-depth <depth>  Limit the directory traversal to a given depth.
+#        --prune           Do not traverse into directories that match the search criteria. see '--exclude=…' option.
+#   -t, --type <filetype>  Filter the search by type:
+              'f' or 'file':         regular files
+              'd' or 'directory':    directories
+              'l' or 'symlink':      symbolic links
+              's' or 'socket':       socket
+              'p' or 'pipe':         named pipe (FIFO)
+              'x' or 'executable':   executables
+              'e' or 'empty':        empty files or directories
+            This option can be specified more than once to include multiple file types. Searching
+
+# Only search for files:
+fd --type file …
+fd -tf …
+
+# performance
+ strace -fc fd -j1 --no-ignore --hidden --exclude .git --type file --type symlink>/dev/null
+
+# Find both files and symlinks
+fd --type file --type symlink …
+fd -tf -tl …
+
+# Find executable files:
+fd --type executable
+fd -tx
+
+# Find empty files:
+fd --type empty --type file
+fd -te -tf
+
+# Find empty directories:
+fd --type empty --type directory
+fd -te -td
+
+#    -e, --extension <ext>  (Additionally) filter search results by their file extension.
+
+# without extension
+If you want to search for files without extension, you can use the regex '^[^.]+$' as anormal search pattern.
+
+#    -x, --exec <cmd>...  Execute a command for each search result in parallel (use --threads=1 for sequential
+            command execution). All positional arguments following --exec are considered to be
+            arguments to the command - not to fd. It is therefore recommended to place the
+            '-x'/'--exec' option last.
+            The following placeholders are substituted before the command is executed:
+              '{}':   path (of the current search result)
+              '{/}':  basename
+              '{//}': parent directory
+              '{.}':  path without file extension
+              '{/.}': basename without file extension
+            If no placeholder is present, an implicit "{}" at the end is assumed.
+
+# find all *.zip files and unzip them:
+fd -e zip -x unzip
+
+# find *.h and *.cpp files and run "clang-format -i .." for each of them:
+fd -e h -e cpp -x clang-format -i
+
+# Convert all *.jpg files to *.png files:
+fd -e jpg -x convert {} {.}.png
+
+#    -X, --exec-batch <cmd>...
+            Execute the given command once, with all search results as arguments.
+            One of the following placeholders is substituted before the command is executed:
+              '{}':   path (of all search results)
+              '{/}':  basename
+              '{//}': parent directory
+              '{.}':  path without file extension
+              '{/.}': basename without file extension
+
+# Find all test_*.py files and open them in your favorite editor:
+fd -g 'test_*.py' -X vim
+
+# Find all *.rs files and count the lines with "wc -l ...":
+fd -e rs -X wc -l
+
+#    -E, --exclude <pattern> Exclude files/directories that match the given glob pattern. This overrides any other
+            ignore logic. Multiple exclude patterns can be specified.
+            Examples:
+              --exclude '*.pyc'
+              --exclude node_modules
+
+# -j, --threads <num>  Set number of threads to use for searching & executing (default: number of available CPU cores)
+# -S, --size <size>  Limit results based on the size of files using the format <+-><NUM><UNIT>.
+               '+': file size must be greater than or equal to this
+               '-': file size must be less than or equal to this
+            If neither '+' nor '-' is specified, file size must be exactly equal to this.
+               'NUM':  The numeric size (e.g. 500)
+               'UNIT': The units for NUM. They are not case-sensitive.
+            Allowed unit values:
+                'b':  bytes
+                'k':  kilobytes (base ten, 10^3 = 1000 bytes)
+                'm':  megabytes
+                'g':  gigabytes
+                't':  terabytes
+                'ki': kibibytes (base two, 2^10 = 1024 bytes)
+                'mi': mebibytes
+                'gi': gibibytes
+                'ti': tebibytes
+
+#        --changed-within <date|dur>
+            Filter results based on the file modification time. The argument can be provided as a
+            specific point in time (YYYY-MM-DD HH:MM:SS) or as a duration (10h, 1d, 35min). If the
+            time is not specified, it defaults to 00:00:00. '--change-newer-than' or '--newer' can
+            be used as aliases.
+            Examples:
+                --changed-within 2weeks
+                --change-newer-than '2018-10-27 10:00:00'
+                --newer 2018-10-27
+
+#    -o, --owner <user:group>
+            Filter files by their user and/or group. Format: [(user|uid)][:(group|gid)]. Either side
+            is optional. Precede either side with a '!' to exclude files instead.
+            Examples:
+                --owner john
+                --owner :students
+                --owner '!john:students'
+
+
+# df -kh
+fd . --full-path /clusterfs/jgi/scratch/dsi/aa/dm_archive/sdm -X ls -l  | awk '{s+=$5}END{print s/(1024*1024*1024*1024)}'

@@ -1,0 +1,14 @@
+# description
+flux-core flux-workflow , etc. (LLNL). Disambiguate from fluxcd (https://...)
+
+# setup gitlab-agent helm
+helm repo add gitlab https://charts.gitlab.io
+helm repo update
+helm upgrade --install eks-agent gitlab/gitlab-agent \
+    --namespace gitlab-agent-eks-agent \
+    --create-namespace \
+    --set image.tag=v16.11.3 \
+    --set config.token=glagent--... \
+    --set config.kasAddress=wss://code.jgi.doe.gov/-/kubernetes-agent/
+
+#

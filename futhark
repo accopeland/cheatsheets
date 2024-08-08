@@ -1,0 +1,15 @@
+# description
+
+# install
+
+# docs
+https://futhark-book.readthedocs.io/en/latest/
+
+# compile to c
+## dotprod.fut -- 'entry' indicates that it should be externally visible.  compute dot product of two integer vectors:
+entry dotprod (xs: []i32) (ys: []i32): i32 =
+  reduce (+) 0 (map2 (*) xs ys)
+$ futhark opencl --library dotprod.fut  #  compile it with the futhark opencl compiler
+$ gcc dotprod.c -o libdotprod.so -fPIC -shared  # compile dotprod.c to a shared library like this:
+
+#

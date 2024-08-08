@@ -1,0 +1,8 @@
+---
+syntax: bash
+tags: [ dev ]
+---
+# frink - cli
+	java -cp /Applications/stuff/frink.jar frink.parser.Frink -v
+
+#

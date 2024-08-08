@@ -1,0 +1,1749 @@
+# description
+Cross platform and architecture build system with support for nested environments (stacks) , modules, and container builds
+
+# build-system
+$ spack edit --build-system cuda
+
+# CLI help
+https://spack.readthedocs.io/en/latest/basic_usage.html  # CLI args
+
+# docs
+https://spack.readthedocs.io/en/latest
+https://code.ornl.gov/ncrc/spack/-/blob/a091eeceab650609ca3f88473bb3b6dc2c722573/lib/spack/docs/packaging_guide.rst
+https://groups.google.com/g/spack/c/d0jIQ0s96_s
+slack
+https://spack-tutorial.readthedocs.io/en/latest/tutorial_developer_workflows.html#development-iteration-cycles
+https://spack.readthedocs.io/en/latest/command_index.html # commands
+
+# installation
+git clone https://github.com/spack/spack 	#  can then just do spack/bin/spack install zlib
+. share/spack/setup-env.sh			# fix paths etc
+# cloned a copy into ~/spack
+# aliased spack to /Users/copeland/spack/bin/spack
+$ spack list
+
+# tutorial
+https://github.com/spack/spack-cscs2024
+
+# help
+https://code.ornl.gov/ncrc/spack/-/blob/a091eeceab650609ca3f88473bb3b6dc2c722573/lib/spack/docs/packaging_guide.rst
+https://groups.google.com/g/spack/c/d0jIQ0s96_s
+slack
+https://spack-tutorial.readthedocs.io/en/latest/tutorial_developer_workflows.html#development-iteration-cycles
+
+# update ?
+git pull origin releases/latest
+
+# update
+something similar using spack mark (see https://spack.readthedocs.io/en/latest/basic_usage.html#marking-packages-explicit-or-implicit).
+$ spack mark -i -a
+$ spack install pkgtokeep1
+$ spack install pkgtokeep2
+$ spack gc
+
+# glossary
+roots - specs explicitly isted in the spack.yaml (not dependencies)
+variants -
+stack -
+environment - list of packages in a spack.yaml (lockfile)
+buildcache - OCI cache (tar)
+concretize -
+
+#--------------------
+# installation
+#--------------------
+git clone https://github.com/spack/spack 	#  can then just do spack/bin/spack install zlib
+. share/spack/setup-env.sh			# fix paths etc
+# cloned a copy into ~/spack
+# aliased spack to /Users/copeland/spack/bin/spack
+$ spack list
+
+
+#--------------------
+# config
+#--------------------
+# config - high level
+$ spack config --scope defaults edit config
+
+# config get --  With so many scopes overriding each other, it can sometimes be difficult to understand what Spack’s final configuration looks like. Spack provides two useful ways to view the final “merged” version of any configuration file:
+$ spack config get
+$ spack config blame
+
+# config / locations / scopes
+default configuration: $SPACK_ROOT/etc/spack/defaults.
+Scope		Directory
+------------	----------------------------------------------
+Command-line	N/A
+Environment	In environment base directory (in spack.yaml)
+Custom		Custom directory, specified with --config-scope
+User		~/.spack/
+Site		$SPACK_ROOT/etc/spack/
+System		/etc/spack/
+Defaults	$SPACK_ROOT/etc/spack/defaults/
+
+# config files (decreasing precedence)
+environment-root-dir/spack.yaml
+~/.spack/<platform>/compilers.yaml
+~/.spack/compilers.yaml
+$SPACK_ROOT/etc/spack/<platform>/compilers.yaml
+$SPACK_ROOT/etc/spack/compilers.yaml
+/etc/spack/<platform>/compilers.yaml
+/etc/spack/compilers.yaml
+$SPACK_ROOT/etc/defaults/<platform>/compilers.yaml
+$SPACK_ROOT/etc/defaults/compilers.yaml
+
+# config debugging
+$ spack config --scope defaults blame modules
+$ spack config --scope defaults blame
+
+# config edit
+$ spack config --scope defaults edit config
+
+# config list
+$ spack config get config
+
+
+#-------------------
+# package
+#-------------------
+# spack install error
+Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
+
+# install debugging
+$ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
+
+# startup
+source share/spack/setup-env.sh
+
+# sigils
+@version
+%compiler
+extraargs=option
+^dependency
++variant  #
+-variant or ~variant
+e.g. spack install tcl ^zlib @1.2.8 %clang cppopts=-O3 # install tcl w zlib-1.2.8 and clang
+
+# install pkg
+$ spack list somepkg
+$ spack install somepkg
+$ spack uninstall somepkg
+
+# use install pkg
+$ spack load <pkg>
+
+# use installed pkg via lmod
+module load pkg
+
+# uninstall
+$ spack uninstall <pkg>
+
+# uninstall all packages built with specific compiler
+$ spack uninstall -a %gcc@9.3.0
+
+# variants
+@ Optional version specifier (@1.2:1.4)
+% Optional compiler specifier, with an optional compiler version (gcc or gcc@4.7.3)
++ or - or ~ Optional variant specifiers (+debug, -qt, or ~qt) for boolean variants.
+++ or -- or ~~ to propagate variants through the dependencies (++debug, --qt, or ~~qt).
+name=<value> Optional variant specifiers that are not restricted to boolean variants.
+name==<value> to propagate variant through the dependencies.
+name=<value> Optional compiler flag specifiers. Valid flag names are cflags, cxxflags, fflags, cppflags, ldflags, and ldlibs.
+name==<value> to propagate compiler flags through the dependencies.
+target=<value> os=<value> Optional architecture specifier (target=haswell os=CNL10)
+^ Dependency specs (^callpath@1.1)
+
+# cflags -- need single quotes
+$ spack install --add -v  mbedtls cflags='-std=c99'
+
+# cppopts -- need quotes if more than one arg
+$ spack install foo cppflags=\"-fopt-info-vec-all -O3\"
+
+# compile options
+cppopts=-03
+cppflags=...
+cflags, cxxflags, cppflags, fflags, ldflags, and ldlibs.
+
+# move spack repo
+$ spack buildcache push --update-index /some/directory pkg
+$ spack mirror add my_cache /some/directory # in a different instance
+$ spack install pkg
+
+# spec location
+$SPACK_ROOT/var/spack/repos/builtin/packages/*/package.py
+
+# patch location -- inside package dir
+/clusterfs/jgi/groups/gentech/genome_analysis/spack/var/spack/repos/builtin/packages/tar/gnutar-configure-xattrs.patch
+
+# available packages
+$ spack list
+
+# high level config
+$ spack config --scope defaults edit config
+
+# config get --  With so many scopes overriding each other, it can sometimes be difficult to understand what Spack’s final configuration looks like. Spack provides two useful ways to view the final “merged” version of any configuration file:
+$ spack config get
+$ spack config blame
+
+# config / locations / scopes
+default configuration: $SPACK_ROOT/etc/spack/defaults.
+Scope		Directory
+------------	----------------------------------------------
+Command-line	N/A
+Environment	In environment base directory (in spack.yaml)
+Custom		Custom directory, specified with --config-scope
+User		~/.spack/
+Site		$SPACK_ROOT/etc/spack/
+System		/etc/spack/
+Defaults	$SPACK_ROOT/etc/spack/defaults/
+
+# config files (decreasing precedence)
+environment-root-dir/spack.yaml
+~/.spack/<platform>/compilers.yaml
+~/.spack/compilers.yaml
+$SPACK_ROOT/etc/spack/<platform>/compilers.yaml
+$SPACK_ROOT/etc/spack/compilers.yaml
+/etc/spack/<platform>/compilers.yaml
+/etc/spack/compilers.yaml
+$SPACK_ROOT/etc/defaults/<platform>/compilers.yaml
+$SPACK_ROOT/etc/defaults/compilers.yaml
+
+# compilers
+$ spack install gcc@12.2.0 % gcc@8.5.0
+$ spack compiler add `spack location -i gcc@12.2.0`
+$ spack install gcc@12.2.0 % gcc@12.2.0
+edit ~/.spack/linux/compilers.yaml ; change paths for gcc@12.2.0 to point to new gcc@12.2.0 % gcc@12.2.0 instead of original gcc@12.2.0 % gcc@8.5.0
+$ spack uninstall gcc@12.2.0 % gcc@8.5.0
+
+# roots
+specs explicitly isted in the spack.yaml (not dependencies)
+
+# usage : install a package g
+$ spack list somepkg
+$ spack install somepkg
+
+# use installed tool
+$ spack load <pkg>
+
+
+# uninstall
+$ spack uninstall <pkg>
+
+# uninstall all packages built with specific compiler
+$ spack uninstall -a %gcc@9.3.0
+
+# simple use
+$ spack list pkg
+$ spack spec pkg
+$ spack install pkg
+# maybe - spack module refresh
+$ spack load pkg or module load pkg
+
+# packages available
+$ spack list
+
+# repo
+$ spack repo list
+$ cd  /clusterfs/jgi/groups/gentech/genome_analysis/spack/var/spack/repos/builtin/packages/
+$ git status
+
+#----------------------
+# modules
+#----------------------
+
+# modules hashes -- modules all automatically have a hash appended to them.
+# You can work around it in 2 ways:
+# * allow it to add the hash and don’t make it part of the projection
+# * Outside of the projection, set hash_length: 0, and include whatever hash you want (or none) inside the projection
+modules:
+  default:
+    lmod:
+      core_compilers:
+      - gcc@=8.5.0
+      all:
+        autoload: direct
+      hierarchy:
+      - mpi
+      projections:
+        all: '{architecture}/{name}/{version}-{hash:7}'
+    roots:
+      lmod: /opt/software/modules/spack
+      tcl: $spack/share/spack/modules
+    enable:
+    - lmod
+    arch_folder: false
+
+# modules hashes -- modules all automatically have a hash appended to them.
+# You can work around it in 2 ways:
+# * allow it to add the hash and don’t make it part of the projection
+# * Outside of the projection, set hash_length: 0, and include whatever hash you want (or none) inside the projection
+modules:
+  default:
+    lmod:
+      core_compilers:
+      - gcc@=8.5.0
+      all:
+        autoload: direct
+      hierarchy:
+      - mpi
+      projections:
+        all: '{architecture}/{name}/{version}-{hash:7}'
+    roots:
+      lmod: /opt/software/modules/spack
+      tcl: $spack/share/spack/modules
+    enable:
+    - lmod
+    arch_folder: false
+
+# modules config
+Reading config from file /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/defaults/repos.yaml
+Reading config from file /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/defaults/modules.yaml
+Reading config from file /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/defaults/linux/modules.yaml
+Reading config from file /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/modules.yaml
+
+
+# modules
+module avail or use -l
+share/spack/templates/modules/modulefile.lua
+$ spack module lmod loads --dependencies <spec>
+
+# modules disable tclmod
+modules.yaml:: enable:: -lmod
+
+# fix module names -- see https://spack-tutorial.readthedocs.io/en/latest/tutorial_modules.html
+vi ${SPACK_ROOT}/etc/spack/modules.yaml
+modules:
+  default:
+    tcl:
+      exclude:
+      - '%gcc@4.8.5'
+      all:
+        filter:
+          exclude_env_vars:
+          - "CC"
+          - "CXX"
+          - "FC"
+          - "F77"
+
+# module refresh
+$ spack module lmod refresh
+$ spack module lmod refresh --delete-tree -y
+
+# module install tree
+default = $spack/opt/spack
+
+# module change install tree
+$ spack config --scope defaults edit config
+tree:install_tree: <full>/path
+
+# module system
+module_roots
+
+
+# modules
+module avail or use -l
+share/spack/templates/modules/modulefile.lua
+$ spack module lmod loads --dependencies <spec>
+
+# fix module names -- see https://spack-tutorial.readthedocs.io/en/latest/tutorial_modules.html
+vi ${SPACK_ROOT}/etc/spack/modules.yaml
+modules:
+  default:
+    tcl:
+      exclude:
+      - '%gcc@4.8.5'
+      all:
+        filter:
+          exclude_env_vars:
+          - "CC"
+          - "CXX"
+          - "FC"
+          - "F77"
+$ spack module lua refresh
+$ spack module tcl refresh --delete-tree -y
+
+# reload lua modules
+$ spack module lmod refresh --delete-tree -y
+
+# lmod
+$ spack config edit modules.yaml
+enable::-lmod...
+
+# module -- ignore dependencies; only generate the modulefiles for the main package and not its dependencies.
+blacklist_implicits: true --> exclude_implicits
+
+# module template
+share/spack/templates/modules/modulefile.lua
+
+# modules - SPACK_ETC=$SPACK_ROOT/etc/spack
+scope           dir
+defaults        $SPACK_ETC/defaults/modules.yaml
+defaults/linux  $SPACK_ETC/defaults/linux/modules.yaml
+site/linux      $SPACK_ETC/linux/modules.yaml
+per-spack       $SPACK_ETC/modules.yaml
+site            $SPACK_ETC/modules.yaml
+per-user        ~/.spack/modules.yaml
+
+# modules config
+$ spack config --scope defaults edit modules
+modules:
+  default:
+    enable::
+      - lmod
+    lmod:
+      core_compilers:
+      - 'gcc@12.2.0'
+      hash_length: 0
+      include:
+      - gcc
+      exclude:
+      - '%gcc@7.5.0'
+      all:
+        filter:
+          exclude_env_vars:
+          - "C_INCLUDE_PATH"
+          - "CPLUS_INCLUDE_PATH"
+          - "LIBRARY_PATH"
+        environment:
+          set:
+            '{name}_ROOT': '{prefix}'
+      openmpi:
+        environment:
+          set:
+            SLURM_MPI_TYPE: pmi2
+            OMPI_MCA_btl_openib_warn_default_gid_prefix: '0'
+      projections:
+        all:          '{name}/{version}'
+        ^lapack:      '{name}/{version}-{^lapack.name}'
+
+#-------------------
+# debugging installs
+#-------------------
+
+# install debugging
+$ spack setup <foo>
+
+# install debugging
+$ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
+$ spack cd gzip
+$ spack build-env gzip %gcc@12.2.0 -- bash  ## rerun configure with whatever changes
+# see https://github.com/Alexpux/MINGW-packages/commit/2e8da32042344c704e62cf8a5147502e3946ea0f
+# see https://github.com/msys2/MINGW-packages/issues/326
+"""
+In file included from /usr/include/string.h:633,
+                 from ./string.h:41,
+                 from /tmp/accopeland/spack-stage/spack-stage-gzip-1.12-rd5atkxcbgfn7zwxly3o7usbft6w7xw6/spack-src/lib/basename-lgpl.c:25:
+./string.h:1091:1: error: expected identifier or '(' before '__extension__'
+ 1091 | _GL_FUNCDECL_SYS (strndup, char *,
+      | ^~~~~~~~~~~~~~~~
+"""
+## workaround for compiling by hand -- needs patch() to get spack working? See wget/gnulib.patch for inspiration
+CFLAGS+=" -DGNULIB_PORTCHECK=1" CXXFLAGS+=" -DGNULIB_PORTCHECK=1" ./configure
+make
+
+# spack arch
+knowledge of what compiler supports what architecture is in lib/spack/external/archspec/json/cpu/microarchitectures.json
+uses 'archspec' to probe system
+https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-flags
+
+# spack python
+$ spack python --path#	see which python spack is using
+setup-env.sh sets SPACK_PYTHON in your environment, so Spack will continue to use whatever python it found
+to ensure that you don’t make an env with a broken python, load it, and make Spack unusable.
+
+# yaml overrides
+$ spack extends YAML syntax to allow “::” to specify a key-value pair; When used, values are replaced instead of adding.
+
+
+#-------------------
+# externals
+#-------------------
+#  external (package.yaml)
+packages.yaml
+  slurm:
+    externals:
+    - spec: slurm@22.05.11
+      prefix: /usr
+    buildable: false
+
+# find external binaries
+$ spack external find # automatically adds to packages.yaml
+$ spack config --scope defaults edit packages
+
+# find external changes
+$ spack config blame packages
+
+# remove external binaries
+$ spack external rm <spec>
+
+
+# reuse optimization
+> spack solve
+## to look at the optimization criteria, and then force it to reuse that spec and do the same again.
+## may not be useful if you aren’t as familiar with the internals of the solver.
+
+# dependents -- union of all pkgs which depend on mpi AND cuda
+sort <(spack dependents mpi) <(spack dependents cuda) | uniq
+
+# versions
+$ spack versions gcc
+$ spack install gcc@8.3.0
+$ spack compiler add $(spack location -i gcc@8.3.0)
+
+#----------------------
+# compiler
+#----------------------
+
+# compiler add
+$ spack compiler add $(spack location -i gcc@8.3.0)
+
+# compilers modify
+$ spack config edit compilers
+# compiler use new
+$ spack install cmake@3.20.0  %gcc@7.5.0 cppflags=-O3
+
+# compiler use specific
+$ spack install zlib %clang
+
+
+# compiler add flags (permanent changes in spackfile or packages or compilers)
+$ spack install mpileaks@1.1.2 %gcc@4.7.3 cppflags="-O3 -floop-block"
+
+# llvm setup
+# compilers.yaml
+compilers::
+- compiler:
+    environment: {}
+    extra_rpaths: [/spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-7.4.0/llvm-8.0.0-b3kkud6rq2w6ppzqujr4hl4c2tcb4dho/lib]
+    flags: {}
+    modules: [llvm-8.0.0-gcc-7.4.0-b3kkud6]
+    operating_system: ubuntu18.04
+    paths:
+      cc: /spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-7.4.0/llvm-8.0.0-b3kkud6rq2w6ppzqujr4hl4c2tcb4dho/bin/clang
+      cxx: /spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-7.4.0/llvm-8.0.0-b3kkud6rq2w6ppzqujr4hl4c2tcb4dho/bin/clang++
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    spec: clang@8.0.0
+    target: x86_64
+
+# compilers
+$ spack install gcc@12.2.0 % gcc@8.5.0
+$ spack compiler add `spack location -i gcc@12.2.0`
+$ spack install gcc@12.2.0 % gcc@12.2.0
+edit ~/.spack/linux/compilers.yaml ; change paths for gcc@12.2.0 to point to new gcc@12.2.0 % gcc@12.2.0 instead of original gcc@12.2.0 % gcc@8.5.0
+$ spack uninstall gcc@12.2.0 % gcc@8.5.0
+
+# compilers
+$ spack compiler find
+$ spack config edit compilers
+
+# default compiler:
+1. In the package file, you can tell Spack what version is preferred by adding preferred=True in the version directive.
+2. In packages.yaml, you can specify for some or all packages how concretization should happen. Examples here:
+$ spack config add "packages:all:compiler:[gcc@12.2.0]"
+
+# default compiler via config
+$ spack config add "packages:all:compiler:[gcc@8.3.0]"  # via config file
+
+# default compiler via config file
+$ spack config --scope defaults edit packages
+$ spack compilers
+$ spack config get compilers
+$ spack config --scope defaults edit config
+
+# default compiler via packages.yaml
+packages:
+  all:
+    require: '%clang'
+
+# default compiler flags -- https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html
+$ spack config edit compilers
+e.g.
+- compiler:
+    spec: clang@=14.0.0-gfortran
+    paths:
+      cc: /usr/bin/clang
+      ...
+    flags:
+      cppflags: -g
+      fflags: -frecord-gcc-switches
+
+
+# config
+$ spack config get config
+$ spack config --scope defaults edit config
+
+# commands:
+https://spack.readthedocs.io/en/latest/command_index.html
+
+# install tree
+default = $spack/opt/spack
+
+# yaml overrides
+$ spack extends YAML syntax to allow “::” to specify a key-value pair; When used, values are replaced instead of adding.
+
+# build customization -- packages.yaml
+/Users/copeland/spack/share/spack/qa/configuration/packages.yaml
+- customize how software is built through packages.yaml
+- prefer particular implementations of virtual dependencies (e.g., MPI or BLAS/LAPACK)
+- prefer to build with particular compilers
+- use external software installations
+
+# package customization
+$ spack config --scope defaults edit packages
+
+# configure external
+packages.yaml
+
+# find external
+$ spack config blame packages
+
+# find external binaries
+$ spack external find # automatically adds to packages.yaml
+$ spack config --scope defaults edit packages.yaml
+
+# remove external binaries
+$ spack external rm <spec>
+
+# tuning dependencies
+concretizer.yaml -- customize aspects of the algorithm it uses to select the dependencies you install
+reuse: false|true
+$SPACK_ROOT/etc/spack/defaults/concretizer.yaml
+$SPACK_ROOT/lib/spack/spack/test/data/config/concretizer.yaml
+~/.spack/...
+
+# reuse optimization
+$ spack solve
+## to look at the optimization criteria, and then force it to reuse that spec and do the same again.
+## may not be useful if you aren’t as familiar with the internals of the solver.
+
+# debug concretize
+$ spack --backtrace concretize
+
+# dependents -- union of all pkgs which depend on mpi AND cuda
+sort <(spack dependents mpi) <(spack dependents cuda) | uniq
+
+# versions
+$ spack versions gcc
+$ spack install gcc@8.3.0
+$ spack compiler add $(spack location -i gcc@8.3.0)
+
+# compiler add
+$ spack compiler add $(spack location -i gcc@8.3.0)
+
+#  customize how software is built 
+packages.yaml
+
+#----------------------
+# environments
+#----------------------
+
+# environment - troubleshoot loading
+$ spack load --sh --only package llvm
+
+# environment from spack.yaml spack.lock --
+# Both create a new environment called my-project, but which one you choose to use depends on your needs:
+$ spack env create my-project spack.yaml  # yaml allows someone else to build your requirements, potentially a different way.
+$ spack env create my-project spack.lock  # lock allows someone else to rebuild your installation exactly as you built it.
+
+# environments what / why?
+environments are similar to Python venv. Environments ensure packages in one environment are kept separate from those of another.
+environment files can be used to reproduce builds.
+
+## key env files
+- spack.yaml : abstract specs and configuration to install; and holds the environment configuration previously edited through spack config edit.
+- spack.lock : fully concrete specs; automatically generated during concretization.
+
+# environments where?
+printenv SPACK_ENV
+
+# spack install (in environment) error: can't install ...
+$ spack env activate <env>
+$ spack add <pkg>
+$ spack install   # note no trailing arg
+
+# list spack environments
+$ spack env list
+
+# what packages are in environment x
+$ spack env activate x
+$ spack find
+
+# deactivate environment
+$ spack env deactivate
+
+# environment create/use
+$ spack env create myenv
+$ spack env activate -p myenv
+$ spack env deactivate
+$ spack concretize [-f] # uhhh what  ?
+$ spack install
+
+# create bash file to load an env
+$ spack env loads -r
+
+# enviro­nments
+$ spack add [-h] [-l LIST_NAME] packag­e_spec # add a spec to an environment
+$ spack concretize [-f, --force]      # concretize an enviro­nment and write a lockfile
+$ spack env create [--wit­hou­t-view] env [envfile]  # create virtual enviro­nments
+$ spack env list   # list all virtual enviro­nments
+$ spack env activate --prompt [-v, --with­-view] # manage virtual enviro­nments
+$ spack env deactivate
+$ spack concretize [-f] # uhhh what  ?
+$ spack installl
+$ spack env loads -r # create a bash file to load an env
+
+# remove enviro­nments
+$ spack env remove [-hy] env [envfile]
+
+# independent env
+$ spack env create -d .
+$ spack env create --temp
+
+# environment config --
+# Example: install a pkg e.g GROMACS version 2020.4 without MPI using FFTW compiled without MPI both using GCC version 10.2.
+# concretization: together  -- has no effect, but in the config section
+# install_tree: <path-to-installation-dir> --
+# (1) sets the installation dir to be <path-to-install-dir> ,
+# (2) tells Spack to install GCC 10.2 if it was previously detected, and
+# (3) links all the libraries using the RUNPATH mechanism.
+$ spack:
+    specs:
+      - gromacs@2020.4 ~mpi %gcc@10.2 ^fftw ~mpi
+    concretization: together
+    config:
+        install_tree: <path-to-installation-dir>
+        shared_linking: runpath # instead of the default rpath from spack
+        install_missing_compilers: true
+
+# spec matrix -- Spec matrices can be used to install swaths of software across various toolchains.
+# see https://spack.readthedocs.io/en/latest/environments.html#spec-matrices
+$ spack:
+  specs:
+    - matrix:
+        - [zlib, libelf, libdwarf]
+        - ['%gcc@7.1.0', '%gcc@4.9.3']
+      exclude:
+        - libdwarf%gcc@4.9.3
+    - cmake
+
+# containers pre-built
+https://hub.docker.com/u/spack
+
+# container using
+docker run -it --rm ghcr.io/spack/ubuntu-jammy:latest
+
+# containers- need a spack.yaml
+$ spack containerize > Dockerfile
+
+# containers - os
+$ spack containerize --list-os
+
+# containers docker
+https://gist.github.com/haampie/6ede63bc25ecede74d4ec5488be00df9
+
+# containers : containerize environments -- see https://spack.readthedocs.io/en/latest/containers.html
+container:
+format: singularity	# in environment yaml file (spack.yaml)
+
+# containers singularity spack.yaml
+## 1
+$ spack:
+  specs:
+  - py-numpy@1.26
+  - py-protobuf@3.20.3 +cpp
+  view: true
+  concretizer:
+    unify: true
+# then
+# spack env activate -d .
+# spack concretize --fresh --force
+#
+## 2
+$ spack:
+  config:
+    install_missing_compilers: true
+  specs:
+  - mvapich@2.3.7 %gcc@=9.4.0 ^libfabric fabrics=sockets,tcp,udp,psm2,verbs ^gmake@4.3
+  container:
+    format: singularity
+    images:
+      os: rockylinux8
+      spack: 0.21.8
+    strip: true
+    labels:
+      app: "base"
+      mpi: "mvapich"
+
+# singularity instead of docker -- (https://spack.readthedocs.io/en/latest/containers.html)
+
+# modify compilers
+$ spack config edit compilers
+
+# use new compiler
+$ spack install cmake@3.20.0  %gcc@7.5.0 cppflags=-O3
+
+# use specific compiler
+$ spack install zlib %clang
+
+# defaults info
+default configuration reside in $SPACK_ROOT/etc/spack/defaults. useful for reference, but should *never* be directly edited.
+To override these settings, create new configuration files in any of the higher-priority configuration scopes. e.g. ... spack.yaml (users) ???
+
+# Add compiler flags (permanent changes in spackfile or packages or compilers)
+$ spack install mpileaks@1.1.2 %gcc@4.7.3 cppflags="-O3 -floop-block"
+
+# Cross-compile for a different micro-architecture with target=
+$ spack install mpileaks@1.1.2 target=icelake
+
+# modify defaults
+$ spack config --scope defaults edit packages
+
+# search for package
+$ spack list pkg*
+
+# Cross-compile for a different micro-architecture with target=
+$ spack install mpileaks@1.1.2 target=icelake
+
+# config modify defaults -- default configuration in $SPACK_ROOT/etc/spack/defaults.
+# useful for reference, but should *never* be directly edited.
+# To override these settings, create new configuration files in any of the higher-priority configuration scopes. e.g. ...
+$ spack config --scope defaults edit packages # config modify defaults
+
+# package find
+$ spack list pkg*
+
+# package find installed
+$ spack find -p
+$ spack find +cuda # all installed pkg with cuda variant
+$ spack find ~cuda # all installed pkg with cuda disabled
+$ spack find 'cuda=*' # has a cuda variant
+
+# find tricks
+$ spack find --format "{name}-{version}-{hash:7} build_type={variants.build_type.value}" ^cmake
+
+# find installed binary
+$ spack location --install-dir cmake
+$ spack location -i <pkg>
+$ spack find -p cmake
+# also spack cd <pkg>
+
+# build customization -- packages.yaml
+/Users/copeland/spack/share/spack/qa/configuration/packages.yaml
+- customize how software is built through packages.yaml
+- prefer particular implementations of virtual dependencies (e.g., MPI or BLAS/LAPACK)
+- prefer to build with particular compilers
+- use external software installations
+
+# package customization
+$ spack config --scope defaults edit packages
+
+# package use installed
+$ spack load <pkg>
+
+# create types -t
+autoreconf
+autotools
+bazel
+bundle
+cargo
+cmake
+generic
+go
+intel
+lua
+makefile
+maven
+meson
+octave
+perlbuild
+perlmake
+python
+qmake
+r
+racket
+ruby
+scons
+sip
+waf
+
+# spack python
+$ spack python --path#	see which python spack is using
+setup-env.sh sets SPACK_PYTHON in your environment, so Spack will continue to use whatever python it found
+and ensure that you don’t make an env with a broken python and make Spack unusable.
+
+# variant
+variant('name', description='...', default=True)
+
+# package cmake_args() -- see gromacs
+def cmake_args(self):
+  options=[]
+  target=self.spec.target
+  if target=='aarch64':
+    options.append('-D_HASBMI2')
+    options.append('-D_HASPOPCNT')
+  return options
+
+# example  package
+from spack import *
+class Infernal(AutotoolsPackage):
+    """Infernal (INFERence of RNA ALignment) is for searching DNA sequence..."""
+    homepage = "http://eddylab.org/infernal/"
+    git     =  "https://github.com/EddyRivasLab/infernal.git"
+    version('1.1.4', tag='infernal-1.1.4', submodules=True)
+    variant('mpi', default=False, description='Enable MPI parallel support')
+    resource(name='easel',git='https://github.com/EddyRivasLab/easel.git',tag='Bio-Easel-0.15',destination='.')
+    resource(name='hmmer',git='https://github.com/EddyRivasLab/hmmer.git',tag='hmmer-3.3.2',destination='.')
+    depends_on('easel')
+    depends_on('mpi', when='+mpi')
+    def configure_args(self):
+        args = []
+        if '+mpi' in self.spec:
+            args.append('--enable-mpi')
+        else:
+            args.append('--disable-mpi')
+        return args
+
+# package resource
+resource(
+   name='cargo',
+   git='https://github.com/rust-lang/cargo.git',
+   tag='0.10.0',
+   destination='cargo'
+)
+
+# package depends_on()  -- can take a full spec
+depends_on('name', when='...', type='...'version('2014-10-08', git='https://github.com/foo/foo.git',commit='9d38cd') # git version
+depends_on("libelf@0.8.2:0.8.4:") # version range
+depends_on("libelf@0.8:") # min version range
+depends_on("libelf@0.8+debug")  # variant or compiler flags:
+depends_on('libelf debug=True') # flags
+depends_on('libelf cppflags="-fPIC"') # flags
+
+# when()
+def setup(self):
+  # do nothing in the default case
+  pass
+
+@when('^openmpi')
+def setup(self):
+  # do something special when this is built with OpenMPI for
+  # its MPI implementations.
+
+# This will be executed instead of the default install if package's sys_type() is chaos_5_x86_64_ib.
+@when('arch=chaos_5_x86_64_ib')
+def install(self, prefix):
+...
+
+# macos_version()
+Version()
+
+# autoreconf
+def autoreconf(self, spec, prefix):
+  autoreconf("--install") # could be more elaborate e.g. autoreconf("sqlite@3:", when="+sqlite")
+
+# configure()
+def configure(self,spec,prefix):
+  configure("--install")
+
+# configure_args()
+def configure_args(self,spec):
+  args=[]
+  if 'avx512' in spec.target:
+    args.append('--with-avx512')
+    ...
+  return args
+  # or
+  def configure_args(self):
+    args=[]
+    if self.spec.satisfies("+sqlite"):
+      args.append("--with-db-backend=sqlite3")
+   return args
+
+# edit()
+ def edit(self, spec, prefix):
+        makefile = FileFilter("Makefile")
+        makefile.filter("/usr/local", prefix)
+
+
+# install()
+def install(self, spec, prefix):
+  with working_dir("kent/src/lib"):
+    make()
+  with working_dir("kent/src/utils/bedClip"):
+    mkdirp("bin")
+    mkdirp(prefix.bin)
+    make()
+    make("install")
+    install("bin/bedClip", prefix.bin)
+
+# build environment - setup_build_environment()
+def setup_build_environment(self, env):
+  env.set("MYSQLLIBS", "-lmysqlclient")
+  env.set("L", "-lssl")
+  env.set("BINDIR", "bin")
+
+## troubleshooting
+## on cray , may need
+#spack install foo os=sles15
+$ spack install foo platform=linux
+
+# debug
+$ spack -d
+$ spack external list
+$ spack debug report
+$ spack external find python #supports >1 version
+
+# debug install backtrace
+export SPACK_BACKTRACE=1
+$ spack install cmake
+
+# build - manual
+$ spack cd mpileaks
+$ spack stage mpileaks
+$ spack build-env mpileaks bash
+
+# build - local
+cd /home/spack
+$ git clone https://github.com/open-mpi/hwloc.git
+cd hwloc
+$ spack dev-build hwloc@master
+
+# disable local config -- https://spack.readthedocs.io/en/latest/configuration.html#overriding-local-configuration
+export SPACK_DISABLE_LOCAL_CONFIG=true
+
+# build paralel with slurm -- parallel coordinated via file locking
+srun -N<nodes> spack install
+
+# build parallel
+# with depfile --  https://spack.readthedocs.io/en/latest/environments.html#generating-depfiles-from-environments
+# typical workflow : generates Makefile from concretized environment in CWD; make -j64 installs the env, parallelizing across pkgs as much as possible.
+# Spack respects Make-jobserver and forwards it to build env of pkgs, meaning a single -j flag is enough to control the load, even when pkgs are built in parallel.
+$ spack env create -d .
+$ spack -e . add perl
+$ spack -e . concretize
+$ spack -e . env depfile -o Makefile
+make -j64
+
+# patch via filter_file()
+ def patch(self):
+        filter_file("#include <vector>", "#include <vector>\n#include <cstdint>","gatb-core/gatb-core/thirdparty/kff-cpp-api/kff_io.hpp")
+
+# patch
+see https://spack.readthedocs.io/en/latest/packaging_guide.html
+patch() or custom patch(self):
+patch('<NAME>|location', when='@version %gcc@version target=arch64 platform=linux', sha256='...')
+path('https://githubusercontent.com/.../patch', sha256='...', when='@ver %gcc@ver target=...')
+
+# patch file location
+patches in same directory as package.py e.g.
+/home/ec2-user/copeland/spack/var/spack/repos/builtin/packages/megahit/amd.patch
+If the patch is a filename, then patch needs to live in spack source tree at:
+$SPACK_ROOT/var/spack/repos/builtin/packages/mvapich2/{package.py,ad_lustre_rwcontig_open_source.patch}
+Also can store patches via githubusercontent.com or .../
+
+# patches in package creation
+$ spack edit <pkg>
+class Mvapich2(Package):
+    ...
+patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
+
+#----------------------
+# contributing 
+#----------------------
+https://spack.readthedocs.io/en/latest/contribution_guide.html#branching
+
+# Contributing guide is for both core and packages
+
+# packaging guide is more specific to package-only.
+
+# create new package and submit PR
+see https://docs.github.com/en/get-started/quickstart/fork-a-repo # for spack repo
+$ git clone https://github.com/YOUR-USERNAME/YOUR-FORK # clone the new fork
+$ git checkout develop # new work on 'dev' branch
+$ git pull upstream develop # sync with upstream
+$ git checkout -b <descriptive_branch_name> # create a feature branch and start work
+$ spack edit mypackage  # create package
+$ spack install --fail-fast mypackage
+... build breaks! ...
+$ spack clean mypackage
+$ spack edit mypackage
+$ spack install --fail-fast mypackage
+... repeat clean/install until install works ...
+$ git add <files_in_commit>  #
+$ git commit --message <descriptive_commit_message>
+$ git push origin <descriptive_branch_name> --set-upstream  ## make a PR via github UI of your fork. local testing - See docs for doc test process ?
+
+# docs / test before PR
+$ git clone --no-single-branch --depth 50 https://github.com/spack/spack.git .
+$ git fetch origin --force --tags --prune --prune-tags --depth 50 pull/30939/head:external-30939
+$ git checkout --force ca5e2ff9579f7e0a50cecd276eee7448a4e2290a
+$ git clean -d -f -f
+$ python3.7 -mvirtualenv
+$ python -m pip install --upgrade --no-cache-dir pip setuptools<58.3.0
+$ python -m pip install --upgrade --no-cache-dir pillow==5.4.1 mock==1.0.1 alabaster>=0.7,<0.8,!=0.7.5 commonmark==0.9.1 recommonmark==0.5.0 sphinx<2 sphinx-rtd-theme<0.5 readthedocs-sphinx-ext<2.3 jinja2<3.1.0
+$ python -m pip install --exists-action=w --no-cache-dir -r lib/spack/docs/requirements.txt
+$ cat lib/spack/docs/conf.py
+$ python -m sphinx -T -E -W --keep-going -b html -d _build/doctrees -D language=en . _build/html
+
+# custom repo for development
+$ spack repo add  $SPACK_ROOT/var/spack/repos/myproject
+modifies  ~/.spack/repos.yaml
+
+# cmake options
+$ spack edit mysql
+options.append("-DCMAKE_CXX_STANDARD=17")
+
+# build checksum
+Standard approach is to download tarballs, with a provided checksum.
+No Checksums if downloading from a symbolic git branch or tag; however, they ARE when downloading from a git hash.
+GitHub and others provide a convenient way to download any Git branch, tag or commit as a tarball (which is checksummable).
+
+# checksum
+$ spack checksum pkg@3 # spider for all versions matching 3.x and checksum
+
+# spec checksum -- needs url= in spec
+url = "https://github.com/rust-lang/rust/archive/refs/tags/1.74.1.tar.gz"   # needed in spec to dig for releases
+
+# spack checksum sha256
+$ spack checksum <pkg>
+$ spack checksum julia@1.6.0
+
+# checksum / md5
+$ spack md5 http://example.com/foo-8.2.1.tar.gz
+
+# spack develop
+
+# sys.platform
+'darwin', ...
+
+# show pkg hash
+$ spack pkg hash <pkg>
+
+# remove by hash
+uninstall any installed packages using its hash. To uninstall tcl@8.5.19, you can use its hash 7qka2cb as follows:
+$ spack find -l tcl
+==> 2 installed packages
+-- linux-centos7-x86_64 / gcc@4.8.5 -----------------------------
+3vbkxar tcl@8.6.10
+-- linux-centos7-x86_64 / gcc@9.3.0 -----------------------------
+7qka2cb tcl@8.5.19
+$ spack uninstall /7qka2cb
+
+# remove specific arch/os/system
+$ spack uninstall -a os=mojave
+
+# remove all pkgs built by compiler
+$ spack uninstall -a %gcc@9.0.1
+
+# on cray , may need
+$ spack install foo os=sles15
+$ spack install foo platform=linux
+
+# debug
+$ spack -d
+$ spack external list
+$ spack debug report
+$ spack external find python #supports >1 version
+
+# fortran -- in gcc
+$ spack install gcc
+$ spack compiler find
+
+# install from git branch
+$ spack install py-balcony@main
+
+# AMD
+see https://cheatography.com/mohan2/cheat-sheets/spack-amd/
+
+#  modules that refuse to die ... see
+/clusterfs/jgi/groups/gentech/genome_analysis/spack/share/spack/lmod/linux-scientific7-x86_64/Core/qemu/
+
+# chaining -- Chaining Spack Installations
+point your Spack installation to another and use packages installed there.
+To register the other Spack instance, add it as an entry to upstreams.yaml
+
+# enhancement proposals - SEP
+https://github.com/spack/seps
+
+# Troubleshoot
+$ spack verify (or is is validate)
+
+# locks -- test if FS supports locking
+$ spack unit-test -k lock.py # may need full path to lock.py
+https://groups.google.com/g/spack/c/EMM4ZX6X8io
+
+# audit
+$ spack audit [configs packages list]
+
+# performance
+$ spack solve --timers <spec>
+$ spack solve --timers libpressio+qoz ^ qoz@git.main
+
+# intel
+# https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-0/spack.html#GUID-6DE83115-3DDC-4B63-A5A0-7234C72D7863
+
+# troubleshoot load env
+$ spack load --sh --only package llvm
+
+# environment from spack.yaml spack.lock --
+# Both create a new environment called my-project, but which one you choose to use depends on your needs:
+$ spack env create my-project spack.yaml  # yaml allows someone else to build your requirements, potentially a different way.
+$ spack env create my-project spack.lock  # lock allows someone else to rebuild your installation exactly as you built it.
+
+# python packages  -- https://spack.readthedocs.io/en/latest/build_systems/pythonpackage.html#choosing-a-package-name
+url: PyPI is preferred over GitHub for downloading
+download: https://pypi.org/project/<package-name>
+naming: don't name py-<pkg> unless it's a library
+
+# install dependency by hash
+$ spack install foo ^/hashofopenmpi.
+
+# show build flags + variants
+$ spack find -Lvd pkg.
+# Example: mtr, a network diagnostic tool
+
+# e4s
+https://oaciss.uoregon.edu/e4s/inventory.html
+
+#-------------------
+# containers
+#------------------
+
+# mconfig builder (go)
+see singularityce
+
+# mconfig passing options ?
+
+# buildcache E4S
+$ spack config add concretizer:reuse:false
+$ spack mirror list
+$ spack mirror add E4S https://cache.e4s.io
+$ spack mirror list
+E4S             https://cache.e4s.io
+$ spack-public    https://mirror.spack.io
+$ spack buildcache keys -it
+==> Fetching https://cache.e4s.io/build_cache/_pgp/25645FA2B218FE55B4EF649E4345F04B40005581.pub
+gpg: key 4345F04B40005581: public key "University of Oregon - E4S" imported
+gpg: Total number processed: 1
+gpg:               imported: 1
+gpg: inserting ownertrust of 6
+
+#--------------
+# buildcache
+#--------------
+$ spack mirror add E4S https://cache.e4s.io
+$ spack buildcache keys --install --trust
+$ spack install --use-buildcache only <package>
+
+# buildcache synopsis
+$ spack mirror add E4S https://cache.e4s.io
+$ spack buildcache keys --install --trust
+$ spack install --use-buildcache only <package>
+$ spack mirror add v0.22.0 https://binaries.spack.io/v0.22.0
+$ spack buildcache keys --install --trust
+
+# add oci buildcache
+$ spack mirror add --oci-username username --oci-password password my_registry oci://example.com/my_image
+$ spack buildcache push --base-image ubuntu:20.04 my_registry ninja
+$ spack install <specs...> # install from the registry
+
+# use oci image from buildcache
+$ docker run -it example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+
+# relocation ~ buildcache
+When using buildcaches across machines, the install path may be different from that used to build binaries.
+To address this problem, spack automatically relocates all paths in binaries and scripts to the new location on install.
+However, if binaries are built in a short path, and installed to a longer path, there may insufficient space in the binary to encode the new path leading to an install failure.
+A source build is always an option , but to reduce the likelihood of this happening, it is highly recommended to add padding to the install root during the build, as specified in the config.yaml
+ config:
+   install_tree:
+     root: /opt/spack
+     padded_length: 128
+
+# confirm buildcache working
+# ...
+
+#---------------
+# concretize
+#--------------
+# concretize
+$ spack config --scope defaults edit concretizer
+concretizer.yaml -- customize aspects of the algorithm it uses to select the dependencies you install
+reuse: false|true
+$SPACK_ROOT/etc/spack/defaults/concretizer.yaml
+$SPACK_ROOT/lib/spack/spack/test/data/config/concretizer.yaml
+~/.spack/...
+
+# debug concretize
+$ spack --backtrace concretize
+
+# concretizer
+$ spack config add concretizer:reuse:false
+concretizer:reuse        "-U","--fresh",        help="do not reuse installed deps; build newest configuration",
+concretizer:reuse,        "--reuse",        help="reuse installed packages/buildcaches when possible",
+concretizer:reuse,        "--reuse-deps",        help="reuse installed dependencies only",
+concretizer:unify:false|true|when_possible
+concretizer:targets:granularity
+concretizer:targets:host_compatible
+
+# concretizer:unify
+'true' -- all roots are satisfied in a single clingo solve
+'false'
+
+# concretize (options)
+--force
+--fresh
+--reuse
+--reuse-deps
+
+# env upgrade
+$ spack env activate myenv
+$ spack mark -i --all
+$ spack concretize --fresh --force
+$ spack install
+$ spack gc
+
+# spec queries --You can use specs to query for specific configurations and builds of each package.
+$ spack find libelf@0.8.12:  # find only libelf versions greater than version 0.8.12
+$ spack find --long libdwarf ^libelf@0.8.12 # Find only versions of libdwarf built with particular version of libelf
+$ spack find libdwarf +debug # will show only installations of libdwarf with the ‘debug’ compile-time option enabled.
+
+# diff -- show differences between multiple variants
+$ spack diff /efzjziy /sl7m27m
+
+
+#-------------------
+# maintenance
+#------------------
+# clean
+remove temporary build files and/or downloaded archives
+positional arguments:
+  specs               one or more package specs
+options:
+  -a, --all           equivalent to -sdfmp (does not include --bootstrap)
+  -s, --stage         remove all temporary build stages (default)
+  -d, --downloads     remove cached downloads
+  -f, --failures      force removal of all install failure tracking markers
+  -m, --misc-cache    remove long-lived caches, like the virtual package index
+  -p, --python-cache  remove .pyc, .pyo files and __pycache__ folders
+  -b, --bootstrap     remove software and configuration needed to bootstrap Spack
+
+#-------------------
+# build / create pkg
+#-------------------
+# golang / go
+$ spack create -t makefile ...cheat...
+
+# create package and build
+$ spack create --force -n bloocoo -t cmake https://github.com/GATB/bloocoo.git
+$ spack build bloocoo
+$ spack -d install bloocoo
+. /Users/copeland/spack/share/spack/setup-env.sh
+
+# spack build cache (cori)
+Using cached archive: /global/cscratch1/sd/copeland/sw/spackcache/_source-cache/archive/0e/0ea8c3283de8d8335d7ae338ef27c53a916f15f382753b174c18b45ffd481558.tar.xz
+
+# pypi pip -- see snakemake
+$ spack create -t python https://pypi.org/project/pycoverm
+pypi = "snakemake/snakemake-6.12.3.tar.gz"
+
+# speedup builds -- see OCI buildcache
+
+#--------------------
+# testing
+#-------------------
+# test
+$ spack test run openmpi
+
+# testing
+$ spack unit-test lib/spack/spack/test/llnl/util/lock.py
+$ spack unit-test -k lock.py
+
+# test
+    def test(self):
+        if self.spec.version <= Version("2.2.6"):
+            return
+        exe = "uniform"
+        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_unif.smb"]
+        expected = "mesh pipe_unif.smb written"
+        description = "testing pumi uniform mesh refinement"
+        self.run_test(exe, options, expected, purpose=description, work_dir=self.prefix.bin)
+
+        mpiexec = Executable(join_path(self.spec["mpi"].prefix.bin, "mpiexec")).command
+        mpiopt = ["-n", "2"]
+        exe = ["split"]
+        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_2_.smb", "2"]
+        expected = "mesh pipe_2_.smb written"
+        description = "testing pumi mesh partitioning"
+        self.run_test(
+            mpiexec,
+            mpiopt + exe + options,
+            expected,
+            purpose=description,
+            work_dir=self.prefix.bin,
+        )
+
+# test
+    def _test_examples(self):
+        """Perform very basic checks on a subset of copied examples."""
+        checks = [
+            (
+                "ex5_line-of-sight_solution",
+                [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"],
+            ),
+            (
+                "ex6_stencil-offset-layout_solution",
+                [r"RAJA Views \(permuted\)", r"result -- PASS"],
+            ),
+            (
+                "ex8_tiled-matrix-transpose_solution",
+                [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
+            ),
+            ("kernel-dynamic-tile", [r"Running index", r"(24,24)"]),
+            ("plugin-example", [r"Launching host kernel for the 10 time"]),
+            ("tut_batched-matrix-multiply", [r"result -- PASS"]),
+            ("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"]),
+        ]
+        for exe, expected in checks:
+            reason = "test: checking output of {0} for {1}".format(exe, expected)
+            self.run_test(
+                exe,
+                [],
+                expected,
+                installed=False,
+                purpose=reason,
+                skip_missing=True,
+                work_dir=self._extra_tests_path,
+            )
+
+    def test(self):
+        """Perform smoke tests."""
+        self._test_examples()
+
+# test a branch
+$ git fetch
+$ git checkout -b temporarybranch 190a1bf5238279a53b85fdad9e1b3f2a44689ae9
+
+# unit test
+$ spack unit-test -k hide_implicits [/path/to/testfile]
+
+#--------------------
+# debugging
+#-------------------
+# Error: "Error: Spec version is not concrete"
+means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: module: not found
+# Fix: make sure MODULEPATH is correct
+
+# Error: C compiler .../gcc-12.2.0-be6eu2n/bin/gcc does not exist, or does not run correctly. The compiler gcc@=12.2.0 will not be used during concretization.
+# Fix: ???
+
+# Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
+# Fix: spack clean -a ???
+
+#Error: AttributeError: module 'spack.pkg.builtin.pycoverm-git' has no attribute 'PycovermGit'
+# Fix: spack clean -m
+
+# Error: timeout error on install
+# Fix: spack clean -f
+
+# Error: autoreconf failures: missing macros
+# Fix:
+  depends_on("autoconf", type="build")
+  depends_on("automake", type="build")
+  depends_on("libtool", type="build")
+  depends_on("autoconf-archive", type="build")
+  def setup_dependent_build_environment(self, env, dependent_spec):
+    """Adds the ACLOCAL path for autotools."""
+    env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
+
+# Error: module load fails due to short name missing -- spack modules have very long names and 'spack' is needed to alias them
+# Fix: if you do not know the name of the specific numpy module you wish to load, run
+$ spack module lmod loads
+
+# Error: zero length files
+# Fix: ???
+$ spack install --overwrite <spec>
+$ spack -d uninstall /xnoykzf  ## --debug (-d)
+$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
+
+# Error: "Error: Spec version is not concrete"
+- means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: corrupted database
+# Fix: reindex
+$ spack reindex
+
+# Error: spack modules lmod refresh --delete-tree -y
+==> Error: Command module spack.cmd.modules (/clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/lib/spack/spack/cmd/modules/__init__.py) must define function 'modules'.
+# Fix: 'module' not 'modules'
+
+
+# Error:  Warning: some module files could not be written (on spack module lmod refresh --delete-tree -y)
+# Fix: ???
+#
+
+# config debugging
+$ spack config --scope defaults blame modules
+$ spack config --scope defaults blame
+
+# install debugging
+$ spack setup <foo>
+
+# install debugging
+$ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
+$ spack cd gzip
+$ spack build-env gzip %gcc@12.2.0 -- bash  ## rerun configure with whatever changes
+# see https://github.com/Alexpux/MINGW-packages/commit/2e8da32042344c704e62cf8a5147502e3946ea0f
+# see https://github.com/msys2/MINGW-packages/issues/326
+"""
+In file included from /usr/include/string.h:633,
+                 from ./string.h:41,
+                 from /tmp/accopeland/spack-stage/spack-stage-gzip-1.12-rd5atkxcbgfn7zwxly3o7usbft6w7xw6/spack-src/lib/basename-lgpl.c:25:
+./string.h:1091:1: error: expected identifier or '(' before '__extension__'
+ 1091 | _GL_FUNCDECL_SYS (strndup, char *,
+      | ^~~~~~~~~~~~~~~~
+"""
+## workaround for compiling by hand -- needs patch() to get spack working? See wget/gnulib.patch for inspiration
+CFLAGS+=" -DGNULIB_PORTCHECK=1" CXXFLAGS+=" -DGNULIB_PORTCHECK=1" ./configure
+make
+
+# Error: spack style produces "==> Error: 'NoneType' object is not callable"
+# Fix: nuke the bootstrap directory: rm -rf ~/.spack/bootstrap
+
+# Error: "Error: Spec version is not concrete"
+- means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: zero length files
+# Fix: ???
+$ spack install --overwrite <spec>
+$ spack -d uninstall /xnoykzf  ## --debug (-d)
+$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
+
+# Error: corrupted database
+# Fix: reindex
+$ spack reindex
+
+# redeploy
+bwrap --dev-bind / / --bind /new/spack/path /old/spack/path
+
+# Error: cannot detect libc from gcc@=12.2.0. The compiler will not be used during concretization.
+# See: https://github.com/spack/spack/issues/44177
+# Fix?: https://github.com/spack/spack/pull/44182
+
+# Error: gcc-runtime
+# Fix:
+$ spack mirror add develop-developer-tools-manylinux2014 https://binaries.spack.io/develop/developer-tools-manylinux2014
+$ spack buildcache keys --install --trust
+
+# Error: ==> Error: /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/modules.yaml:9: ['mpi'] is not of type 'object'
+# Fix: look for typos in keywords e.g. 'heirarchy' instead of 'hierarchy'
+
+
+
+# troubleshooting
+# Error: init hang
+# Fix: rm -rf ~/.spack/cray ~/.spack/cache
+
+#Error:  If spack install <package>@<version>%<compiler> prints error :==> Error: 'str' object has no attribute 'get'
+# Fix: rm -rf ~/.spack
+
+# Error: misc unresolveable errors
+# Fix: delete all spack dirs
+rm -rf your_path_to/spack-install # delete spack-install folder
+rm -rf your_path_to/spack-stages  # delete spack-stages folder
+rm -rf your_path_to/modules       # delete modules folder
+rm -rf ~/.spack/cache             # delete cache folder
+
+# Error: 2.1 (2023-01-15) Problems with Python 3.6
+Python 3.6 is now deprecated for running Spack and support for 3.6, 3.7 and earlier will be removed in the next few months.
+# Fix: export SPACK_PYTHON=/usr/bin/python3.8
+
+# package prefs --https://spack.readthedocs.io/en/latest/build_settings.html#assigning-package-attributes
+packages.yaml
+packages:
+  opencv:
+    compiler: [gcc@4.9]
+    variants: +debug
+  gperftools:
+    version: [2.2, 2.4, 2.3]
+  all:
+    compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
+    target: [sandybridge]
+    providers:
+      mpi: [mvapich2, mpich, openmpi]
+
+# package attributes -- can assign class-level attributes in the configuration:
+# packages.yaml
+packages:
+  mpileaks:
+    # Override existing attributes
+    url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+    # ... or add new ones
+    x: 1
+
+# views -- need to specify the root in modules.yaml if you specify projections.
+view:
+  default:
+    root: .spack-env/view
+    projections:
+      all: '{name}/{version}/{compiler.name}/{compiler.version}/'
+
+# bbcp custom
+cxxflags='-std=c++11'
+
+# haskell <- use package
+$ spack edit pango
+
+# style
+$ spack style duc
+
+# install prebuilt tgz
+class Vmatch(Package):
+    """Vmatch is a versatile software tool for efficiently solving large scale
+    sequence matching tasks"""
+    homepage = "http://www.vmatch.de/"
+    url = "http://www.vmatch.de/distributions/vmatch-2.3.0-Linux_x86_64-64bit.tar.gz"
+    version("2.3.0", sha256="5e18d0dddf04e86dad193fcdde6e48f3901365932634125602d8808f35acf979")
+    def install(self, spec, prefix):
+        install_tree(self.stage.source_path, prefix.bin)
+
+# see what affects a hash
+$ spack pkg source --canonical hdf5 # e.g.
+
+# build log file location
+$ spack location --stage-dir <spec>
+
+# stop build early
+$ spack install --until cmake # e.g. stop at cmake
+
+# selectively generate module for (only) just installed pkg
+$ spack config add modules:default:enable:lmod  # change default config
+
+# remove pkg and all dependencies
+$ spack uninstall --remove --all <spec>
+
+# see build diffs
+$ spack diff /hash1 /hash2
+
+# version ranges
+$ spack version ranges are inclusive, so ^py-numpy@1.20 means <= 1.20.X
+
+# to sif
+$ spack_init
+vim spack.yaml
+$ spack env activate -d .
+$ spack concretize --fresh --force
+$ spack containerize > env.def
+cat env.def
+$ spack env deactivate
+apptainer_init
+apptainer build t.sif env.def
+
+# config customization
+$ spack_USER_CONFIG_PATH: Override the path to use for the user scope (~/.spack by default).
+$ spack_SYSTEM_CONFIG_PATH: Override the path to use for the system scope (/etc/spack by default).
+$ spack_DISABLE_LOCAL_CONFIG: set to completely disable both SYSTEM and USER config dirs; Spack will ONLY consider its own defaults and site config locs.
+$ spack_USER_CACHE_PATH: move the default cache location: Override the default path to use for user data (misc_cache, tests, reports, etc.)
+
+# stacks -- see spack-tutorial.readthedocs.io
+$ spack env activate --create ~/stacks
+$ spack env status
+$ spack add gcc@12.2.0 # %gcc@11
+$ spack env view disable
+$ spack config edit
+$ spack concretize
+
+# concretize
+specify if <<<.yaml
+options:
+when_possible
+always
+fresh
+force
+
+# emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
+#  upgrade entire software stack in an environment and clean up old package versions, run the following:
+$ spack env activate myenv
+$ spack mark -i --all
+$ spack concretize --fresh --force
+$ spack install
+$ spack gc
+
+# git repo
+If a package contains both url() and git() attributes, Spack decides which to use based on the arguments to version()
+if version() contains a branch, tag, or revision  then assume VCS download methods,
+if version() contains a checksum, assume URL download methods.
+
+# git() -- https://spack.readthedocs.io/en/latest/packaging_guide.html
+preferred method is to fetch a particular commit:
+version("2014-10-08", commit="9d38cd4e2c94c3cea97d0e2924814acc")  # hash can be abbreviated as you’d expect with git
+version("2014-10-08", commit="9d38cd")
+
+#----------------------
+# testing
+#----------------------
+$ spack unit-test lib/spack/spack/test/llnl/util/lock.py
+$ spack unit-test -k lock.py
+
+# lmod
+> spack config edit modules
+modules:
+  default:
+    roots:
+     lmod:   $spack/share/spack/lmod  # $SPACK_ROOT/share/spack/lmod/<arch>/gcc/12.2.0
+    'enable:':
+    - lmod
+    lmod:
+      hash_length: 4
+      #exclude_implicits: true
+      hierarchy:
+      - 'mpi'
+      core_compilers:
+      - 'gcc@=8.5.0' # system /usr/bin/gcc
+      include:
+      - '%gcc@14'
+      - '%gcc@12'
+      exclude:
+      - '%gcc@4.8.5'
+      #- '%gcc@9'
+      projections:
+        all: '{name}/{version}-{compiler.name}{compiler.version}'
+      openmpi:
+        environment:
+          set:
+            SLURM_MPI_TYPE: pmix
+
+# cleanup / gc
+$ spack -e . gc  # rm non-explicitly installed build deps in active env; everything first marked as root, then env subtracted then roots are readded.
+$ spack gc -e .  #gets rid of everything in the DB not needed (via run/link deps) by this env
+$ spack gc -be . # gets rid of everything in the DB not needed (via run/link/build deps) by this env
+
+# disallow compiler version
+conflicts('%gcc@:8', msg='GCC versions lower than 9 are not supported')
+
+# submodules --  must use a git not url fetcher
+git = "https://github.com/iqbal-lab-org/cobs.git"
+version("main",branch="main",submodules=True)
+version("0.3.0",tag="v0.3.0", submodules=True)
+
+# cmake project missing install target --  see sshash
+# in package.py
+patch("sshash.cmakelists.patch")
+# in stage then copy to package dir:  edit; git diff > patch
+diff --git i/CMakeLists.txt w/CMakeLists.txt
+index b60e570..a8acfb0 100644
+--- i/CMakeLists.txt
++++ w/CMakeLists.txt
+@@ -88,4 +88,8 @@ target_link_libraries(sshash
+ add_executable(test_alphabet test/test_alphabet.cpp)
+ target_link_libraries(test_alphabet
+   sshash_static
+-)
+\ No newline at end of file
++)
++
++# install
++install(TARGETS sshash)

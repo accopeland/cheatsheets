@@ -1,0 +1,330 @@
+# see also s3
+
+# managment / configuration
+	cloudformation (considered harmful)
+	terraform
+	tibanna (instead of config?)
+
+# docs
+examples: /usr/local/share/awscli
+https://medium.com/circuitpeople/aws-cli-with-jq-and-bash-9d54e2eabaf1
+
+# install
+
+# login
+aws iam list-groups-for-user --user-name <USER> --profile <USER>
+
+# connect
+ssh -i "~/.ssh/acc-c6g-keypair.pem" ec2-user@ec2-54-245-176-86.us-west-2.compute.amazonaws.com
+
+# configure
+awscli aws-cli configure
+~/.aws/credentials
+
+# env vars have highest precedence
+AWS_CONFIG_FILE  location of file AWS CLI uses to store configuration profiles. The default path is ~/.aws/config.
+AWS_DATA_PATH	 ':' sep list of additional dir to check outside of ~/.aws/models when loading AWS CLI data.
+AWS_DEFAULT_OUTPUT	the output format to use.
+AWS_DEFAULT_REGION AWS Region to send the request to. override this variable by using the --region command
+AWS_EC2_METADATA_DISABLED  Disables use of Amazon EC2 instance metadata service (IMDS).
+AWS_MAX_ATTEMPTS  value of maximum retry attempts the AWS CLI retry handler uses
+AWS_METADATA_SERVICE_NUM_ATTEMPTS retries attempting to retrieve credentials on an Amazon EC2 instance configured with IAM role
+AWS_METADATA_SERVICE_TIMEOUT number of seconds before a connection to the instance metadata service should time out.
+AWS_PAGER  pager program used for output.
+AWS_PROFILE name of the AWS CLI profile with the credentials and options to use. override using --profile .
+AWS_REGION specifies the AWS Region to send the request to. override using --region .
+AWS_RETRY_MODE which retry mode AWS CLI uses. [ legacy (default), standard, and adaptive]
+AWS_ROLE_ARN  (ARN) of IAM role w web id provider to run CLI commands. Use with AWS_WEB_IDENTITY_TOKEN_FILE, AWS_ROLE_SESSION_NAME
+AWS_ROLE_SESSION_NAME name to attach to the role session.  becomes part of the assumed role user ARN: arn:aws:sts::123456789012:assumed-role/role_name/role_session_name.
+AWS_SECRET_ACCESS_KEY  secret key associated with the access key. This is essentially the "password" for the access key.
+AWS_SESSION_TOKEN session token value required if you are using temporary security credentials retrieved directly from AWS STS
+AWS_SHARED_CREDENTIALS_FILE  location of file that the AWS CLI uses to store access keys. default path is ~/.aws/credentials.
+AWS_WEB_IDENTITY_TOKEN_FILE  path to file that contains OAuth 2.0 access token or OpenID Connect ID token provided by an id provide
+
+# cli
+aws --cli-auto-prompt
+
+# cli examples
+/usr/local/share/awscli/examples
+
+# s3
+aws s3api list-buckets --query "Buckets[].Name"
+
+# s3 copy
+s3p [npx s3p] (js) -- https://www.genui.com/open-source/s3p-massively-parallel-s3-copying
+s3cmd --
+s3copier -- not maintained (go) 9G/s
+s3parcp - https://github.com/chanzuckerberg/s3parcp ; brew tap chanzuckerberg/tap
+aws s3 cp -- 150M/s
+s3sync --
+rclone
+
+# s3 copy benchmarking
+loc	cmd	aws-cli		s3p		speedup	avg size
+local	ls	2000 items/s	20000 items/s	10x	n/a
+local	cp	  30    mB/s	     150 mB/s	5x	512 kB
+ec2	cp	 150    mB/s	       8 gB/s	54x	100 mB
+
+# s3p ls -- no forward slashes
+s3p ls --bucket bfoster-refdata # 9s
+rclone ls s3:bfoster-refdata  # 17s
+aws s3 ls --recursive s3://bfoster-refdata # 13s
+aws  s3 ls --recursive s3://bfoster-refdata --no-cli-auto-prompt # 13s
+
+# cli completion
+aws <cmds>  --no-cli-auto-prompt
+
+# aws s3 make bucket
+aws s3 mb  s3://acopeland/grav2
+
+# cluster in the cloud
+	git clone https://github.com/clusterinthecloud/installer.git
+	cd installer/
+	./install-citc.sh aws  # use --region to specify specific AWS region to use
+	ssh -i citc-terraform-saved-opossum/citc-key citc@3.249.43.139
+	./destroy-citc.py aws 3.249.43.139 citc-terraform-saved-opossum/citc-key
+
+# brew awscli depends on jasper depends on latex depends on universe
+	-disable doc generation in cmake call: "-DJAS_ENABLE_DOC=OFF",
+
+# cloud cleanup
+	aws-nuke
+	janitor-monkey
+	cloud-nuke
+
+# cp -- measure rate with 'pv'
+aws s3 cp : ~190MB/s
+
+# aws s3copier 9GB/s
+# linux binary build on mac: GOOS=linux GOARCH=amd64 go build -o s3copier copier.go
+go get -u github.com/venkssa/s3copier
+dep ensure
+go build -o s3copier copier.go
+
+# mc : s3  gcs (~60MB/s)
+mc config host add s3 https://s3.amazonaws.com BKI***  V****
+mc config host add gcs https://storage.googleapis.com  GOOG*****  K*****
+mc ls s3/acopeland
+mc ls gcs/acopeland/t1/
+
+# s3 public data -- https://registry.opendata.aws
+aws s3 ls  s3://sra-pub-src-2
+
+# sra:
+aws s3 ls  s3://sra-pub-src-2
+
+# cloud reference databases
+https://github.com/ewels/AWS-iGenomes
+gcloud
+aws::
+http://refgenomes.databio.org
+rsync --dry-run -avzP rsync://datacache.galaxyproject.org/indexes  # galaxy::rsync
+ref.mugqic   # cvmfs computecanada.ca
+https://docs.computecanada.ca/wiki/Genomics_data
+
+# ncbi blast databases (see email 20191219 Tom Madden, David Arndt, Lee Pang)
+aws s3 ls s3://ncbi-blast-databases/ --no-sign-request
+http://s3.amazonaws.com/ncbi-blast-databases docker run --rm ncbi/blast
+update_blastdb.pl --showall pretty --source aws
+https://github.com/ncbi/blast_plus_docs aws ls s3://ncbi-blast-databases/latest-dir (on AWS)
+or
+gs://blast-db/latest-dir (on GCP). latest-dir is a text file with a date stamp (e.g., 2020-09-29-01-05-01)
+aws s3 ls  s3://ncbi-blast-databases/2020-12-15-01-05-02/
+
+# ec2 pricing -
+http://www.ec2instances.info/?min_memory=128&region=us-west-1&reserved_term=yrTerm1Standard.allUpfront
+
+# total cost of ownership:
+https://awstcocalculator.com/#
+
+# spot-instance pricing
+	REGIONS="ap-southeast-2 ap-southeast-1 ap-northeast-1 us-east-1 us-west-1 us-west-2 eu-west-1 eu-central-1"
+	for region in $REGIONS; do
+	  aws ec2 describe-spot-instance-requests --region $region ~/data/requests/spot-instance-requests-$region.json;
+	done
+	for region in $REGIONS; do
+	  aws ec2 describe-instances --region $region > ~/data/instances/instances-$region.json;
+	done
+
+# ec2 docker (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html)
+	sudo yum install docker
+	sudo service docker start
+	sudo usermod -a -G docker ec2-user
+	# logout / login
+	docker info
+
+# policy sim
+https://policysim.aws.amazon.com/home/index.jsp
+
+# create snapshot (cli)
+aws ec2 create-snapshot --volume-id vol-026cf79b92c3cd12c --description "a description"
+
+# stop instance
+> aws ec2 stop-instances --instance-ids i-0853ad8955b74425a
+
+# benchmarking
+https://aws.amazon.com/blogs/publicsector/generalized-approach-benchmarking-genomics-workloads-cloud-bwa-read-aligner-graviton2/
+https://aws.amazon.com/blogs/publicsector/accelerating-genome-assembly-aws-graviton2/
+
+# list ec2
+aws list-instances
+
+# describe
+aws ec2 describe-instances \
+    --filters Name=tag:Stack,Values=production
+aws ec2 describe-instances \
+    --filters Name=tag-value,Values=production
+
+# create resource and tag
+aws ec2 create-volume \
+    --availability-zone us-east-1a \
+    --volume-type gp2 \
+    --size 80 \
+    --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=production},{Key=cost-center,Value=cc123}]'
+
+# add tag to resource
+aws ec2 create-tags \			# single resource
+    --resources ami-78a54011 \
+    --tags Key=Stack,Value=production
+aws ec2 create-tags \  		# multiple resources
+    --resources ami-1a2b3c4d i-1234567890abcdef0 \
+    --tags Key=webserver,Value=  Key=stack,Value=Production
+
+# total cost of ownership:
+https://awstcocalculator.com/#
+
+# cost reporting via ccexplorer -- https://github.com/cduggn/ccExplorer
+$ ccexplorer get aws -g DIMENSION=LINKED_ACCOUNT  # Costs grouped by LINKED_ACCOUNT
+$ ccexplorer get aws -g DIMENSION=OPERATION,DIMENSION=SERVICE -s 2022-10-10 -f OPERATION="CommittedThroughput" -l # Costs by CommittedThroughput operation and SERVICE
+$ ccexplorer get aws -g DIMENSION=OPERATION,DIMENSION=LINKED_ACCOUNT  -s 2022-10-10 -f OPERATION="CommittedThroughput" -l # Costs by CommittedThroughput and LINKED_ACCOUNT
+$ ccexplorer get aws -g DIMENSION=OPERATION,DIMENSION=SERVICE -s 2022-10-10 -f SERVICE="Amazon DynamoDB" -l # DynamodDB costs grouped by OPERATION
+$ ccexplorer get aws -g DIMENSION=SERVICE -s 2022-10-10 # All service costs grouped by SERVICE
+$ ccexplorer get aws -g DIMENSION=SERVICE,DIMENSION=OPERATION -s 2022-10-01 -l # All service costs grouped by SERVICE and OPERATION
+$ ccexplorer get aws -g DIMENSION=SERVICE,DIMENSION=OPERATION -s 2023-01-01 -e 2023-02-10 -l -d -m DAILY # All costs grouped by SERVICE and OPERATION sorted desc by date
+$ ccexplorer get aws -g DIMENSION=OPERATION,DIMENSION=SERVICE -s 2022-04-04  -f SERVICE="Amazon Simple Storage Service" -l # S3 costs grouped by OPERATION
+$ ccexplorer get aws -g TAG=ApplicationName,DIMENSION=OPERATION -s 2022-12-10 -l # Costs grpuped by ApplicationName Cost Allocation Tag
+$ ccexplorer get aws -g DIMENSION=SERVICE,DIMENSION=OPERATION -l -e 2023-01-27T15:04:05Z -s 2023-01-26T15:04:05Z -m HOURLY  # Costs by HOUR and SERVICE and OP DIMENSIONS
+$ ccexplorer get aws -g DIMENSION=SERVICE,DIMENSION=OPERATION -l -e 2023-01-27 -s 2023-01-26 -m DAILY # Costs grouped by DAY and by SERVICE and OPERATION DIMEBSIONS
+$ ccexplorer get aws -g TAG=ApplicationName,DIMENSION=OPERATION -s 2022-12-10 -f TAG="my-project" -l # Costs by AppName Cost Alloc Tag and filtered by specific name
+$ ccexplorer get aws -g DIMENSION=SERVICE,TAG=ApplicationName -f SERVICE="Amazon Simple Storage Service"  -l # S3 costs by SERVICE and Applname Cost Allocation Tag
+$ ccexplorer get aws -g DIMENSION=SERVICE,TAG=ApplicationName -f SERVICE="Amazon Simple Storage Service"  -l -f TAG="my-application" # S3 costs by SERVICE and Name Cost Allocation Tag and filtered by specific name
+$ ccexplorer get aws -g DIMENSION=SERVICE,TAG=BucketName -f SERVICE="Amazon Simple Storage Service" -l # S3 costs by SERVICE dimension and BucketName Cost Allocation Tag
+$ ccexplorer get aws -g DIMENSION=OPERATION,TAG=BucketName -f SERVICE="Amazon Simple Storage Service" -l -f TAG="my-bucket" # S3 costs by SERVICE dim and BucketName Cost Allocation Tag and filterred by specific name
+$ ccexplorer get aws -g TAG=ApplicationName,DIMENSION=OPERATION -s 2022-12-10 -f OPERATION="PutObject" -l  # Costs groupedby OPERATION dimension and ApplicationName Cost Allocation Tag and filtered by PutObject operation
+$ ccexplorer get aws -g DIMENSION=OPERATION,DIMENSION=LINKED_ACCOUNT -s 2022-12-10 -f OPERATION="GetCostAndUsage" -l # Costs grouped by GetCostAndUsage operation and LINKED_ACCOUNT dimension
+
+# aws cost estimator
+https://www.infracost.io/docs/
+
+# aws cost reporting
+https://us-east-1.console.aws.amazon.com/billing/home?region=ap-south-1#/reports
+https://us-east-2.console.aws.amazon.com/s3/buckets/acopeland?region=us-west-1&prefix=CUR-/AWSBasicCost-20230925/&showversions=false
+
+# aws cost query
+aws ce get-cost-and-usage --no-cli-auto-prompt --time-period Start=$(gdate "+%Y-%m-01" -d "-1 Month"),End=$(gdate --date="$(date +'%Y-%m-01') - 1 second" -I) --granularity MONTHLY --metrics UsageQuantity --group-by Type=DIMENSION,Key=SERVICE
+
+# resource to region queries -- console: https://us-west-1.console.aws.amazon.com/config/home?awsc-custsat-override=promptUser&region=us-west-1&v2=true#/queries/editor#
+SELECT
+  resourceId,
+  resourceName,
+  resourceType
+WHERE
+  relationships.resourceId = 'vpc-9077d1f9'
+
+# resource to region via aws cli configservice
+aws configservice select-resource-config --expression "SELECT resourceId,  resourceName, resourceType, tags, availabilityZone WHERE relationships.resourceId='vpc-0ded1c524768bfc52'"
+
+# resource explorer
+https://resource-explorer.console.aws.amazon.com/resource-explorer/home#/search
+
+# find active resources using vpc
+aws ec2 describe-network-interfaces --filters Name=vpc-id,Values=<vpc-id> --query  'NetworkInterfaces[*].[RequesterId,Description]'
+aws ec2 describe-network-interfaces --filters Name=vpc-id,Values=<vpc-id> --query  'NetworkInterfaces[*].[AvailabilityZone, OwnerId, Attachment.InstanceId, PrivateIpAddresses[*].Association.PublicIp]'
+
+# create an ec2 instance from specific AMI
+##Step 1: Find the right AMI (this is slow, ’cause there are a *lot* of AMIs) and hold it in an environment variable:
+export AMI_ID=$(aws ec2 describe-images --owners amazon | jq -r ".Images[] | { id: .ImageId, desc: .Description } | select(.desc?) | select(.desc | contains(\"Amazon Linux 2\")) | select(.desc | contains(\".NET 6\")) | .id")
+##Step 2: Create a key pair, and hold on to it in a file:
+aws ec2 create-key-pair --key-name aurora-test-keypair > keypair.pem
+##Step 3: Create the instance using the AMI and the key pair, and hold onto the result in a file:
+aws ec2 run-instances --instance-type t2.micro --image-id $AMI_ID --region us-east-1 --subnet-id <your_subnet_id> --key-name keypair --count 1 > instance.json
+##Step 4: Grab the instance Id from the file:
+export INSTANCE_ID=$(jq -r .Instances[].InstanceId instance.json)
+##Step 5: Wait for the instance to spin-up, then grab it’s IP address and hold onto it in an environment variable:
+export INSTANCE_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --output text --query 'Reservations[*].Instances[*].PublicIpAddress')
+##Step 6: SSH and profit:
+ssh -i keypair.pem ec2-user@$INSTANCE_IP
+
+# list all services
+curl -s https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json | jq -r '.partitions[0].services | keys[]'
+
+# CloudFormation Stacks number in each Status?
+aws cloudformation list-stacks | jq  '.StackSummaries | [ group_by(.StackStatus)[] | { "status": .[0].StackStatus, "count": (. | length) }
+]'
+
+# EC2 Instances created by Stacks -- Hopefully none, but if you have them you know how important it is to be aware of their parentage.
+for stack in $(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE | jq -r '.StackSummaries[].StackName'); do aws cloudformation describe-stack-resources --stack-name $stack | jq -r '.StackResources[] | select (.ResourceType=="AWS::EC2::Instance")|.PhysicalResourceId'; done;
+
+# Gigabytes of Volumes by Status?
+aws ec2 describe-volumes | jq -r '.Volumes | [ group_by(.State)[] | { (.[0].State): ([.[].Size] | add) } ] | add'
+
+# Snapshot count  -- Perhaps related to the number of volumes. Beware that the list is very, very, very long if you look at the ones owned by amazon.
+aws ec2 describe-snapshots --owner-ids self | jq '.Snapshots | length'
+
+# Snapshot total size
+aws ec2 describe-snapshots --owner-ids self | jq '[.Snapshots[].VolumeSize] | add'
+
+# Snapshot by volume
+##Note, when a Snapshot is copied the VolumeId of the copy does not reflect the volume of the original (it gets the special value vol-ffffffff).
+aws ec2 describe-snapshots --owner-ids self | jq '.Snapshots | [ group_by(.VolumeId)[] | { (.[0].VolumeId): { "count": (.[] | length), "size": ([.[].VolumeSize] | add) } } ] | add'
+
+# Log Streams -- What’s happening in my Log Streams?
+# It’d be cool if the CLI allowed me to get log events using the log stream ARN, but it doesn’t so it starts with getting the log group names:
+logs=$(aws logs describe-log-groups | jq -r '.logGroups[].logGroupName')
+
+# Log Stream first log
+for group in $logs; do echo $(aws logs describe-log-streams --log-group-name $group --order-by LastEventTime --descending --max-items 1 | jq -r '.logStreams[0].logStreamName + " "'); done
+
+# Log Stream --  last 10 messages since midnight:
+for group in $logs; do for stream in $(aws logs describe-log-streams --log-group-name $group --order-by LastEventTime --descending --max-items 1 | jq -r '[ .logStreams[0].logStreamName + " "] | add'); do echo ">>>"; echo GROUP: $group; echo STREAM: $stream; aws logs get-log-events --limit 10 --log-group-name $group --log-stream-name $stream --start-time $(date -d 'today 00:00:00' '+%s%N' | cut -b1-13) | jq -r ".events[].message"; done; done
+
+# Log Stream set expire policy
+# log groups default retention period is “Never Expire” they can start to build up after a few years.
+# I don’t use CloudWatch logs for long-term storage (and neither should you) but since AWS doesn’t provide a way to set the default retention to something I’d prefer, I run the following command from time to time to make sure they’re all set to 30 days:
+for group in $(aws logs describe-log-groups --query "logGroups[].[logGroupName]" --output text --no-paginate); do aws logs put-retention-policy --log-group-name $group --retention-in-days 30; done;
+
+# S3 -- How Much Data is in Each of my Buckets?
+##It’s remarkably difficult get the breakdown of data volume by bucket in the AWS console. CloudWatch contains the data, but if your account has more than a few buckets it’s very tedious to use.
+#This little command gives your the total size of the objects in each bucket, one per line, with human-friendly numbers:
+for bucket in $(aws s3api list-buckets --query "Buckets[].Name" --output text); do aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --dimensions Name=BucketName,Value=$bucket Name=StorageType,Value=StandardStorage --start-time $(date --iso-8601)T00:00 --end-time $(date --iso-8601)T23:59 --period 86400 --statistic Maximum | echo $bucket: $(numfmt --to si $(jq -r ".Datapoints[0].Maximum // 0")); done;
+
+# S3 buckets $/month -- Just a little math ( based on the current standard tier price of $0.023 per GB per month): Warning, this one is slow.
+for bucket in $(aws s3api list-buckets --query "Buckets[].Name" --output text); do aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --dimensions Name=BucketName,Value=$bucket Name=StorageType,Value=StandardStorage --start-time $(date --iso-8601)T00:00 --end-time $(date --iso-8601)T23:59 --period 86400 --statistic Maximum | echo $bucket: \$$(jq -r "(.Datapoints[0].Maximum //
+ 0) * .023 / (1024*1024*1024) * 100.0 | floor / 100.0"); done;
+
+# S3 bucket policy -- What do my Bucket Policies Allow?
+##Nobody wants a Bucket Negligence Award, so let’s stay off Corey’s radar. Unfortunately, the CLI dumps policies into escaped JSON strings; and, fortunately jq can deal with that just fine:
+aws s3api get-bucket-policy --bucket elevenos-production-payloads | jq ".Policy | fromjson"
+
+# S3 bucket policy for all buckets
+# To get the policies for all buckets may take a while, so let’s pipe them to a file (note we have to send the CLI’s annoying error messages to null to get clean output of the policies):
+{ for bucket in $(aws s3api list-buckets --query "Buckets[].Name" --output text); do aws s3api get-bucket-
+policy --bucket $bucket 2>/dev/null; done; } > bucket-policies.txt
+#Next we can --slurp them all up with jq and start to see the big picture:
+jq -s "[ .[].Policy|fromjson|.Statement[] ] | group_by(.Effect) | .[] |  { Effect: .[0].Effect, Principals
+: [ .[].Principal ] | unique }" bucket-policies.txt
+
+# EC2 Security Groups -- Which of my EC2 Security Groups are being used?
+## This is in response to a suggestion from  Rick Anderson that got me thinking about cleaning up the detritus of development, and ways to make that easier. While it’s true that following “configuration as code” makes cleaning-up easier (just delete the stack, right?) nonetheless reality prevails. So, true or false, are you using each of your security groups?
+{ aws ec2 describe-network-interfaces | jq '[.NetworkInterfaces[].Groups[]|.]|map({ (.GroupId|tostring): true }) | add'; aws ec2 desc
+ribe-security-groups | jq '[.SecurityGroups[].GroupId]|map({ (.|tostring): false })|add'; } | jq -s '[.[1], .[0]]|add|to_entries|[group_by(.value)[]|{ (.[0]
+.value|if . then "in-use" else "unused" end): [.[].key] }]|add'
+
+# CloudFront Distributions with old TLS Versions?
+## Another security-related one here. The definition of “secure” HTTPS is a moving target as new exploits are discovered and support for new versions of the TLS specification are deployed by AWS. Clicking-though the UI to check each and every origin in your distributions can be, well, a lot of clicks. This one liner will save you some finger strain:
+aws cloudfront list-distributions \
+ | jq ".DistributionList.Items|.[]|{(.Id):([ .Origins.Items[]|{ (.Id): .CustomOriginConfig.OriginSslProtocols.Items }]|add)}|add"
+
+# AWS Regions Support the Services my Solution Needs?
+# Or perhaps asked differently, “Can I deploy my service in region `X`"? This isn’t always an easy thing to figure out from the reference guides and console, but there is bash solution of course! The output of the command below will give you the list of regions that support all of the named services. Note, if you change the list of services, make sure to also change the number in the awk program (bold) to match:
+for service in "lambda" "stepfunctions" "s3" "comprehendmedical"; do aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/$service/regions --query 'Parameters[].Value' --output text | tr '[:blank:]' '\n' | grep -v -e ^cn- -e ^us-gov- | sort -r; done | awk '++a[$0]==4{ print $0 }'

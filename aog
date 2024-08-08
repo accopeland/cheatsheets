@@ -1,0 +1,28 @@
+# multiple input csv plot with aog
+original_files = [  "FirstThreadAxialStress.xls", "OldRepairAxialStress.xls","NewRepairAxialStress.xls",] # File Names
+new_files = [ "FirstThreadAxialStress.xls", "OldRepairAxialStress.xls", "NewRepairAxialStress.xls",]
+df = vcat(   # Load and Categorize Data
+    CSV.read.( [original_files, new_files],
+        DataFrame,
+        source = "Path Location" => [
+            "First Thread",
+            "Old Repair Diameter",
+            "New Repair Diameter",
+        ]
+    )...,
+    source = "Model" => ["Original Repair", "New Repair"]
+)
+# Plot Data
+fig = draw(
+    data(df)
+    * mapping(
+        "S (in)" => "Distance from Inner Wall (in)",
+        "Normal Stress (psi)" => (x -> x./1000) => "Axial Stress (ksi)",
+        linestyle="Model",
+        color="Path Location",
+    )
+    * visual(Lines),
+    axis=(; title="Post-Repair Stresses"),
+)
+save("Post-Repair Stresses.png", fig)
+display(fig)

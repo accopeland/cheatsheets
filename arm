@@ -1,0 +1,33 @@
+# floats
+There are three float modes available on modern ARM SoC’s:
+  soft - floating point is completely emulated, very slow
+  softfp - uses hardware floating point, but is ABI compatible with soft
+  hard - complete hardware floating point, incompatible ABI with soft and softfp
+
+#  For hard-float with the standard baseline EABI (“softfp”), pass custom configuration options for gcc’s build process, e.g.
+make TARGET=arm-linux-musleabi GCC_CONFIG="--with-float=softfp --with-arch=armv6k --with-fpu=vfpv2" install
+
+#  specify custom gcc configure options to set the default ISA level and  avoid passing -march=..., e.g.
+make TARGET=arm-linux-musleabihf GCC_CONFIG="--with-arch=armv7-a --with-fpu=vfpv3-d16" install
+
+# SIMDE :  megahit  / arm
+-fopenmp-simd -O3 -DSIMDE_ENABLE_OPENMP -DSIMDE_ENABLE_NATIVE_ALIASES
+-mfpu=neon
+-march=armv8-a+simd
+-mbmi2
+-mpopcnt
+-msse42
+ctz => --builtin_ctz --builtin_ctzll
+pdep <= _pdep_w32 _pdep_u64
+
+# SIMDE tests
+HasPopCnt() :
+HasBmi2()  : check for ctz, pdep
+
+# portable snippets
+PSNIP_EMULATE_NATIVE
+include <once.h> ???
+#include exact_int
+#include <builtin>
+#include <cpu/cpu.h>
+psnip_cpu_get_id(int func, int *, data)

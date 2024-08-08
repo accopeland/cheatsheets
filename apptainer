@@ -1,0 +1,25 @@
+# description
+New name for singularity after about v3.9.5
+
+# see also
+singularity
+
+# install
+hmm...
+
+# mac / lima
+limactl start template://apptainer
+limactl shell apptainer
+
+# debug
+apptainer run --env PYTHONPATH='' docker://doejgi/jamo /opt/conda/bin/python3 -m pdb /opt/mo/jamo.py report select _id where file_date gte '2023-05-05'
+
+# pull / docker
+$ export APPTAINER_CACHEDIR=/tmp
+$ apptainer pull fcs-gx-0.4.0.sif docker://ncbi/fcs-gx:0.4.0
+
+# instance -- container running a service in the background is called an instance
+apptainer instance start   alpine_latest.sif     instance1
+
+# remotes
+apptainer remote login --username myuser docker://docker.io

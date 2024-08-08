@@ -1,0 +1,65 @@
+# description
+Various notes about finding and dealing with computer arch
+
+# AMD   -- see https://documentation.suse.com/sbp/all/html/SBP-AMD-EPYC-2-SLES15SP1/index.html
+function _numa() { numactl --hardware ; }
+function _taskset() { taskset -h ; }
+function _turbostat() { turbostat - h ; }
+
+# microarchitectures
+https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
+
+# arm
+	https://en.wikipedia.org/wiki/ARM_architecture#Scalable_Vector_Extension_(SVE)
+	# Note
+	A quirk of Neon in ARMv7 devices is that it flushes all subnormal numbers to zero, and as a result the GCC compiler will not use it unless -funsafe-math-optimizations, which allows losing denormals, is turned on. "Enhanced" Neon defined since ARMv8 does not have this quirk, but as of GCC 8.2 the same flag is still required to enable Neon instructions.[128] On the other hand, GCC does consider Neon safe on AArch64 for ARMv8.
+
+# spack arch
+microarch json file (see aliases)
+
+# gcc -m <archtuning> options all have a corresponding -mno-* option
+	gcc -mcpu=native -march=native -Q --help=target
+
+# gcc spec / configuration
+	gcc -x c++ -E -Wp,-v -
+	gcc -print-search-dirs
+	ld -v
+
+# arm
+	AArch64 =64-bit state introduced in Armv8-A architecture
+
+# graviton/ arm64 / aarch64
+	https://gitter.im/simd-everywhere/community
+	https://github.com/simd-everywhere/simde
+	see https://wiki.debian.org/SIMDEverywhere
+
+# clang search paths
+	clang -x c -v -E /dev/null
+
+
+# ld: symbol(s) not found for architecture x86_64
+	check for global defs of CFLAGS, LDFLAGS, CC, CXX
+	# generally seems to be a problem with llvm / clang, so
+	CC=gcc make  # careful though since /usr/bin/gcc is ALSO clang!!
+
+# hardware
+	sysdig
+	hwloc
+	systemstats
+	m
+	sw_vers
+	arch
+	system_profiler SPHardwareDataType | grep Identifier
+	sysctl -n machdep.cpu.brand_string
+
+# linking error: file was built for archive which is not the architecture being linked
+	make sure the correct AR is being used
+
+# macos check architecture of obj files: lipo -info <*.o>
+
+
+#  configure (conda r-base)
+x86_64-apple-darwin13.4.0-clang" CFLAGS="-march=core2 -mtune=haswell -mssse3 -ftree-vectorize -fPIC -fPIE -fstack-protector-strong -O2 -pipe -I/Users/copeland/.julia/conda/3/include -fdebug-prefix-map=/opt/concourse/worker/volumes/live/35542676-6889-43cb-7dee-5296bec04994/volume/r-base_1583246889808/work=/usr/local/src/conda/r-base-3.5.3 -fdebug-prefix-map=/Users/copeland/.julia/conda/3=/usr/local/src/conda-prefix  -D_FORTIFY_SOURCE=2 -mmacosx-version-min=10.9  -I/Users/copeland/.julia/conda/3/include -fPIC " AR="x86_64-apple-darwin13.4.0-ar" RANLIB="x86_64-apple-darwin13.4.0-ranlib" LDFLAGS="-Wl,-dead_strip_dylibs  -Wl,-pie -Wl,-headerpad_max_install_names -Wl,-dead_strip_dylibs -Wl,-rpath,/Users/copeland/.julia/conda/3/lib -L/Users/copeland/.julia/conda/3/lib" ./configure --quiet)
+
+
+#  compile errors libutf8proc.a wrong arch:  https://github.com/JuliaStrings/utf8proc.git

@@ -1,0 +1,16 @@
+# description
+Notes on DNA/RNA assembly, assemblers and tooling
+
+# HiCanu
+HiCanu consensus sequences using PacBio HiFi data are typically well above
+99.99% We discourage any post-processing/polishing of these assemblies as
+mis-mapping within repeats can introduce errors.
+
+# Canu
+Canu consensus sequences are typically well above 99% identity for PacBio
+datasets. Nanopore accuracy varies depending on pore and basecaller version,
+but is typically above 99% for recent data. Accuracy can be improved by
+polishing the contigs with tools developed specifically for that task. We
+recommend Arrow for PacBio and Nanopolish or Medaka for Oxford Nanpore data.
+When Illumina reads are available, FreeBayes can be used to polish either
+PacBio or Oxford Nanopore assemblies.

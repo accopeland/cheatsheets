@@ -1,0 +1,21 @@
+# description
+collection of random apple-related stuff
+
+
+# disable writing .DS_STORE on network drives
+defaults write com.apple.desktopservices DSDontWriteNetworkStores true
+
+# status
+https://www.apple.com/support/systemstatus/
+
+# can't login to appleid server
+make sure proxy is up (e.g. dori_9050)
+
+# show IO kit registry
+ioreg -p IOUSB
+
+# spotlight metadata
+mdutil – manage the metadata stores used by Spotlight
+
+# realtime fs data
+fs_usage – report system calls and page faults related to filesystem activity in real-time

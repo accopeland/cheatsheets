@@ -1,0 +1,38 @@
+# description
+
+# install
+spack
+
+# usage -- Note that for UDP-based tools, it is very important to follow the UDP tuning suggestions.
+7x difference in performance dependent on UDP tuning is typical of UDP-based tools, and is not unique to Aspera's ascp.
+
+# tuning udp
+# For example, this aspera command:
+numactl -C 4 /opt/aspera/bin/ascp -S "numactl -C 4 /opt/aspera/bin/ascp -b 1024" -i ~/.ssh/id_rsa -Z 8972 -QTl 20G --no-read --no-write /tmp/test.data 192.168.101.9:/tmp/test.file # 14 Gbps over a 40G network
+ascp -i ~/.ssh/id_rsa  -QTl 20G --no-read --no-write /tmp/test.data 192.168.101.9:/tmp/test.file  # 2Gbps using the default setting
+
+
+
+# ncbi
+https://www.ncbi.nlm.nih.gov/sra/docs/aspera-key-pairs/
+
+# test (works 20230419)
+spack load aspera-cli
+ascp -v -QT -l1000M -i asperaweb_id_dsa.openssh anonftp@ftp.ncbi.nlm.nih.gov:1GB /tmp/1GB
+
+# ncbi updates 2023-02
+# need new version ascp , key , syntax
+env ASPERA_SCP_PASS=743128bf-3bf3-45b5-ab14-4602c67f2950
+~/.aspera/connect/bin/ascp  -QT -l500m -i ~/.aspera/connect/etc/aspera_tokenauth_id_rsa --no-read --no-write anonftp@ftp.ncbi.nlm.nih.gov:1GB /tmp/
+
+# ena / ebi
+
+# nt
+works but only get 5MB/s on dori (ETA 8d !?!)
+ascp -vQT -l 200M -i asperaweb_id_dsa.openssh --host=ftp.ncbi.nih.gov --user=anonftp --mode=recv /blast/db/FASTA/nt.gz nt.gz
+200MB/s on dtn03.nersc.gov
+500-900MB/s on dtn03.nersc.gov with -l1000M
+
+# Error: Session Stop  (Error: failed to authenticate)
+# Fix? chmod 400 <keyfiles>
+ssh-keygen -e -f  /clusterfs/jgi/groups/gentech/homes/accopeland/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12.2.0/aspera-cli-3.7.7-qq3hncomcbg7wac74tganunkzjmyzz6i/cli/etc/asperaweb_id_dsa.openssh

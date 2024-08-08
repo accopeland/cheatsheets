@@ -15,3 +15,10 @@ printf "george jetson\nolive oyl\nbeetle bailey" | awk '$2=="bailey"{print $0}'
 #
 # To execute commands only on matching rows using regex
 printf "george jetson\nolive oyl\nbeetle bailey" | awk '/ley$/{print $0}'
+
+# system calls
+awk 'BEGIN{ cmd="date +%s" ; cmd | getline x; close(cmd); print systime(),x ; } '
+
+# ignore first N cols
+e.g. N=3
+gawk '{$1=$2=$3="";sub(/  /,"")} 1'  CMDs

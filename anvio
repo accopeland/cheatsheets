@@ -1,0 +1,16 @@
+# install miniconda
+	brew install Caskroom/cask/miniconda
+	export PYTHONPATH=
+	export PATH=~/miniconda3/bin:"$PATH"
+
+# install anvio deps via conda
+	# python2 ???
+	#conda create -n anvio -c bioconda python=2 cython hdf5 numpy sqlite scikit-learn django requests six h5py ete2 bottle bwa prodigal prinseq biopython numpy pandas hmmer blast muscle mcl gsl
+	# python3
+	 ./conda create -n anvio -c bioconda -c conda-forge anvio  prodigal hmmer "cherrypy>=6.0.2,<9"
+
+	# To activate this environment, use:
+	 source activate anvio
+	(anvio) copeland@acopeland:~/miniconda3/bin> source  ../envs/anvio/bin/activate  anvio
+	# To deactivate this environment, use:
+	source deactivate anvio

@@ -1,0 +1,71 @@
+# description
+Tool to configure multiple versions of multiple tools
+
+# install
+brew install asdf
+
+# config
+. $HOME/.asdf/asdf.sh
+. $HOME/.asdf/completions/asdf.bash
+
+# docs
+https://asdf-vm.com/guide/getting-started.html#_3-install-asdf
+
+# current versions
+asdf current
+
+# homebrew config
+echo -e "\n. $(brew --prefix asdf)/libexec/asdf.sh" >> ~/.bash_profile
+echo -e "\n. $(brew --prefix asdf)/etc/bash_completion.d/asdf.bash" >> ~/.bash_profile # configure completions per Homebrew
+asdf_init  ## asdf_clean
+
+# plugins
+https://github.com/asdf-vm/asdf-plugins
+
+# java
+asdf plugin-add java https://github.com/halcyon/asdf-java.git
+asdf list-all java
+asdf install java adopt-openjdk-12.0.2+10.2  ## Install a candidate listed from the previous command like this:
+asdf global java adopt-openjdk-12.0.2+10.2  ## Select an installed candidate for use like this:
+. ~/.asdf/plugins/java/set-java-home.bash  ##To set JAVA_HOME in your shell's initialization add the following:
+
+# JAVA_HOME integration -- Some macos applications use /usr/libexec/java_home. Set java_macos_integration_enable in .asdfrc
+java_macos_integration_enable = yes
+
+# zig
+asdf plugin-add zig
+asdf install zig master
+
+# python
+asdf list-all python
+asdf install python 3.9.15
+asdf global python 3.9.15
+
+# nodejs
+asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+asdf list-all nodejs
+asdf install nodejs latest
+asdf global nodejs latest
+asdf current
+
+# R -- https://github.com/asdf-community/asdf-r  https://github.com/asdf-community/asdf-R/pull/2#issue-615542640
+asdf plugin add R
+R_EXTRA_CONFIGURE_OPTIONS="CFLAGS=-I/opt/homebrew/lib CPPFLAGS=-I/opt/homebrew/include LDFLAGS=-L/opt/homebrew/include --enable-R-shlib --with-cairo --with-x=no" asdf install R 4.2.1
+asdf global R 4.2.1  # system
+asdf plugin-add R https://github.com/asdf-community/asdf-r.git
+llvm_init 15
+brew install gcc xz libxt cairo pcre2 [xquartz?
+# R_CONFIGURE_OPTIONS - use only your configure options
+# R_EXTRA_CONFIGURE_OPTIONS -  append these configure options along with ones that this plugin already uses
+# R_EXTRA_CONFIGURE_OPTIONS=--enable-R-shlib
+# R_EXTRA_CONFIGURE_OPTIONS='--enable-R-shlib --with-cairo CFLAGS="$CFLAGS -I/usr/local/Cellar/xz/5.4.1/include/lzma -I/usr/local/include -I/opt/X11/include" LDFLAGS="-L/opt/X11/lib"' asdf install R <version>
+R_EXTRA_CONFIGURE_OPTIONS="CFLAGS=-I/opt/homebrew/lib CPPFLAGS=-I/opt/homebrew/include LDFLAGS=-L/opt/homebrew/include --enable-R-shlib --with-cairo --with-x=no" asdf install R 4.2.2
+# maybe / seem to need -Wl,w also ?
+CFLAGS=-I/usr/local/include
+CPPFLAGS=-I/usr/local/include
+LDFLAGS=-L/usr/local/lib -Wl,-rpath,/usr/local/opt/llvm@15/lib
+R_EXTRA_CONFIGURE_OPTIONS="CFLAGS=$CFLAGS CPPFLAGS=$CPPFLAGS LDFLAGS="-Wl,-w"  --enable-R-shlib --with-cairo --with-x=no" asdf install R 4.2.2
+# working base R compile from source ...
+CFLAGS="-I/usr/local/Cellar/xz/5.4.1/include -I/usr/local/include -I/opt/X11/include"
+LDFLAGS="-L/opt/X11/lib -L/usr/local/Cellar/xz/5.4.1/lib -llzma "
+R_EXTRA_CONFIGURE_OPTIONS="CFLAGS=$CFLAGS CPPFLAGS=$CPPFLAGS LDFLAGS="-Wl,-w" --enable-R-shlib --with-cairo" asdf install R 4.2.2

@@ -1,0 +1,35 @@
+# notes
+ ~/Desktop/Jie-Notes-Final/
+
+# repo
+https://code.jgi.doe.gov/qaqc/autoqc.git
+/Users/copeland/Repos/JGI/autoqc
+
+# git remote -v
+origin  https://<user>:<tok>@code.jgi.doe.gov/qaqc/autoqc.git (fetch)
+origin  https://<user>:<tok>@code.jgi.doe.gov/qaqc/autoqc.git (push)
+
+
+# logs
+# -- OLD /global/project/projectdirs/qc_user/rqc/logs/rqc_system/rqc_auto.log
+LOGPATH=/global/cfs/cdirs/qc_user/rqc/logs/autoqc/
+LOGPATHDEV=/global/cfs/cdirs/qc_user/rqc/logs/autoqc/dev_logs/
+LOGS=${LOGPATH}/default_worker.log
+logfile = os.path.join(AutoQcConstants.PATH_VAR['LOGPATHDEV'], 'rqc_autoqc_run.log')
+
+# info
+/global/project/projectdirs/qc_user/rqc/logs/rqc_system/rqc_auto.log
+
+Autoqc prod path: /global/dna/projectdirs/PI/rqc/prod/jgi-rqc-autoqc
+Autoqc venv path: /global/cfs/cdirs/qc_user/autoqc3_prod
+
+# gitlab
+https://code.jgi.doe.gov/qaqc/autoqc
+
+# spin
+I created two RMQ services, one on SPIN (db-rmq.autoqc-rmq-prod.prod-cattle.stable.spin.nersc.org) and one on SVM (http://rqc-rmq.jgi.lbl.gov/).
+Also, I refactored tfmq with celery and celery has been deployed to production on Apr 16.
+
+
+# logs
+Log file: /global/projectb/scratch/qc_user/rqc/prod/logs/rqc_system/sh/rqc_auto.log

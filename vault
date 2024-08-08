@@ -1,0 +1,47 @@
+# description
+Hashicorp secrets manager
+
+# install
+brew install vault
+
+# config
+ vault server -config=config.hcl
+
+# service
+  brew services start vault -config=/Users/copeland/vault/config.hcl
+  brew services start vault
+
+# init
+vault operator init
+vault operator unseal
+
+# list
+vault secrets list
+vault secrets list enable -path=kv kv
+vault secrets list -detailed
+
+# login
+vault login
+vault secrets list
+vault secrets list ssh
+
+# cli
+vault write auth/github/config organization=jgi
+
+# disable
+vault auth disable github
+
+# paths
+vault secrets enable -path=secret/ kv-v2
+
+# put
+vault kv put secret/creds password="my-long-password"
+
+# kv
+vault kv put kv-v1/eng/apikey/Google key=...
+vault kv put kv-v2/Jon/JonMBP/copeland key=...
+
+# import
+grep RCC bar | awk -F'[\t]' '{print "vault kv put secret/"$1"/"$2"/"$3" key="$4}'  > rcc.sh
+. ./rcc.sh 2>rcc.err 1>rcc.out
+

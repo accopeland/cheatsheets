@@ -1,0 +1,46 @@
+# description
+network test and monitoring tool TCP , UDP, ICMP
+
+# install
+go get
+
+# build
+git clone https://github.com/Microsoft/ethr.git
+cd ethr
+go build
+
+# usage
+# Start server
+ethr -s
+
+# Start client for default (bandwidth) test measurement using 1 thread
+ethr -c localhost
+
+# Start bandwidth test using 8 threads
+ethr -c localhost -n 8
+
+# Start connections/s test using 64 threads to server 10.1.0.11
+ethr -c 10.1.0.11 -t c -n 64
+
+# Run Ethr server on port 9999
+ethr -s -port 9999
+
+# Measure TCP connection setup latency to ethr server on port 9999
+# Assuming Ethr server is running on server with IP address: 10.1.1.100
+ethr -c 10.1.1.100 -p tcp -t pi -d 0 -4 -port 9999
+
+# Measure TCP connection setup latency to www.github.com at port 443
+ethr -x www.github.com:443 -p tcp -t pi -d 0 -4
+
+# Measure TCP connection setup latency to www.github.com at port 443
+# Note: Here port 443 is driven automatically from https
+ethr -x https://www.github.com -p tcp -t pi -d 0 -4
+
+# Measure ICMP ping latency to www.github.com
+sudo ./ethr -x www.github.com -p icmp -t pi -d 0 -4
+
+# Run measurement similar to mtr on Linux
+sudo ./ethr -x www.github.com -p icmp -t mtr -d 0 -4
+
+# Measure packets/s over UDP by sending small 1-byte packets
+ethr -c 172.28.192.1 -p udp -t p -d 0

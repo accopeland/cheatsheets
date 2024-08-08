@@ -1,0 +1,55 @@
+# description
+NCBI edirect, prev. e-utils, a perl based web API and utility collection for accessing metadata and data from NCBI
+
+# install
+sh -c "$(curl -fsSL https://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/install-edirect.sh)"
+
+# docs
+https://www.ncbi.nlm.nih.gov/books/NBK179288/
+https://github.com/NCBI-Hackathons/EDirectCookbook
+https://www.ncbi.nlm.nih.gov/books/NBK25501
+https://www.ncbi.nlm.nih.gov/pubmed/34850941 # Information on how to obtain an API Key is described in this NCBI blogpost:
+
+# usage
+https://docs.google.com/presentation/d/1qaLybJXfHh920gWHnMtgfHIt6SZ3qjLSTV_FM7yLlSY/edit
+
+# API Key -- see qctools.sh
+export NCBI_API_KEY=unique_api_key
+
+# databases
+einfo -dbs
+
+# fields
+einfo -db <DB> -fields
+
+# links
+elink -target <DB>
+
+# containers
+apptainer run docker://ncbi/edirect ...
+podman run --rm -it docker.io/ncbi/edirect ...
+singularity run docker://ncbi/edirect ...
+
+# containers + pipes
+apptainer run docker://ncbi/edirect sh -c "cmd1 | cmd2 | cmd3 ..."
+
+# navigation
+Navigation programs (esearch, elink, efilter, and efetch)
+
+# accessory programs
+ccessory programs (nquire, transmute, and xtract)
+
+# elink
+Elink looks up precomputed neighbors within a database, or finds associated records in other databases:
+
+# nquire
+Nquire retrieves data from remote servers with URLs constructed from command line arguments:
+
+#  xtract
+ Xtract can use waypoints to navigate a complex XML hierarchy and obtain data values by field name:
+
+# transmute
+Transmute converts a concatenated stream of JSON objects or other structured formats into XML:o
+
+# ftp links
+esearch -db gds -query "PRJNA313294[ACCN]" | efetch -format docsum | xtract -pattern DocumentSummary -element FtpLink

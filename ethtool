@@ -1,7 +1,10 @@
 ---
 syntax: bash
-tags: [networking] 
+tags: [networking]
 ---
+# find devname -- most commands require 'devname';
+ip a s
+
 # To show statistics for the selected interface:
 ethtool -S <interface>
 
@@ -16,3 +19,15 @@ ethtool -s <interface> [ autoneg on|off ]
 
 # To get interface errors:
 ethtool -S <interface> | grep error
+
+# features
+/usr/sbin/ethtool --show-features hsn0
+
+# permanent address
+/usr/sbin/ethtool --show-permaddr hsn0
+
+# json
+ethtool --json
+
+# stats
+ethtool --statistics

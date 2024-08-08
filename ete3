@@ -1,0 +1,13 @@
+#  list workflows
+ete3 build wl
+
+# make tree with three algorithms
+ete3 build -w bionj_default -o bionj_ --cpu 8 -v 1 -n foo.fa
+ete3 build -w standard_raxml  -o try_ --cpu 8 -v 1 -n foo.fa | ete3 view
+ete3 build -w standard_trimmed_fasttree -o std_trim_ft_ --cpu 8 -v 1 -n foo.fa
+
+# lookup taxinfo and make tree from names
+ete3 ncbiquery  --info
+
+# lookup taxinfo and make tree from names
+cat $TMPF | ete3 ncbiquery --tree | ete view --ncbi --sbl --sin  -i names2taxtree.png

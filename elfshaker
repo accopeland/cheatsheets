@@ -1,0 +1,66 @@
+# description
+Packer and snapshot for manyclangs
+
+# see also
+dvc
+git-annex
+...
+
+# install
+cargo +1.55 build --release --bin elfshaker
+cargo install elfshaker
+
+# workflow
+Add some files
+Store them in a snapshot
+Make some changes to the files
+Store them again
+Repeat 2) and 3) a number of times
+Then, when you have lots of snapshots, they can be stored efficiently in pack, but will still be quickly accessible
+
+# Snapshot
+Created by elfshaker store
+Store a directory state (a set of files)
+Can be packed into a pack file by elfshaker pack (otherwise called a loose snapshot)
+
+# Repository
+The parent directory of the directory elfshaker_data
+The directory from which snapshots are created and into which they are extracted
+
+# Packs
+Created by elfshaker pack
+Store a set of snapshots
+Represented by [packname].pack + [packname].pack.idx
+Must reside under ./elfshaker_data/packs/
+
+# elfshaker_data
+Created automatically by elfshaker store on its first run
+Contains loose snapshots and pack files
+Put the .pack + .pack.idx files under ./elfshaker_data/packs
+Can be created manually (if you plan to use existing packs; for example from manyclangs)
+
+# implementation
+Implementation
+Compute the checksums for all input file names.
+Compare these checksums against the set of all loose objects (objects stored as part of a loose snapshot; not in a pack).
+Store any new files as objects in the loose object store.
+Create a loose pack index <snapshot>.pack.idx representing the snapshot in ./elfshaker_data/packs/loose.
+Sets the current snapshot reference elfshaker_data/HEAD to the string loose/<snapshot>:<snapshot>.
+
+# find
+elfshaker find ''
+
+# store
+elfshaker store my-snapshot
+
+# pack
+elfshaker pack <pack> [--frames N]
+
+# show
+elfshaker show ''
+
+# list
+elfshaker list <pack>...
+
+# extract
+elfshaker extract [<pack>:]<snapshot> [--reset] [--verify]

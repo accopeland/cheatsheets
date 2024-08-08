@@ -1,0 +1,136 @@
+https://ena-docs.readthedocs.io/en/latest/retrieval/programmatic-access.html
+
+# dataPortal
+ena
+pathogen
+assembly
+analysis
+
+# portal API -- https://www.ebi.ac.uk/ena/portal/api/
+GET /accessionTypes # list of accession types that can be used in the search query.
+GET /controlledVocab # list of available values for a controlled vocabulary field.
+GET /count # Count rows matching search parameters
+POST /count # Count rows matching search parameters
+GET /doc # Download documentation as a PDF file.
+GET /filereport # Get file report from warehouse search
+GET /filereportcount # Get row count for file report from warehouse search
+GET /links/sample # Sample links
+GET /links/study # Study links
+GET /links/taxon # Taxonomy links
+GET /results # list of available result types (data sets) to search against.
+GET /returnFields # list of fields that can be returned for a result type.
+GET /search # warehouse search
+POST /search # warehouse search with POST
+GET /searchFields # list of searchable fields for a result type.
+
+# portal API example
+curl -X GET "https://www.ebi.ac.uk/ena/portal/api/accessionTypes?dataPortal=ena&result=a" -H "accept: application/json"
+
+# browser API -- https://www.ebi.ac.uk/ena/browser/api/
+GET /{recordFormat}/textsearch/count # count for the xml text search
+GET /doc # Download the documentation as a PDF file.
+POST /embl # Obtain records in EMBL flatfile format with max limit of 10000 accessions per request
+GET /embl/{accession} # Obtain records in EMBL flatfile format
+GET /embl/ebisearch # text search and download data in EMBL flat file format.
+GET /embl/links/{linksResult} # Get links (related ENA records) and download sequence data in EMBl flatfile format.
+GET /embl/search # warehouse search and download data in EMBl flatfile format.
+GET /embl/textsearch # text search and download data in EMBL flat file format.
+POST /fasta # Obtain records in FASTA file format with max limit of 10000 accessions per request
+GET /fasta/{accession} # fasta
+GET /fasta/ebisearch # text search and download data in FASTA format.
+GET /fasta/links/{linksResult} # Get links (related ENA records) and download sequence data in FASTA format.
+GET /fasta/search # Perform warehouse search and download FA ordered by acc Note: Only sequence_release and sequence_update results are available currently.
+GET /fasta/textsearch # text search and download data in FASTA format.
+GET /text/{accession} # Obtain records in EMBL flatfile format
+GET /text/ebisearch # text search and download data in EMBL flat file format.
+GET /text/links/{linksResult} # Get links (related ENA records) and download sequence data in EMBl flatfile format.
+GET /text/search # warehouse search and download data in EMBl flatfile format.
+GET /text/textsearch # text search and download data in EMBL flat file format.
+GET /tsv/ebisearch # text search and download data as a tsv report.
+GET /tsv/textsearch # text search and download data as a tsv report.
+GET /versions/{accession} # versions
+POST /xml # Obtain records in XML format with max limit of 10000 accessions per request
+GET /xml/{accession}
+GET /xml/ebisearch  # text search and download data in XML format.
+GET /xml/links/{linksResult}
+## Get links (related ENA records) and download data in XML format. Note: This endpoint does not produce up to date ENA data.
+GET /xml/search # warehouse search and download data in XML format.
+GET /xml/textsearch  # text search and download data in XML format.
+
+## Status Controller
+GET /changed_sets/{dataType}/{date}
+GET /deleted/{dataType}/{date}
+
+
+# read_run results (fields)
+#
+base_count
+cram_index_aspera
+experiment_accession
+fastq_aspera
+fastq_galaxy
+instrument_model
+library_layout
+library_source
+read_count
+sample_accession
+secondary_sample_accession
+sra_bytes
+sra_md5
+study_title
+submitted_bytes
+submitted_galaxy
+broker_name
+cram_index_ftp
+experiment_alias
+fastq_bytes
+fastq_md5
+instrument_platform
+library_name
+library_strategy
+run_accession
+sample_alias
+secondary_study_accession
+sra_ftp
+study_accession
+submission_accession
+submitted_format
+submitted_md5
+center_name
+cram_index_galaxy
+experiment_title
+fastq_ftp
+first_public
+last_updated
+library_selection
+nominal_length
+run_alias
+scientific_name
+sra_aspera
+sra_galaxy
+study_alias
+submitted_aspera
+submitted_ftp
+tax_id
+
+# examples
+https://www.ebi.ac.uk/ena/portal/api/results?dataPortal=pathogen #results that can be searched against in the pathogen data portal.
+https://www.ebi.ac.uk/ena/portal/api/searchFields?result=assembly #fields that can be searched for the assembly result.
+https://www.ebi.ac.uk/ena/portal/api/returnFields?result=analysis #fields that can be returned in the report for the analysis result
+https://www.ebi.ac.uk/ena/portal/api/controlledVocab?field=checklist #CV for checklist. Note value and label contain different content; value is what should be used in the search query label gives the title of each checklist.
+https://www.ebi.ac.uk/ena/portal/api/controlledVocab?field=instrument_model # CV for instrument_model. Note the value column contains understandable values, the label column holds the same information.
+
+# Search against public samples
+https://www.ebi.ac.uk/ena/portal/api/search?result=sample&limit=0 #Find all public samples in ENA portal. Return accession and title, ordered by accession.
+https://www.ebi.ac.uk/ena/portal/api/search?result=sample&dataPortal=pathogen&fields=sample_accession,tax_id,scientific_name,collection_date,country,location&sortFields=scientific_name,sample_accession&limit=0  # all accessions, tax id, etc. of public samples in pathogen portal. Sort results by scientific name, followed by sample accession.
+
+# Search against public samples with paging
+https://www.ebi.ac.uk/ena/portal/api/search?result=sample&dataPortal=ena &fields=all&offset=100&limit=100&format=json # Submit same search as above, without sorting, but requesting ALL result fields, and using an offset and limit, in json format. Useful for paging.
+curl -X GET --header 'Accept: text/plain' –u 'username:password' 'https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&limit=20000 0&dataPortal=pathogen' #Authenticated search for a dataPortal and results download • Using CURL, submit a search with the username and password.
+
+#Search against data hub (DCC) data only
+https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&fields=fastq_ftp,fastq_md5&dccDataOnly&limit=0 # Find all read data registered with dcc_chopin. Return a list of the run accessions with FTP FASTQ file links. Include the MD5 checksums for the files. Note that this example URL doesn’t include the data hub account information, this must be included in the request header. Note also that the URL has been changed to HTTPS so that the account information is secure during transit.
+
+#Search for read data using sample fields
+https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&query=collection_date>=2016-01-01%20AND%20collection_date<=2016-12-31%20AND%20tax_tree(590)&fields=fastq_ftp,fastq_md5&limit=0 # Find all public Salmonella reads from 2016. Return list of run accessions with FTP FQ links. Include the MD5 checksums for the files.
+https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&query=collec tion_date>=2016-01-01%20AND%20collection_date<=2016-12- 31%20AND%20tax_tree(590)&fields=fastq_ftp,fastq_md5,sample_accession,collection_date&limit=0 # same search, but return sample accession and collection date in addition to the read file data. Note that while the above search will return one row for each run accession, the following search will return one row for each run- sample combination.

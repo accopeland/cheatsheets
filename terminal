@@ -1,0 +1,17 @@
+# description
+
+terminal stuff
+
+# reset
+tput reset
+
+# stty
+Print or change terminal characteristics.
+
+# print current settings
+stty -a
+
+# sane
+same as cread -ignbrk brkint -inlcr -igncr icrnl icanon iexten echo echoe echok -echonl -noflsh -ixoff -iutf8
+-iuclc -ixany imaxbel -xcase -olcuc -ocrnl opost -ofill onlcr -onocr -onlret nl0 cr0 tab0 bs0 vt0 ff0 isig -tostop
+-ofdel -echoprt echoctl echoke -extproc -flusho, all special characters to their default values

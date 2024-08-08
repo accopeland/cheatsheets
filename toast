@@ -1,0 +1,201 @@
+# description -- Toast:i high-level containerized build system.
+A tool for working in containers; tasks defined in a YAML toastfile, run in a containerized env based on a Docker image.
+tasks can depend on other tasks, install packages, build applications, run tests, serve web pages,etc.
+
+# install
+brew home toast
+curl https://raw.githubusercontent.com/stepchowfun/toast/main/install.sh -LSfs | sh
+
+# dependencies
+docker ?
+docker engine
+docker login
+
+# config -- location
+macOS: $HOME/Library/Application Support/toast/toast.yml.
+other Unix: $XDG_CONFIG_HOME/toast/toast.yml or $HOME/.config/toast/toast.yml
+
+# usage:    toast [OPTIONS] [--] [TASKS]...
+OPTIONS:
+    -c, --config-file <PATH>       Path of config file
+        --docker-cli <CLI>         Docker CLI binary
+    -r, --docker-repo <REPO>       Docker repository
+    -f, --file <PATH>              Path to the toastfile
+        --force <TASK>...          Run a task unconditionally, even if cached
+    -h, --help                     Print help
+    -l, --list            	   Lists tasks that have a description
+    -s, --shell      		   Drop into shell after tasks are finished
+
+# tasks
+toast task1 task2 task3…
+
+# basic run
+cat > toast.yml
+image: ubuntu
+tasks:
+  greet:
+    command: echo 'Hello, World!' # Toast will run this in a container.
+$ toast
+
+# toastfile options
+image: <required>   # Docker image name with optional tag or digest
+default: null       # Name of default task to run or `null` to run all tasks by default
+location: /scratch  # Path in the container for running tasks
+user: root          # Name of the user in the container for running tasks
+command_prefix: ''  # A string to be prepended to all commands by default
+tasks: {}           # Map from task name to task
+
+# dependencies
+image: ubuntu
+tasks:
+  install_figlet:
+    command: |
+      apt-get update
+      apt-get install --yes figlet
+  greet:
+    dependencies:
+      - install_figlet # run this task first.
+    command: figlet 'Hello, World!'
+
+# exporting artifacts
+image: ubuntu
+tasks:
+  install_gcc:
+    command: |
+      apt-get update
+      apt-get install --yes gcc
+  build:
+    dependencies:
+      - install_gcc
+    input_paths:
+      - main.c
+    output_paths:
+      - a.out # Toast will copy this file onto the host after running the command.
+    command: gcc main.c
+
+# gcc build script
+image: ubuntu
+tasks:
+  install_gcc:
+    command: |
+      apt-get update
+      apt-get install --yes gcc
+  build:
+    dependencies:
+      - install_gcc
+    input_paths:
+      - main.c # Toast will copy this file into the container before running the command.
+    command: gcc main.c
+  run:
+    dependencies:
+      - build
+    command: ./a.out
+
+# passing args - environment:
+image: ubuntu
+tasks:
+  deploy:
+    cache: false
+    environment:
+      CLUSTER: staging # Deploy to staging by default.
+    command: echo "Deploying to $CLUSTER..."
+
+# nginx
+image: nginx
+tasks:
+  serve:
+    cache: false # It doesn't make sense to cache this task.
+    mount_paths:
+      - index.html # Synchronize this file between the host and the container.
+    ports:
+      - 3000:80 # Expose port 80 in the container as port 3000 on the host.
+    location: /usr/share/nginx/html/ # Nginx will serve the files in here.
+    command: nginx -g 'daemon off;' # Run in foreground mode.
+
+# interactive
+toast --shell
+
+# fail early w command_prefix
+image: ubuntu
+command_prefix: set -e # Make Bash fail fast.
+tasks:
+  install_figlet:
+    command: |
+      apt-get update
+      apt-get install --yes figlet
+
+# docker alternative
+PATH searched for docker CLI binary. To switch to a replacement for docker, such as Podman, modify the config file:
+	docker_cli: podman
+or
+	use CLI arg: --docker-cli podman
+
+# tasks
+description: null           # A description of the task for the `--list` option
+dependencies: []            # Names of dependencies
+cache: true                 # Whether a task can be cached
+environment: {}             # Map from environment variable to optional default
+input_paths: []             # Paths to copy into the container
+excluded_input_paths: []    # A denylist for `input_paths`
+output_paths: []            # Paths to copy out of the container if the task succeeds
+output_paths_on_failure: [] # Paths to copy out of the container if the task fails
+mount_paths: []             # Paths to mount into the container
+mount_readonly: false       # Whether to mount the `mount_paths` as readonly
+ports: []                   # Port mappings to publish
+location: null              # Overrides the corresponding top-level value
+user: null                  # Overrides the corresponding top-level value
+command: ''                 # Shell command to run in the container
+command_prefix: null        # Overrides the corresponding top-level value
+extra_docker_arguments: []  # Additional arguments for `docker container create`
+
+# cache config -- supports local and remote caching.
+By default, only local caching is enabled. Remote caching requires registry (e.g., via docker login).
+cache-related fields and default values are as follows:
+	docker_repo: toast        # Docker repository
+	read_local_cache: true    # Whether Toast should read from local cache
+	write_local_cache: true   # Whether Toast should write to local cache
+	read_remote_cache: false  # Whether Toast should read from remote cache
+	write_remote_cache: false # Whether Toast should write to remote cache
+
+# github ci
+# .github/workflows/ci.yml
+name: Continuous integration
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: azure/docker-login@v1
+      with:
+        username: DOCKER_USERNAME
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      if: github.event_name == 'push'
+    - uses: stepchowfun/toast/.github/actions/toast@main
+      with:
+        file: toastfiles/toast.yml
+        tasks: build lint test
+        docker_repo: DOCKER_USERNAME/DOCKER_REPO
+        write_remote_cache: ${{ github.event_name == 'push' }}
+
+# usage
+    toast [OPTIONS] [--] [TASKS]...
+    <TASKS>...
+            tasks to run
+OPTIONS:
+    -c, --config-file <PATH>       Path of config file
+        --docker-cli <CLI>         Docker CLI binary
+    -r, --docker-repo <REPO>       Docker repository
+    -f, --file <PATH>              Path to the toastfile
+        --force <TASK>...          Run a task unconditionally, even if cached
+    -h, --help                     Print help
+    -l, --list            	   Lists tasks that have a description
+        --read-local-cache <BOOL>  Whether local cache reading is enabled
+        --read-remote-cache <BOOL> Whether remote cache reading is enabled
+    -s, --shell      		   Drop into shell after tasks are finished
+    -v, --version            	   Prints version information
+        --write-local-cache <BOOL> Enable local cache writing
+        --write-remote-cache <BOOL> Enable remote cache writing
+
+# tasks
+toast task1 task2 task3…

@@ -1,0 +1,19 @@
+# description
+Notes on tidier.jl
+
+# quarto integration
+---
+title: "Simple Julia Tidier Plot"
+date: today
+format: html
+engine: julia
+---
+```{julia}
+## Load packages
+using DataFrames, PalmerPenguins, Tidier
+## Load data and plot
+penguins = dropmissing(DataFrame(PalmerPenguins.load()));
+ggplot(penguins, @aes(x=bill_length, y=bill_depth_mm, color=species())
+ + geom_point(size=20, stroke=1, strokecolor="black", alpha=0.5)
+ + labs(x="Bill len(mm)", y="Bill width(mm)") + theme_light()
+

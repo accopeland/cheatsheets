@@ -1,0 +1,32 @@
+# description
+Notes on JGI taxonomy server (taxonomy.jgi.doe.gov)
+
+# deploy
+
+# resources
+~80 GB RAM currently (It doesn't need nearly that much - ~ 40G should be adequate)
+IIRC - but it is set to use 80G because that seemed to reduce OOM exceptions that occur due to
+unstable hardware.  CPU requirements are pretty slight.
+
+# sketch servers combined currently use 90 GB RAM.  Those have slightly
+higher CPU requirements and a minimum of 8 cores would be ideal.  The disk
+space of both is less than the memory requirements and they only need to touch
+the dist when starting up.
+
+# background (2022 June)
+The systems all seemed perfectly stable for months until some upgrade was done
+on the VMs, and they've never been stable since, but I've never been able to
+determine the cause; it's almost always the OS deciding to kill the process
+because the system is out of memory, even though when I start the process there
+is 30-40 GB free.  Somewhere the OS has a higher-priority process that randomly
+swells to take up all the free memory on the system, causing the user processes
+to be killed.  I'm not sure what that process is doing, though it would make
+sense to me if it was buffering network traffic.
+
+taxonomy server on taxonomy-vm
+
+# IP  ?
+104.18.31.4
+
+# rqc logs:
+/global/cfs/cdirs/qc_user/rqc/logs/rqc_system/

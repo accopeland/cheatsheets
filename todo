@@ -1,0 +1,56 @@
+
+reinstall/eval
+
+e03a5da9527d8525ad2e2f72e20a92fd27817e4a75e92a4078e33fc32fce5c90--Inkscape-1.2.1_x86_64.dmg
+a0a93326839d96173ab10dbb39f09b60bb868cd0218ecc7ec9b78d552e615799--openrefine-3.6.1-mac.dmg
+326309fee23503ee80f66e71fc5a11a8b69bf6840d156ee5b7609a8a27b1bf63--openjdk@17--17.0.4.1.catalina.bottle.tar.gz
+c65feb22b2ffda037b43ba92f2c90ae656ab9da231858d8a02f97a9f11b663a1--go--1.19.catalina.bottle.tar.gz
+9c54d61af5eec65e3d24168c8e30b5610f90086782ea66699b6115e197964798--openjdk--18.0.2.1.catalina.bottle.tar.gz
+971858375705d2187861aa3178fd4a05d829026123448dc9fa68fe232f98cd27--openjdk@11--11.0.16.1.catalina.bottle.tar.gz
+0a31dff56b954586711fe23ece23226e61a0771acdab722ed289f7cdfea153d9--OpenJDK16U-jdk_x64_mac_hotspot_16.0.1_9.pkg
+ed6852f7712b9caec3d5ffb6302b3605a905808fd839db54527fbfab2525f743--llvm@13--13.0.1_1.catalina.bottle.tar.gz
+f4f13bffab6d9e04d79cc0800d4abffd5d884c36422793cf07261dc878972f19--llvm@13--13.0.1.catalina.bottle.tar.gz
+71e18126b3ab8e91166c67022f4e4ee3a8d5027ee3cf3b26f43f8c978f1a766f--llvm--14.0.6.catalina.bottle.tar.gz
+8d1767c102da2855106ea2ada43ddb96b0123d48ae0dc79db7ae0a1b4e4b3526--llvm--14.0.6_1.catalina.bottle.tar.gz
+14f937216e491efd76e08fd937afa93b54a042da8e8051518ef7e8e9dca7a86b--calibre-6.3.0.dmg
+0165af265f2068cad2b0220936208a129211f20fcb3cade3f31bae239e2088e8--cromwell--84.all.bottle.tar.gz
+7e5b9b27964b77a49d58489049d965b465d43e1ae4a641fc8b86a1b785f55418--apache-drill--1.20.2.all.bottle.tar.gz
+3a862110fdaf0226f666cf056c505ad1d44ffd798f5ff7814c7c44e78b569442--knime_4.6.1.app.macosx.cocoa.x86_64.dmg
+1620cc59d55f3b4f37773ee55cd3d34d2b3fff758ae7a1d9e6bffe3446b532a1--prestodb--0.275.all.bottle.tar.gz
+
+
+# DNA qc / lc ms
+look for DNA pol inhibitors ? Mostly (many) small molecules e.g.
+--
+rifamycin		719 g/mol
+aminoactinomycin 	1270
+viderabine		270
+lamivudine 		229
+neobavaisofluoxone	322
+norubiocin		634
+Vit D2			396
+valcyclovir		360
+aphidicolin		338
+nalidixic acid		232
+octadecatrienoic acid	278
+xantohumol		354 ***
+--
+# these are specifically reported to interfere with PCR
+Excess salts: Fe, Al, K, Na, Ca
+ionic detergents: sodium deocycholate, sarkosyl and SDS
+alcohols: ethanol, isopropanol
+organics:  phenol, Polyphenols, phenolic acids
+polysaccharides:  Pectin, Xylan, Heparin, Glycogen
+proteins: Lactoferrin, hemoglobin, Myoglobin, Proteases (e.g. plasmin),
+organic acids: Fulmic acids, Humic acids, uric acid/urate, tannic acid
+polyphenols: flavonoids: anthocyanin, flavonol, ellagitannin, proanthocyanidin
+Lipids
+
+--
+Remediation:
+add  T4 bacteriophage gene 32 product (gp32)  or betaine, bovine serum albumin (BSA), dimethyl sulphoxide, formamide, glycerole, non-ionic detergents, polyethylene glycol, powdered milk
+Column chromatography using Sephacryl S-400, Sephadex G-200, Chelex, Sephadex or cetrimonium bromide can be used to remove salts and small proteins as well as polysaccharides from several sample matrices
+0.4% BSA
+--
+qPCR inhibition ? proxy for lib failure;
+why not use products for LC ?

@@ -1,0 +1,25 @@
+# session manager for tmux
+
+# inssall
+brew install tmuxp
+
+# sesssions - minimum must include
+session_name
+windows
+panes for each window
+
+# load session
+tmuxp load example.yaml [example2.yaml]
+
+# config file location
+export TMUXP_CONFIGDIR=~/.yourconfigdir/tmuxp
+
+# commands
+load
+shell
+ls
+edit
+import
+convert
+freeze
+debug-info

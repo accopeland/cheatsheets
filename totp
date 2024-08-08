@@ -1,0 +1,43 @@
+# description
+Need 'secret' from QRcode. Also called TOKEN in some contexts
+
+# install
+brew install oathtool
+brew install totp-cli
+
+# token / secret - looks like
+X6ZP47G3Z14R5SXZRLPV59EDF655A2SC
+
+# tools
+authy
+gauthenticator
+oathtool
+totp-cli
+
+# python -- computes the TOTP code in Devin's example:
+python -c 'import hmac, base64, struct, hashlib;h = hmac.new(base64.b32decode("MZXW633PN5XW6==="),struct.pack(">Q", 43499885), hashlib.sha1).digest();o = ord(h[19]) & 15;h = (struct.unpack(">I", h[o:o+4])[0] & 0x7fffffff) % 1000000;print h'
+
+# check time
+https://time.is
+
+# password lost / forgotten
+start over :  rm   ~/.config/totp-cli/credentials
+
+# update
+totp-cli update # nope
+
+# usage
+totp-cli add-token LBL JGI # need password (LDAP)
+totp-cli list
+totp-cli add-token
+totp-cli list LBL
+totp-cli generate LBL JGI
+
+#oathtool
+#https://www.cyberciti.biz/faq/use-oathtool-linux-command-line-for-2-step-verification-2fa/
+oathtool -b --totp <TOKEN>
+
+# cli list
+ totp-cli list LBL
+Password: *** (LDAP)
+LBL.JGI

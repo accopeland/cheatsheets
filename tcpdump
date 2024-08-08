@@ -14,6 +14,7 @@ tcpdump -nn -i any host 173.194.40.120 and port 80
 
 # Make a grep on tcpdump (ASCII)
 # -A  => Show only ASCII in packets.
+
 # -s snaplen => Capture only snaplen bytes of data from each packet.
 #    By default, tcpdump captures 262144 bytes.
 #    Packets truncated because of a limited snapshot are indicated in the

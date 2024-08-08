@@ -1,0 +1,42 @@
+# ssh tunnel kill
+	find ssh pid
+	pgrep -lL -x ssh
+	kill
+
+#ssh tunnel : https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Tunnels
+	https://erev0s.com/blog/ssh-local-remote-and-dynamic-port-forwarding-explain-it-i-am-five/
+	https://www.baeldung.com/linux/ssh-tunneling-and-proxying
+
+# rqc-web
+	# has sshd
+	rqc.jgi-psf.org = 	jgi-rqc-web-1
+	Server:         128.55.208.1
+	Address:        128.55.208.1#53
+	Name:   jgi-rqc-web-1.nersc.gov
+	Address: 128.55.193.168
+	# no sshd ?
+	rqc.jgi.lbl.gov canonical name = rqc.jgi.lbl.gov.cdn.cloudflare.net.
+	Name:   rqc.jgi.lbl.gov.cdn.cloudflare.net
+	Address: 104.18.25.153
+	1. modify /etc/hosts
+	2. rqctunnel
+	3. https://rqc.jgi.lbl.gov:8443
+
+# ssh tunnel 3 hop
+	ssh -A -t myhomegateway -l user1 -p 11111 ssh -A -t localhost -l user2 -p 22222 ssh -A servername -l user3 -p 33333
+	http://sshmenu.sourceforge.net/articles/transparent-mulithop.html
+	# cori
+	ssh -A -t cori ssh -A -t cmom05 ssh -A -t nid00025
+
+# mysql port forward
+	# https://myopswork.com/transparent-ssh-tunnel-through-a-bastion-host-d1d864ddb9ae
+	ssh -i mymaster.pem  ec2-user@10.0.2.56 -o "proxycommand ssh -W %h:%p -i mymaster.pem ec2-user@mybastion.elb.amazonaws.com"
+	see ~/.ssh/config ProxyCommand LocalForward
+	see ~/.aliases rqct()
+
+# IO kibana / collectd
+	https://kb.nersc.gov/s/syslog/app/kibana#/home?_g=()
+	# tunnel from cori login
+	 ssh -L 9200:es5-client-pool.service.consul:9200 hatter.nersc.gov -Nf
+	 curl -X POST 'http://localhost:9200/cori-collectd-*/_search?pretty=true'
+	# or direct: $ curl -X POST 'http://es5-client-pool.service.consul:9200/cori-collectd-*/_search?pretty=true'

@@ -1,30 +1,332 @@
 ---
 tags: [ orchestration, iac ]
 ---
-# Initialize this configuration.
+# description
+Terraform - infrastructure as code
 
-terraform init
+# install
+$ brew install terraform
+
+# reverse engineering tools
+terraformer
+balcony
+terracognita
+terragrunt
+
+# see also -- infra as a service / infra as code
+https://opentofu.org - open source terraform
+terraform - iac
+terraforming - obsolete aws only iac ?>
+terragrunt - a thin wrapper that provides extra tools for keeping your configurations DRY, working with multiple Terraform modules, and managing remote state.
+terracognita - reverse eng cloud install
+pulumi - iac via procedural code in python
+packer (container spec) - ami / container builder
+kube (k8s) -
+toast - builder ??
+kind  - (kubernetes/docker cluster ~ docker swarm)
+nomad - like docker swarm
+chef - orchestration
+puppet - orchestration
+rancher - orchestration
+ansible - orchestration
+terraform-inventory - Terraform State → Ansible Dynamic Inventory
+docker-compose - kubernetes precursor
+cloudformation (AWS) - aws specific iac
+terrahelp - De/Encryption in either full or inline mode, viar a simple or Vault based encryption provider.  Masking instead of encrypting with something like *****
+terrascan - Detect compliance and security violations across Infrastructure as Code to mitigate risk before provisioning cloud native infrastructure.
+terraform-local - localstack. Develop and test AWS locally.
+terraform-rover - terraform visualizer (interactive?)
+terramate - orchestration tool for Terraform, OpenTofu, Terragrunt, Kubernetes, Pulumi, AWS Cloud Formation, AWS CDK, Azure Resource Manager (ARM), Biceps, and others.
+terraform_landscape - tool for reformatting the output of terraform plan to be easier to read and understand
+terraform-provider-libvirt -Terraform provider to provision infrastructure with Linux's KVM using libvirt
+atlantis - terraform PR automation
+terragrunt-atlantis-config - Generate Atlantis config for Terragrunt projects.
+terraform-docs - Generate documentation from Terraform modules in various output formats
+terrahub - DevOps Hub for Terraform Automation includes API , Console, CLI (obsolete?)
+iam-policy-json-to-terraform - convert an IAM Policy in JSON format into a Terraform aws_iam_policy_document
+terraform-graph-beautifier - terraform graph | terraform-graph-beautifier --output-type=cyto-html  > config1.html
+terraform-lsp - language server
+terraform-ls - hashicorp language server
+
+# example - genome canada
+https://github.com/mboisson/magic_castle
+
+# best practices -- https://cloud.google.com/docs/terraform/best-practices-for-terraform
+# follow https://www.terraform.io/docs/modules/create.html
+README.md
+main.tf
+Put resource groups into separate file(s)
+Declare all variables in variables.tf
+Put data sources next to the resources that reference them
+Include helper scripts in a separate directory
+
+# usage
+$ terraform init [-upgrade]
+$ vim main.tf
+$ terraform validate
+$ terraform plan
+$ terraform apply
+$ terraform destroy
+
+# Initialize this configuration.
+$ terraform init
 
 # Reformat configuration in the standard style
-
-terraform fmt
+$ terraform fmt
 
 # Check whether the configuration is valid
-
-terraform validate
+$ terraform validate
 
 # Apply terraform configuration
-
-terraform apply
+$ terraform apply
 
 # Delete applied terraform configuration
+$ terraform destroy
 
-terraform destroy
+# To upgrade Terraform providers (distributed separately from the Terraform binary)
+#https://www.terraform.io/docs/providers/index.html
+$ terraform init -upgrade
 
-# To upgrade your [Terraform providers](https://www.terraform.io/docs/providers/index.html), which are distributed separately from the Terraform binary. 
+# To upgrade Terraform modules (distributed separately from the Terraform binary)
+#https://www.terraform.io/docs/modules/index.html
+$ terraform get -update
 
-terraform init -upgrade
+# cost estimation
+https://github.com/cycloidio/terracost
+https://www.infracost.io/docs/
 
-# To upgrade your [Terraform modules](https://www.terraform.io/docs/modules/index.html), which are distributed separately from the Terraform binary. 
+# graph
+https://github.com/cycloidio/inframap
+docker run --rm -v ${PWD}:/opt --entrypoint "/bin/ash" inframap -c './inframap generate /opt/PATH_TO_HCL_STATE | dot -Tpng > /opt/graph.png'
 
-terraform get -update
+# examples
+https://github.com/terraform-google-modules/terraform-docs-samples # /Users/copeland/Repos/Other/_Cloud/terraform-docs-samples
+https://github.com/terraform-google-modules/terraform-google-vm  # create VMs
+https://github.com/terraform-google-modules/terraform-example-foundation  # create entire org worth of infrastructure
+https://github.com/terraform-google-modules/terraform-google-project-factory  # create new GCP project
+https://github.com/terraform-google-modules/terraform-google-network  # create GCP network / subnets / VPC
+
+# terraformer
+CLI tool to generate terraform files from existing infrastructure (reverse Terraform). Infrastructure to Code
+https://github.com/GoogleCloudPlatform/terraformer
+https://blog.palark.com/using-terraformer-to-adapt-existing-aws-infrastructure-for-terraform/
+
+# terraformer aws
+$ terraform init  # after manually creating providers.tf ?
+$ terraformer import aws --path-pattern="{output}/" --compact=true --regions=... --resources=elasticache,rds,...
+$ cd generated
+$ terraform init
+$ terraform plan
+$ vim resources.tf # fix any discrepancies
+$ terraform plan
+# add a resource to existing
+$ cd ../ # need a new dir to avoid overwriting files
+$ terraformer import aws --path-pattern="./ec2/" --compact=true --regions=eu-central-1 --resources=ec2_instance --filter="Name=tags.NodeRole;Value=node"
+$ cd ec2
+$ terraform init
+$ terraform plan
+$ vim resources.tf # manually merge files for each added/new resource
+$ cd ../generated/
+$ terraform state mv -state=../ec2/terraform.tfstate -state-out=terraform.tfstate 'tfer--i-002D-03f57062-node-1' 'tfer--i-002D-03f57062-node-1'
+$ terraform apply
+
+# cluster in the cloud
+git clone https://github.com/clusterinthecloud/installer.git
+cd installer/
+./install-citc.sh aws  # use --region to specify specific AWS region to use
+$ ssh -i citc-terraform-saved-opossum/citc-key citc@3.249.43.139
+$ ./destroy-citc.py aws 3.249.43.139 citc-terraform-saved-opossum/citc-key
+
+# terraform:
+https://medium.com/galvanize/docker-deployments-using-terraform-d2bf36ec7bdf
+https://blog.logrocket.com/real-world-azure-resource-management-with-terraform-and-docker/
+
+# reverse engineer configuration
+https://github.com/dtan4/terraforming
+
+# ssh keys
+variable "key_name" {}
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+resource "aws_key_pair" "generated_key" {
+  key_name   = var.key_name
+  public_key = tls_private_key.example.public_key_openssh
+}
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  key_name      = aws_key_pair.generated_key.key_name
+
+  tags {
+    Name = "HelloWorld"
+  }
+}
+
+# ssh keys2
+# create myKey to AWS and myKey.pem to your computerand the created myKey and myKey.pem have the same private keys. (I used Terraform v0.15.4)
+resource "tls_private_key" "pk" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+resource "aws_key_pair" "kp" {
+  key_name   = "myKey"       # Create "myKey" to AWS!!
+  public_key = tls_private_key.pk.public_key_openssh
+
+  provisioner "local-exec" { # Create "myKey.pem" to your computer!!
+    command = "echo '${tls_private_key.pk.private_key_pem}' > ./myKey.pem"
+  }
+}  # Don't forget to make myKey.pem readable only by you running the code below before ssh to your ec2 instance.
+$ chmod 400 myKey.pem
+
+# plan vs 'apply -refresh-only'
+
+# migrate state
+e.g. to cloud which creates group shareable/editable resources
+
+# import
+
+# configuration based import
+
+# remote state -- migrate state to s3 (allow multi-user since s3 blocks)
+#  https://spacelift.io/blog/terraform-s3-backend
+You can upload the tfstate file to S3 storage for convenience since Terraform will handle all further actions with this state file. The beauty of storing the file in S3 is that it will be blocked during use. As a result, a team of engineers can work simultaneously on a massive infrastructure without the risk of conflicts when launching critical operations. Also, with S3, you can store the file reliably (and version it, too).
+## create a new directory to contain configuration files intended for creating resources to store the state.
+mkd foo
+## create a provider configuration :
+provider "aws" {
+  region = "eu-central-1"
+}
+terraform {
+  required_providers {
+    aws = {
+      version = "~> 3.28.0"
+    }
+  }
+}
+## create aws_s3_bucket configuration , provision the dedicated storage in S3:
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "eu-terraform-state"
+  lifecycle {
+    prevent_destroy = true
+  }
+  versioning {
+    enabled = true
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+## add aws_dynamodb_table resource to the config. This AWS DynamoDB table stores information about terraform.tfstate locks:
+resource "aws_dynamodb_table" "terraform_locks" {
+  name = "eu-terraform-locks"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "LockID"
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+## Initialize backend...
+$ terraform init
+$ terraform plan
+$ terraform apply
+# Switch to dir containing the AWS resource configuration and create a backend.tf file in it with the following lines:
+$ cd ../../regions/eu
+$ vim backend.tf
+terraform {
+ backend "s3" {
+   bucket = "eu-terraform-state"
+   key = "terraform.tfstate"
+   region = "eu-central-1"
+   dynamodb_table = "eu-terraform-locks"
+   encrypt = true
+ }
+}
+#Any attempt to do something with the current resource configuration will result in an error:
+#Backend reinitialization required. Please run "terraform init".
+#Reason: Initial configuration of the requested backend "s3"
+#To get rid of it, you need to re-run the initialization. Terraform will connect to the S3 backend created earlier and request the terraform.tfstate file. Since the new backend is empty, it will prompt if you want to copy the local state file to S3:
+$ terraform init  #  Enter a value: yes
+$ terraform plan # And, lastly, plan the final version of the configuration:
+
+# terraformer resources
+accessanalyzer
+acm
+alb (supports ALB and NLB)
+api_gateway
+appsync
+auto_scaling
+batch
+budgets
+cloud9
+cloudformation
+cloudfront
+cloudhsm
+cloudtrail
+cloudwatch
+codebuild
+codecommit
+codedeploy
+codepipeline
+cognito
+config
+customer_gateway
+datapipeline
+devicefarm
+docdb
+dynamodb
+ebs
+ec2_instance
+ecr
+ecrpublic
+ecs
+efs
+eip
+eks
+elasticache
+elastic_beanstalk
+elb
+emr
+eni
+firehose
+glue
+iam
+igw
+iot
+kinesis
+kms
+lambda
+logs
+media_package
+media_store
+medialive
+msk
+nacl
+nat
+opsworks
+organization
+qldb
+rds
+redshift
+resourcegroups
+route53
+route_table
+s3

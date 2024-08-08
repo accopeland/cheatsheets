@@ -1,0 +1,7709 @@
+# description
+a portable command-line data file processor for xml, yaml, json, toml, csv
+
+# install
+https://github.com/mikefarah/yq
+
+# docs
+https://mikefarah.git-book.io/yq/ # QUICK GUIDE
+https://mikefarah.gitbook.io/yq/usage/tips-and-tricks
+
+# install
+ brew install yq
+
+# alternate
+python-yq
+
+# usage
+yq [eval/eval-all] [expression] files..
+
+# validate
+yq --exit-status 'tag == "!!map" or tag== "!!seq"' file.txt > /dev/null
+
+#  csv
+yq -o=csv sample.yml
+
+# with / inplace
+yq --inplace '
+  with(.a.deeply.nested;
+    . = "newValue" | . style="single") |
+  with(.b.another.nested;
+    . = "cool" | . style="folded")
+' my_file.yaml
+
+# create bash array
+-- given sample,yaml
+coolActions:
+  - create
+  - edit
+  - delete
+yq '.coolActions[]' sample.yaml
+
+# create file
+To create a new yaml file simply:
+yq -n '.someNew="content"' > newfile.yml
+
+# json
+yq -P '.' sample.json
+
+# yaml2json
+yq -o=json -I=0 '.' sample.yml
+
+# create
+yq -n '.b.c = "cat"'
+
+# validate
+yq 'true' some.file > /dev/null
+
+# update
+Given
+- name: bob
+fruit: apple - name: sally
+fruit: orange
+
+Because of precendence, To update the sally entry to have  fruit:  `mango'.
+(.[] | select(.name == "sally") | .fruit) = "mango"
+
+# relative form
+Given
+  a: 1 b: thing
+ with an expression:
+  .a |= . + 1
+Returns
+  a: 2 b: thing
+
+# +
+Given
+              a: ['dog']
+       then
+              yq '.a += "cat"' sample.yml
+       will output
+              a: ['dog', 'cat']
+
+# prepend
+       Given
+              a:
+                - dog
+       then
+              yq '.a = ["cat"] + .a' sample.yml
+       will output
+              a:
+                - cat
+                - dog
+# +=
+Given :
+              a:
+                a1:
+                  b:
+                    - cat
+                a2:
+                  b:
+                    - dog
+                a3: {}
+       then
+              yq '.a[].b += ["mouse"]' sample.yml
+       will output
+              a:
+                a1:
+                  b:
+                    - cat
+                    - mouse
+                a2:
+                  b:
+                    - dog
+                    - mouse
+                a3:
+                  b:
+                    - mouse
+
+       will output
+
+              a: 7 b: 4
+
+# increment
+Given:
+              a: 3 b: 5
+       then
+              yq '.[] += 1' sample.yml
+       will output
+              a: 4 b: 6
+
+# dates -- add durations to dates.  Assumes RFC3339 date time format, see date-time operators  for more information.
+       Given a sample.yml file of:
+              a: 2021-01-01T00:00:00Z
+       then
+              yq '.a += "3h10m"' sample.yml
+       will output
+              a: 2021-01-01T03:10:00Z
+
+# dtf
+       Given a sample.yml file of:
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+       then
+              yq  'with_dtf("Monday,  02-Jan-06 at 3:04PM MST", .a += "3h1m")'
+              sample.yml
+       will output
+              a: Saturday, 15-Dec-01 at 6:00AM GMT
+       will output
+              cat
+# //
+       Given a sample.yml file of:
+              a: bridge
+       then
+              yq '.a // "hello"' sample.yml
+       will output
+              bridge
+       Given a sample.yml file of:
+              a: false b: cat
+       then
+              yq '.a // .b' sample.yml
+       will output
+              cat
+
+# anchor
+       Given a sample.yml file of:
+              a: &billyBob cat
+       then
+              yq '.a | anchor' sample.yml
+       will output
+              billyBob
+
+
+
+
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a anchor = "foobar"' sample.yml
+
+       will output
+
+              a: &foobar cat
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+
+       then
+
+              yq '.a anchor |= .b' sample.yml
+
+       will output
+
+              a: &cat
+                b: cat
+
+       Given a sample.yml file of:
+
+              b: &billyBob meow a: *billyBob
+
+       then
+
+              yq '.a | alias' sample.yml
+
+       will output
+
+              billyBob
+
+       Given a sample.yml file of:
+
+              b: &meow purr a: cat
+
+       then
+
+              yq '.a alias = "meow"' sample.yml
+
+       will output
+
+              b: &meow purr a: *meow
+
+       Given a sample.yml file of:
+
+              b: &meow purr a: cat
+
+       then
+
+              yq '.a alias = ""' sample.yml
+
+       will output
+
+              b: &meow purr a: cat
+
+       Given a sample.yml file of:
+
+              b: &meow purr a:
+                f: meow
+
+       then
+
+              yq '.a alias |= .f' sample.yml
+
+       will output
+
+              b: &meow purr a: *meow
+
+       Given a sample.yml file of:
+
+              f:
+                a: &a cat
+                b: *a
+
+       then
+
+              yq 'explode(.f)' sample.yml
+
+       will output
+
+              f:
+                a: cat
+                b: cat
+
+       Given a sample.yml file of:
+
+              a: mike
+
+       then
+
+              yq 'explode(.a)' sample.yml
+
+       will output
+
+              a: mike
+
+       Given a sample.yml file of:
+
+              f:
+                a: &a cat
+                *a: b
+
+       then
+
+              yq 'explode(.f)' sample.yml
+
+       will output
+
+              f:
+                a: cat
+                cat: b
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq 'explode(.)' sample.yml
+
+       will output
+
+              foo:
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar:
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: bar_b
+                thing: foo_thing
+                c: foobarList_c
+                a: foo_a foobar:
+                c: foo_c
+                a: foo_a
+                thing: foobar_thing
+
+       Use explode with multiply to dereference an object
+
+       Given a sample.yml file of:
+
+              item_value: &item_value
+                value: true thingOne:
+                name: item_1
+                !!merge <<: *item_value thingTwo:
+                name: item_2
+                !!merge <<: *item_value
+
+       then
+
+              yq '.thingOne |= explode(.) * {"value": false}' sample.yml
+
+       will output
+
+              item_value: &item_value
+                value: true thingOne:
+                name: item_1
+                value: false thingTwo:
+                name: item_2
+                !!merge <<: *item_value
+
+       Use  this operator to convert an array to..a map.  The indices are used
+       as map keys, null values in the array are skipped over.
+
+       Behind the scenes, this is implemented using reduce:
+
+              (.[] | select(. != null) ) as $i ireduce({}; .[$i | key] = $i)
+
+       Given a sample.yml file of:
+
+              cool:
+                - null
+                - null
+                - hello
+
+       then
+
+              yq '.cool |= array_to_map' sample.yml
+
+       will output
+
+              cool:
+                2: hello
+
+       This operator is used to update node values.  It can be used in  either
+       the:
+
+       Which  will  set the LHS node values equal to the RHS node values.  The
+       RHS expression is run against the matching nodes in the pipeline.
+
+       This will do a similar thing to the plain form, but the RHS  expression
+       ues based on old values, e.g. increment.
+
+
+       Running
+
+              yq --null-input '.a.b = "cat" | .x = "frog"'
+
+       will output
+
+              a:
+                b: cat x: frog
+
+       Given a sample.yml file of:
+
+              a:
+                b:
+                  g: foof
+
+       then
+
+              yq '.a |= .b' sample.yml
+
+       will output
+
+              a:
+                g: foof
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq '.[] |= . * 2' sample.yml
+
+       will output
+
+              - 2 - 4 - 6
+
+       Note this will also work when the second file is a scalar  (string/num-
+       ber)
+
+       Given a sample.yml file of:
+
+              a: apples
+
+       And another sample another.yml file of:
+
+              b: bob
+
+       then
+
+              yq  eval-all  'select(fileIndex==0).a  =  select(fileIndex==1) |
+              select(fileIndex==0)' sample.yml another.yml
+
+       will output
+
+              a:
+                b: bob
+
+       Given a sample.yml file of:
+
+              a:
+                b: child b: sibling
+
+       then
+
+              yq '.a = .b' sample.yml
+
+       will output
+
+              a: sibling b: sibling
+
+       Given a sample.yml file of:
+
+              a: fieldA b: fieldB c: fieldC
+
+       then
+
+              yq '(.a, .c) = "potato"' sample.yml
+
+       will output
+
+              a: potato b: fieldB c: potato
+
+       Given a sample.yml file of:
+
+              a:
+                b: apple
+
+       then
+
+              yq '.a.b = "frog"' sample.yml
+
+       will output
+
+              a:
+                b: frog
+
+       Note there is no difference between = and |= when the RHS is a scalar
+
+       Given a sample.yml file of:
+
+              a:
+                b: apple
+
+       then
+
+              yq '.a.b |= "frog"' sample.yml
+
+       will output
+
+              a:
+                b: frog
+
+       Note that the LHS is wrapped in brackets!  This is to ensure  we  don't
+       first filter out the yaml and then update the snippet.
+
+       Given a sample.yml file of:
+
+              a:
+                b: apple
+                c: cactus
+
+       then
+
+              yq '(.a[] | select(. == "apple")) = "frog"' sample.yml
+
+       will output
+
+              a:
+                b: frog
+                c: cactus
+
+       Given a sample.yml file of:
+
+              - candy - apple - sandy
+
+       then
+
+              yq '(.[] | select(. == "*andy")) = "bogs"' sample.yml
+
+       will output
+
+              - bogs - apple - bogs
+
+       Given a sample.yml file of:
+
+              {}
+
+       then
+
+              yq '.a.b |= "bogs"' sample.yml
+
+       will output
+
+              a:
+                b: bogs
+
+       Anchor will remain
+
+       Given a sample.yml file of:
+
+              a: &cool cat
+
+       then
+
+              yq '.a = "dog"' sample.yml
+
+       will output
+
+              a: &cool dog
+
+       Given a sample.yml file of:
+
+              {}
+
+       then
+
+              yq '.a.b.[0] |= "bogs"' sample.yml
+
+       will output
+
+              a:
+                b:
+                  - bogs
+
+       Given a sample.yml file of:
+
+              a: !cat meow b: !dog woof
+
+       then
+
+              yq '.a = .b' sample.yml
+
+       will output
+
+              a: !cat woof b: !dog woof
+
+       Use the c option to clobber custom tags
+
+       Given a sample.yml file of:
+
+              a: !cat meow b: !dog woof
+
+       then
+
+              yq '.a =c .b' sample.yml
+
+       will output
+
+              a: !dog woof b: !dog woof
+
+       The  or  and  and  operators  take  two parameters and return a boolean
+       result.
+
+       not flips a boolean from true to false, or vice versa.
+
+       any will return true if there are any true values in an array sequence,
+
+       any_c(condition)  and  all_c(condition)  are  like any and all but they
+       take a condition expression that is used against each element to deter-
+       mine  if it's true.  Note: in jq you can simply pass a condition to any
+       or all and it simply works - yq isn't that clever..yet
+
+       These are most commonly used with the select operator to filter partic-
+       ular nodes.
+
+
+
+
+       Running
+
+              yq --null-input 'true or false'
+
+       will output
+
+              true
+
+       In  the yaml 1.2 standard, support for yes/no as booleans was dropped -
+       they  are  now  considered  strings.   See  `10.2.1.2.    Boolean'   in
+       https://yaml.org/spec/1.2.2/
+
+       Given a sample.yml file of:
+
+              - yes - no
+
+       then
+
+              yq '.[] | tag' sample.yml
+
+       will output
+
+              !!str !!str
+
+       Running
+
+              yq --null-input 'true and false'
+
+       will output
+
+              false
+
+       Given a sample.yml file of:
+
+              - a: bird
+                b: dog - a: frog
+                b: bird - a: cat
+                b: fly
+
+       then
+
+              yq '[.[] | select(.a == "cat" or .b == "dog")]' sample.yml
+
+       will output
+
+              - a: bird
+                b: dog - a: cat
+                b: fly
+
+       Given a sample.yml file of:
+
+              - false - true
+
+       then
+
+              yq 'any' sample.yml
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              []
+
+       then
+
+              yq 'any' sample.yml
+
+       will output
+
+              false
+
+       tion.
+       Given a sample.yml file of:
+
+              a:
+                - rad
+                - awesome b:
+                - meh
+                - whatever
+
+       then
+
+              yq '.[] |= any_c(. == "awesome")' sample.yml
+
+       will output
+
+              a: true b: false
+
+       Given a sample.yml file of:
+
+              - true - true
+
+       then
+
+              yq 'all' sample.yml
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              []
+
+       then
+
+              yq 'all' sample.yml
+
+       will output
+
+              true
+
+       dition.
+       Given a sample.yml file of:
+
+              a:
+                - rad
+                - awesome b:
+                - meh
+                - 12
+
+       then
+
+              yq '.[] |= all_c(tag == "!!str")' sample.yml
+
+       will output
+
+              a: true b: false
+
+       Running
+
+              yq --null-input 'true | not'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input 'false | not'
+
+       will output
+
+              true
+
+       Running
+
+              yq --null-input '"cat" | not'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input '"" | not'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input '1 | not'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input '0 | not'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input '~ | not'
+
+       will output
+
+              true
+
+       This creates an array using the expression between the square brackets.
+
+       Running
+
+              yq --null-input '[]'
+
+       will output
+
+              []
+
+       Running
+
+              yq --null-input '["cat"]'
+
+       will output
+
+              - cat
+
+       Given a sample.yml file of:
+
+              a: cat b: dog
+
+       then
+
+              yq '[.a, .b]' sample.yml
+
+       will output
+
+              - cat - dog
+
+       Returns the column of the matching node.  Starts from  1,  0  indicates
+       there was no column data.
+
+       Given a sample.yml file of:
+
+              a: cat b: bob
+
+       then
+
+              yq '.b | column' sample.yml
+
+       will output
+
+              4
+
+       Pipe through the key operator to get the column of the key
+
+       Given a sample.yml file of:
+
+              a: cat b: bob
+
+       then
+
+              yq '.b | key | column' sample.yml
+
+       will output
+
+              1
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a | key | column' sample.yml
+
+       will output
+
+              1
+
+       Running
+
+              yq --null-input '{"a": "new entry"} | column'
+
+       will output
+
+              0
+
+       Use  these  comment  operators  to set or retrieve comments.  Note that
+
+       Like the = and |= assign operators, the same syntax applies when updat-
+       ing comments:
+
+       This will set the LHS nodes' comments equal to the  expression  on  the
+       RHS.  The RHS is run against the matching nodes in the pipeline
+
+       comments  as  a relative expression of the node, for instance its value
+       or path.
+
+       Set the comment on the key node for more reliability (see below).
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a line_comment="single"' sample.yml
+
+       will output
+
+              a: cat # single
+
+       This will also work for scalars.
+
+       Given a sample.yml file of:
+
+              a:
+                b: things
+
+       then
+
+              yq '(.a | key) line_comment="single"' sample.yml
+
+       will output
+
+              a: # single
+                b: things
+
+       Given a sample.yml file of:
+
+              a: cat b: dog
+
+       then
+
+              yq '.. line_comment |= .' sample.yml
+
+       will output
+
+              a: cat # cat b: dog # dog
+
+       The  underlying  yaml  parser can assign comments in a document to sur-
+       prising nodes.  Use an expression like this to find where  you  comment
+       is.   `p'  indicates  the path, `isKey' is if the node is a map key (as
+       opposed to a map value).  From this, you can see the  `hello-world-com-
+       ment' is actually on the `hello' key
+
+       Given a sample.yml file of:
+
+              hello: # hello-world-comment
+                message: world
+
+       then
+
+              yq  '[... | {"p": path | join("."), "isKey": is_key, "hc": head-
+              Comment, "lc": lineComment, "fc": footComment}]' sample.yml
+
+       will output
+
+              - p: ""
+                isKey: false
+                hc: ""
+                lc: ""
+                fc: "" - p: hello
+                isKey: true
+                hc: ""
+                lc: hello-world-comment
+                fc: "" - p: hello
+                isKey: false
+                hc: ""
+                lc: ""
+                fc: "" - p: hello.message
+                isKey: true
+                hc: ""
+                lc: ""
+                fc: "" - p: hello.message
+                isKey: false
+                hc: ""
+                lc: ""
+                fc: ""
+
+       From the previous example, we know that the comment is on  the  `hello'
+
+       Given a sample.yml file of:
+
+              hello: # hello-world-comment
+                message: world
+
+       then
+
+              yq '.hello | key | line_comment' sample.yml
+
+       will output
+
+              hello-world-comment
+
+       The  underlying  yaml  parser can assign comments in a document to sur-
+       prising nodes.  Use an expression like this to find where  you  comment
+       is.   `p'  indicates  the path, `isKey' is if the node is a map key (as
+       opposed to a map value).  From this, you can see  the  `under-name-com-
+       ment' is actually on the first child
+
+       Given a sample.yml file of:
+
+              name:
+                # under-name-comment
+                - first-array-child
+
+       then
+
+              yq  '[... | {"p": path | join("."), "isKey": is_key, "hc": head-
+              Comment, "lc": lineComment, "fc": footComment}]' sample.yml
+
+       will output
+
+              - p: ""
+                isKey: false
+                hc: ""
+                lc: ""
+                fc: "" - p: name
+                isKey: true
+                hc: ""
+                lc: ""
+                fc: "" - p: name
+                isKey: false
+                hc: ""
+                lc: ""
+                fc: "" - p: name.0
+                isKey: false
+                hc: under-name-comment
+                lc: ""
+                fc: ""
+
+       From the previous example, we know that the comment  is  on  the  first
+       child as a headComment
+
+       Given a sample.yml file of:
+
+              name:
+                # under-name-comment
+                - first-array-child
+
+       then
+
+              yq '.name[0] | headComment' sample.yml
+
+       will output
+
+              under-name-comment
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '. head_comment="single"' sample.yml
+
+       will output
+
+              # single a: cat
+
+       Given a sample.yml file of:
+
+              f: foo a:
+                b: cat
+
+       then
+
+              yq '(.a | key) head_comment="single"' sample.yml
+
+       will output
+
+              f: foo # single a:
+                b: cat
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '. foot_comment=.a' sample.yml
+
+       will output
+
+              a: cat # cat
+
+       Given a sample.yml file of:
+
+              a: cat # comment b: dog # leave this
+
+       then
+
+              yq '.a line_comment=""' sample.yml
+
+       will output
+
+              a: cat b: dog # leave this
+
+       Note the use of ... to ensure key nodes are included.
+
+       Given a sample.yml file of:
+
+              # hi
+
+              a: cat # comment # great b: # key comment
+
+       then
+
+              yq '... comments=""' sample.yml
+
+       will output
+
+              a: cat b:
+
+       Given a sample.yml file of:
+
+              # welcome!
+
+              a: cat # meow # have a great day
+
+       then
+
+              yq '.a | line_comment' sample.yml
+
+       will output
+
+              meow
+
+       Given a sample.yml file of:
+
+              # welcome!
+
+              a: cat # meow
+
+              # have a great day
+
+       then
+
+              yq '. | head_comment' sample.yml
+
+       will output
+
+              welcome!
+
+       Given a sample.yml file of:
+
+              # welcome!  --- # bob a: cat # meow
+
+              # have a great day
+
+       then
+
+              yq 'head_comment' sample.yml
+
+       will output
+
+              welcome!  bob
+
+       Given a sample.yml file of:
+
+              # welcome!
+
+              a: cat # meow
+
+              # have a great day # no really
+
+       then
+
+              yq '. | foot_comment' sample.yml
+
+       will output
+
+              have a great day no really
+
+       Comparison  operators  (>,  >=, <, <=) can be used for comparing scalar
+       values of the same time.
+
+       The following types are currently supported:
+
+
+
+
+
+
+
+       Given a sample.yml file of:
+
+              a: 5 b: 4
+
+       then
+
+              yq '.a > .b' sample.yml
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              a: 5 b: 5
+
+       then
+
+              yq '.a >= .b' sample.yml
+
+       will output
+
+              true
+
+       Compares strings by their bytecode.
+
+       Given a sample.yml file of:
+
+              a: zoo b: apple
+
+       then
+
+              yq '.a > .b' sample.yml
+
+       will output
+
+              true
+
+       You can compare date times.  Assumes  RFC3339  date  time  format,  see
+       date-time operators  for more information.
+
+       Given a sample.yml file of:
+
+              a: 2021-01-01T03:10:00Z b: 2020-01-01T03:10:00Z
+
+       then
+
+              yq '.a > .b' sample.yml
+
+       will output
+
+              true
+
+       Running
+
+              yq --null-input '.a > .b'
+
+       will output
+
+              false
+
+       Running
+
+              yq --null-input '.a >= .b'
+
+       will output
+
+              true
+
+       This  returns true if the context contains the passed in parameter, and
+       false otherwise.  For arrays, this will return true if  the  passed  in
+       array  is contained within the array.  For strings, it will return true
+       if the string is a substring.
+
+       {% hint style="warning" %}
+
+       This means an expression like contains(["cat"]) will return true for an
+       array ["cats"].
+
+       See  the "Array has a subset array" example below on how to check for a
+       subset.
+
+       {% endhint %}
+
+       Array is equal or subset of
+
+       Given a sample.yml file of:
+
+              - foobar - foobaz - blarp
+
+       then
+
+              yq 'contains(["baz", "bar"])' sample.yml
+
+       will output
+
+              true
+
+       Subtract the superset array from the subset, if there's anything  left,
+       it's not a subset
+
+       Given a sample.yml file of:
+
+              - foobar - foobaz - blarp
+
+       then
+
+              yq '["baz", "bar"] - . | length == 0' sample.yml
+
+       will output
+
+              false
+
+       Given a sample.yml file of:
+
+              "foo": 12 "bar":
+                - 1
+                - 2
+                - "barp": 12
+                  "blip": 13
+
+       then
+
+              yq 'contains({"bar": [{"barp": 12}]})' sample.yml
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              "foo": 12 "bar":
+                - 1
+                - 2
+                - "barp": 12
+                  "blip": 13
+
+       then
+
+              yq 'contains({"foo": 12, "bar": [{"barp": 15}]})' sample.yml
+
+       will output
+
+              false
+
+       Given a sample.yml file of:
+
+              foobar
+
+       then
+
+              yq 'contains("bar")' sample.yml
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              meow
+
+       then
+
+              yq 'contains("meow")' sample.yml
+
+       will output
+
+              true
+
+       This  is used to construct objects (or maps).  This can be used against
+       existing yaml, or to create fresh yaml documents.
+
+       Running
+
+              yq --null-input '{}'
+
+       will output
+
+              {}
+
+       Given a sample.yml file of:
+
+              name: Mike
+
+       then
+
+              yq '{"wrap": .}' sample.yml
+
+       will output
+
+              wrap:
+                name: Mike
+
+       Given a sample.yml file of:
+
+              name: Mike pets:
+                - cat
+                - dog
+
+       then
+
+              yq '{.name: .pets.[]}' sample.yml
+
+       will output
+
+              Mike: cat Mike: dog
+
+       Given a sample.yml file of:
+
+              name: Mike pets:
+                - cat
+                - dog --- name: Rosey pets:
+                - monkey
+                - sheep
+
+       then
+
+              yq '{.name: .pets.[]}' sample.yml
+
+       will output
+
+              Mike: cat Mike: dog --- Rosey: monkey Rosey: sheep
+
+       Running
+
+              yq --null-input '{"wrap": "frog"}'
+
+       will output
+
+              wrap: frog
+
+       Running
+
+              yq --null-input '(.a.b = "foo") | (.d.e = "bar")'
+
+       will output
+
+              a:
+                b: foo d:
+                e: bar
+
+       Various operators for parsing and manipulating dates.
+
+       This uses Golang's built in time library  for  parsing  and  formatting
+       date times.
+
+       When    not    specified,    the    RFC3339    standard    is   assumed
+       2006-01-02T15:04:05Z07:00 for parsing.
+
+       To specify a custom parsing format, use  the  with_dtf  operator.   The
+       first  parameter sets the datetime parsing format for the expression in
+       the second parameter.  The expression can be any  valid  yq  expression
+       tree.
+
+              yq 'with_dtf("myformat"; .a + "3h" | tz("Australia/Melbourne"))'
+
+       See the library docs  for examples of formatting options.
+
+       This uses Golang's built in LoadLocation function  to  parse  timezones
+       strings.  See the library docs  for more details.
+
+       Durations are parsed using Golang's built in ParseDuration  function.
+
+       You can add durations to time using the + operator.
+
+       Providing  a  single parameter assumes a standard RFC3339 datetime for-
+       mat.  If the target format is not a valid  yaml  datetime  format,  the
+       result will be a string tagged node.
+
+       Given a sample.yml file of:
+
+              a: 2001-12-15T02:59:43.1Z
+
+       then
+
+              yq  '.a  |= format_datetime("Monday, 02-Jan-06 at 3:04PM")' sam-
+              ple.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 2:59AM
+
+       Use with_dtf to set a custom datetime format for parsing.
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 2:59AM
+
+       then
+
+              yq '.a |= with_dtf("Monday, 02-Jan-06 at  3:04PM";  format_date-
+              time("2006-01-02"))' sample.yml
+
+       will output
+
+              a: 2001-12-15
+
+       Given a sample.yml file of:
+
+              a: 2001-12-15
+
+       then
+
+              yq '.a | format_datetime("Monday")' sample.yml
+
+       will output
+
+              Saturday
+
+       Given a sample.yml file of:
+
+              a: cool
+
+       then
+
+              yq '.updated = now' sample.yml
+
+       will output
+
+              a: cool updated: 2021-05-19T01:02:03Z
+
+       Converts  from  unix time.  Note, you don't have to pipe through the tz
+       operator :)
+
+       Running
+
+              yq --null-input '1675301929 | from_unix | tz("UTC")'
+
+       will output
+
+              2023-02-02T01:38:49Z
+
+       Converts to unix time
+
+       Running
+
+              yq --null-input 'now | to_unix'
+
+       will output
+
+              1621386123
+
+       Returns a new datetime in the  specified  timezone.   Specify  standard
+       IANA  Time  Zone format or `utc', `local'.  When given a single parame-
+       ter, this assumes the datetime is in RFC3339 format.
+
+       Given a sample.yml file of:
+
+              a: cool
+
+       then
+
+              yq '.updated = (now | tz("Australia/Sydney"))' sample.yml
+
+       will output
+
+              a: cool updated: 2021-05-19T11:02:03+10:00
+
+       Specify standard IANA Time Zone format or `utc', `local'
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+
+       then
+
+              yq '.a |= with_dtf("Monday, 02-Jan-06 at 3:04PM  MST";  tz("Aus-
+              tralia/Sydney"))' sample.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 1:59PM AEDT
+
+       Specify standard IANA Time Zone format or `utc', `local'
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+
+       then
+
+              yq  '.a  |= with_dtf("Monday, 02-Jan-06 at 3:04PM MST"; tz("Aus-
+              tralia/Sydney"))' sample.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 1:59PM AEDT
+
+       Given a sample.yml file of:
+
+              a: 2021-01-01T00:00:00Z
+
+       then
+
+              yq '.a += "3h10m"' sample.yml
+
+       will output
+
+              a: 2021-01-01T03:10:00Z
+
+       You can subtract durations from dates.  Assumes RFC3339 date time  for-
+       mat,  see https://mikefarah.gitbook.io/yq/operators/datetime#date-time-
+       formattings date-time operators  for more information.
+
+       Given a sample.yml file of:
+
+              a: 2021-01-01T03:10:00Z
+
+       then
+
+              yq '.a -= "3h10m"' sample.yml
+
+       will output
+
+              a: 2021-01-01T00:00:00Z
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+
+       then
+
+              yq 'with_dtf("Monday, 02-Jan-06 at 3:04PM MST"; .a  +=  "3h1m")'
+              sample.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 6:00AM GMT
+
+       You can embed full expressions in with_dtf if needed.
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+
+       then
+
+              yq  'with_dtf("Monday,  02-Jan-06  at  3:04PM  MST";  .a = (.a +
+              "3h1m" | tz("Australia/Perth")))' sample.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 2:00PM AWST
+
+       Deletes matching entries in maps or arrays.
+
+       Given a sample.yml file of:
+
+              a: cat b: dog
+
+       then
+
+              yq 'del(.b)' sample.yml
+
+       will output
+
+              a: cat
+
+       Given a sample.yml file of:
+
+              a:
+                a1: fred
+                a2: frood
+
+       then
+
+              yq 'del(.a.a1)' sample.yml
+
+       will output
+
+              a:
+                a2: frood
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq 'del(.[1])' sample.yml
+
+       will output
+
+              - 1 - 3
+
+       Given a sample.yml file of:
+
+              - a: cat
+                b: dog
+
+       then
+
+              yq 'del(.[0].a)' sample.yml
+
+       will output
+
+              - b: dog
+
+       Given a sample.yml file of:
+
+              a: cat b: dog
+
+       then
+
+              yq 'del(.c)' sample.yml
+
+       will output
+
+              a: cat b: dog
+
+       Given a sample.yml file of:
+
+              a: cat b: dog c: bat
+
+       then
+
+              yq 'del( .[] | select(. == "*at") )' sample.yml
+
+       will output
+
+              b: dog
+
+       Given a sample.yml file of:
+
+              a:
+                name: frog
+                b:
+                  name: blog
+                  age: 12
+
+       then
+
+              yq 'del(.. | select(has("name")).name)' sample.yml
+
+       will output
+
+              a:
+                b:
+                  age: 12
+
+       Divide behaves differently according to the type of the LHS: * strings:
+       split by the divider * number: arithmetic division
+
+       Given a sample.yml file of:
+
+              a: cat_meow b: _
+
+       then
+
+              yq '.c = .a / .b' sample.yml
+
+       will output
+
+              a: cat_meow b: _ c:
+                - cat
+                - meow
+
+       The result during division is calculated as a float
+
+       Given a sample.yml file of:
+
+              a: 12 b: 2.5
+
+       then
+
+              yq '.a = .a / .b' sample.yml
+
+       will output
+
+              a: 4.8 b: 2.5
+
+       Dividing by zero results in +Inf or -Inf
+
+       Given a sample.yml file of:
+
+              a: 1 b: -1
+
+       then
+
+              yq '.a = .a / 0 | .b = .b / 0' sample.yml
+
+       will output
+
+              a: !!float +Inf b: !!float -Inf
+
+       Use the documentIndex operator (or the di shorthand) to select nodes of
+       a particular document.
+
+       Given a sample.yml file of:
+
+              a: cat --- a: frog
+
+       then
+
+              yq '.a | document_index' sample.yml
+
+       will output
+
+              0 --- 1
+
+       Given a sample.yml file of:
+
+              a: cat --- a: frog
+
+       then
+
+              yq '.a | di' sample.yml
+
+       will output
+
+              0 --- 1
+
+       Given a sample.yml file of:
+
+              a: cat --- a: frog
+
+       then
+
+              yq 'select(document_index == 1)' sample.yml
+
+       will output
+
+              a: frog
+
+       Given a sample.yml file of:
+
+              a: cat --- a: frog
+
+       then
+
+              yq 'select(di == 1)' sample.yml
+
+       will output
+
+              a: frog
+
+       Given a sample.yml file of:
+
+              a: cat --- a: frog
+
+       then
+
+              yq '.a | ({"match": ., "doc": document_index})' sample.yml
+
+       will output
+
+              match: cat doc: 0 --- match: frog doc: 1
+
+       Encode operators will take the piped in object structure and encode  it
+       as  a  string in the desired format.  The decode operators do the oppo-
+       site, they take a formatted string and  decode  it  into  the  relevant
+       object structure.
+
+       Note  that  you can optionally pass an indent value to the encode func-
+       tions (see below).
+
+       These operators are useful to process yaml documents that have stringi-
+       fied embedded yaml/json/props in them.
+
+
+       Format       Decode        (from   Encode (to string)
+                    string)
+       ------------------------------------------------------
+       Yaml         from_yaml/@yamld      to_yaml(i)/@yaml
+       JSON         from_json/@jsond      to_json(i)/@json
+       Properties   from_props/@propsd    to_props/@props
+       CSV          from_csv/@csvd        to_csv/@csv
+       TSV          from_tsv/@tsvd        to_tsv/@tsv
+       XML          from_xml/@xmld        to_xml(i)/@xml
+       Base64       @base64d              @base64
+       URI          @urid                 @uri
+       Shell                              @sh
+
+       See CSV and TSV documentation  for accepted formats.
+
+       XML uses the --xml-attribute-prefix and xml-content-name flags to iden-
+       tify attributes and content fields.
+
+       Base64  assumes  rfc4648   encoding.  Encoding and decoding both assume
+       that the content is a utf-8 string and not binary content.
+
+       Given a sample.yml file of:
+
+              a:
+                cool: thing
+
+       then
+
+              yq '.b = (.a | to_json)' sample.yml
+
+       will output
+
+              a:
+                cool: thing b: |
+                {
+                  "cool": "thing"
+                }
+
+       Pass in a 0 indent to print json on a single line.
+
+       Given a sample.yml file of:
+
+              a:
+                cool: thing
+
+       then
+
+              yq '.b = (.a | to_json(0))' sample.yml
+
+       will output
+
+              a:
+                cool: thing b: '{"cool":"thing"}'
+
+       Pass in a 0 indent to print json on a single line.
+
+       Given a sample.yml file of:
+
+              a:
+                cool: thing
+
+       then
+
+              yq '.b = (.a | @json)' sample.yml
+
+       will output
+
+              a:
+                cool: thing b: '{"cool":"thing"}'
+
+       Keep in mind JSON is a subset of YAML.  If  you  want  idiomatic  yaml,
+       pipe through the style operator to clear out the JSON styling.
+
+       Given a sample.yml file of:
+
+              a: '{"cool":"thing"}'
+
+       then
+
+              yq '.a | from_json | ... style=""' sample.yml
+
+       will output
+
+              cool: thing
+
+       Given a sample.yml file of:
+
+              a:
+                cool: thing
+
+       then
+
+              yq '.b = (.a | @props)' sample.yml
+
+       will output
+
+              a:
+                cool: thing b: |
+                cool = thing
+
+       Given a sample.yml file of:
+
+              a: |-
+                cats=great
+                dogs=cool as well
+
+       then
+
+              yq '.a |= @propsd' sample.yml
+
+       will output
+
+              a:
+                cats: great
+                dogs: cool as well
+
+       Given a sample.yml file of:
+
+              a: |-
+                cats,dogs
+                great,cool as well
+
+       then
+
+              yq '.a |= @csvd' sample.yml
+
+       will output
+
+              a:
+                - cats: great
+                  dogs: cool as well
+
+       Given a sample.yml file of:
+
+              a: |-
+                cats  dogs
+                great cool as well
+
+       then
+
+              yq '.a |= @tsvd' sample.yml
+
+       will output
+
+              a:
+                - cats: great
+                  dogs: cool as well
+
+       Indent defaults to 2
+
+       Given a sample.yml file of:
+
+              a:
+                cool:
+                  bob: dylan
+
+       then
+
+              yq '.b = (.a | to_yaml)' sample.yml
+
+       will output
+
+              a:
+                cool:
+                  bob: dylan b: |
+                cool:
+                  bob: dylan
+
+       You can specify the indentation level as the first parameter.
+
+       Given a sample.yml file of:
+
+              a:
+                cool:
+                  bob: dylan
+
+       then
+
+              yq '.b = (.a | to_yaml(8))' sample.yml
+
+       will output
+
+              a:
+                cool:
+                  bob: dylan b: |
+                cool:
+                        bob: dylan
+
+       Given a sample.yml file of:
+
+              a: 'foo: bar'
+
+       then
+
+              yq '.b = (.a | from_yaml)' sample.yml
+
+       will output
+
+              a: 'foo: bar' b:
+                foo: bar
+
+       Given a sample.yml file of:
+
+              a: |
+                foo: bar
+                baz: dog
+
+       then
+
+              yq '.a |= (from_yaml | .foo = "cat" | to_yaml)' sample.yml
+
+       will output
+
+              a: |
+                foo: cat
+                baz: dog
+
+       Given a sample.yml file of:
+
+              a: 'foo: bar'
+
+       then
+
+              yq '.a |= (from_yaml | .foo = "cat" | to_yaml)' sample.yml
+
+       will output
+
+              a: 'foo: cat'
+
+       Scalars are strings, numbers and booleans.
+
+       Given a sample.yml file of:
+
+              - cat - thing1,thing2 - true - 3.40
+
+       then
+
+              yq '@csv' sample.yml
+
+       will output
+
+              cat,"thing1,thing2",true,3.40
+
+       Given a sample.yml file of:
+
+              - - cat
+                - thing1,thing2
+                - true
+                - 3.40 - - dog
+                - thing3
+                - false
+                - 12
+
+       then
+
+              yq '@csv' sample.yml
+
+       will output
+
+              cat,"thing1,thing2",true,3.40 dog,thing3,false,12
+
+       Scalars are strings, numbers and booleans.
+
+       Given a sample.yml file of:
+
+              - - cat
+                - thing1,thing2
+                - true
+                - 3.40 - - dog
+                - thing3
+                - false
+                - 12
+
+       then
+
+              yq '@tsv' sample.yml
+
+       will output
+
+              cat thing1,thing2   true    3.40 dog thing3  false   12
+
+       Given a sample.yml file of:
+
+              a:
+                cool:
+                  foo: bar
+                  +@id: hi
+
+       then
+
+              yq '.a | to_xml' sample.yml
+
+       will output
+
+              <cool id="hi">
+                <foo>bar</foo> </cool>
+
+       Given a sample.yml file of:
+
+              a:
+                cool:
+                  foo: bar
+                  +@id: hi
+
+       then
+
+              yq '.a | @xml' sample.yml
+
+       will output
+
+              <cool id="hi"><foo>bar</foo></cool>
+
+       Given a sample.yml file of:
+
+              a:
+                cool:
+                  foo: bar
+                  +@id: hi
+
+       then
+
+              yq '{"cat": .a | to_xml(1)}' sample.yml
+
+       will output
+
+              cat: |
+                <cool id="hi">
+                 <foo>bar</foo>
+                </cool>
+
+       Given a sample.yml file of:
+
+              a: <foo>bar</foo>
+
+       then
+
+              yq '.b = (.a | from_xml)' sample.yml
+
+       will output
+
+              a: <foo>bar</foo> b:
+                foo: bar
+
+       Given a sample.yml file of:
+
+              coolData: a special string
+
+       then
+
+              yq '.coolData | @base64' sample.yml
+
+       will output
+
+              YSBzcGVjaWFsIHN0cmluZw==
+
+       Pipe  through  @yaml  first to convert to a string, then use @base64 to
+       encode it.
+
+       Given a sample.yml file of:
+
+              a: apple
+
+       then
+
+              yq '@yaml | @base64' sample.yml
+
+       will output
+
+              YTogYXBwbGUK
+
+       Given a sample.yml file of:
+
+              coolData: this has & special () characters *
+
+       then
+
+              yq '.coolData | @uri' sample.yml
+
+       will output
+
+              this+has+%26+special+%28%29+characters+%2A
+
+       Given a sample.yml file of:
+
+              this+has+%26+special+%28%29+characters+%2A
+
+       then
+
+              yq '@urid' sample.yml
+
+       will output
+
+              this has & special () characters *
+
+       Sh/Bash friendly string
+
+       Given a sample.yml file of:
+
+              coolData: strings with spaces and a 'quote'
+
+       then
+
+              yq '.coolData | @sh' sample.yml
+
+       will output
+
+              strings' with spaces and a '\'quote\'
+
+       Decoded data is assumed to be a string.
+
+       Given a sample.yml file of:
+
+              coolData: V29ya3Mgd2l0aCBVVEYtMTYg8J+Yig==
+
+       then
+
+              yq '.coolData | @base64d' sample.yml
+
+       will output
+
+
+       Pipe through from_yaml to parse the decoded base64  string  as  a  yaml
+       document.
+
+       Given a sample.yml file of:
+
+              coolData: YTogYXBwbGUK
+
+       then
+
+              yq '.coolData |= (@base64d | from_yaml)' sample.yml
+
+       will output
+
+              coolData:
+                a: apple
+
+       Similar  to  the  same  named  functions  in jq these functions convert
+       to/from an object and an array of key-value pairs.  This is most useful
+       for performing operations on keys of maps.
+
+       Given a sample.yml file of:
+
+              a: 1 b: 2
+
+       then
+
+              yq 'to_entries' sample.yml
+
+       will output
+
+              - key: a
+                value: 1 - key: b
+                value: 2
+
+       Given a sample.yml file of:
+
+              - a - b
+
+       then
+
+              yq 'to_entries' sample.yml
+
+       will output
+
+              - key: 0
+                value: a - key: 1
+                value: b
+
+       Given a sample.yml file of:
+
+              null
+
+       then
+
+              yq 'to_entries' sample.yml
+
+       will output
+
+
+       Given a sample.yml file of:
+
+              a: 1 b: 2
+
+       then
+
+              yq 'to_entries | from_entries' sample.yml
+
+       will output
+
+              a: 1 b: 2
+
+       from_entries always creates a map, even for numeric keys
+
+       Given a sample.yml file of:
+
+              - a - b
+
+       then
+
+              yq 'to_entries | from_entries' sample.yml
+
+       will output
+
+              0: a 1: b
+
+       Given a sample.yml file of:
+
+              a: 1 b: 2
+
+       then
+
+              yq 'with_entries(.key |= "KEY_" + .)' sample.yml
+
+       will output
+
+              KEY_a: 1 KEY_b: 2
+
+       Use  to_entries  to  convert  to  an array of key/value pairs, sort the
+       array using sort/sort_by/etc, and convert it back.
+
+       Given a sample.yml file of:
+
+              a: 1 c: 3 b: 2
+
+       then
+
+              yq 'to_entries | sort_by(.key) | reverse  |  from_entries'  sam-
+              ple.yml
+
+       will output
+
+              c: 3 b: 2 a: 1
+
+       Given a sample.yml file of:
+
+              a:
+                b: bird c:
+                d: dog
+
+       then
+
+              yq 'with_entries(select(.value | has("b")))' sample.yml
+
+       will output
+
+              a:
+                b: bird
+
+       These  operators  are  used  to  handle  environment variables usage in
+       expressions and documents.  While environment variables can, of course,
+       be  passed  in via your CLI with string interpolation, this often comes
+       with complex quote escaping and can be tricky to write and read.
+
+       There are three operators:
+
+         variable  as  a  yaml  node  (be  it  a map, array, string, number of
+         boolean)
+
+         always parses the variable as a string.
+
+         variables in strings using envsubst .
+
+       You can optionally pass envsubst any of the following options:
+
+         that are not set
+
+         that are empty
+
+         lect all the errors)
+
+       E.g: envsubst(ne, ff) will fail on the first empty variable.
+
+       See  Imposing  Restrictions   in  the  envsubst  documentation for more
+       information, and below for examples.
+
+       To replace environment variables  across  all  values  in  a  document,
+       envsubst can be used with the recursive descent operator as follows:
+
+              yq '(.. | select(tag == "!!str")) |= envsubst' file.yaml
+
+       Running
+
+              myenv="cat meow" yq --null-input '.a = env(myenv)'
+
+       will output
+
+              a: cat meow
+
+       Running
+
+              myenv="true" yq --null-input '.a = env(myenv)'
+
+       will output
+
+              a: true
+
+       Running
+
+              myenv="12" yq --null-input '.a = env(myenv)'
+
+       will output
+
+              a: 12
+
+       Running
+
+              myenv="{b: fish}" yq --null-input '.a = env(myenv)'
+
+       will output
+
+              a: {b: fish}
+
+       Running
+
+              myenv="true" yq --null-input '.a = strenv(myenv)'
+
+       will output
+
+              a: "true"
+
+       Running
+
+              myenv="12" yq --null-input '.a = strenv(myenv)'
+
+       will output
+
+              a: "12"
+
+       The env variable can be any valid yq expression.
+
+       Given a sample.yml file of:
+
+              a:
+                b:
+                  - name: dog
+                  - name: cat
+
+       then
+
+              pathEnv=".a.b[0].name"  valueEnv="moo" yq 'eval(strenv(pathEnv))
+              = strenv(valueEnv)' sample.yml
+
+       will output
+
+              a:
+                b:
+                  - name: moo
+                  - name: cat
+
+       Given a sample.yml file of:
+
+              cat: meow dog: woof
+
+       then
+
+              myenv="cat" yq '.[env(myenv)]' sample.yml
+
+       will output
+
+              meow
+
+       Running
+
+              myenv="cat" yq --null-input '"the ${myenv} meows" | envsubst'
+
+       will output
+
+              the cat meows
+
+       Running
+
+              yq --null-input '"the ${myenvnonexisting} meows" | envsubst'
+
+       will output
+
+              the  meows
+
+       (nu) not unset, will fail if there are unset (missing) variables
+
+       Running
+
+              yq --null-input '"the ${myenvnonexisting} meows" | envsubst(nu)'
+
+       will output
+
+              Error: variable ${myenvnonexisting} not set
+
+       (ne) not empty, only validates set variables
+
+       Running
+
+              yq --null-input '"the ${myenvnonexisting} meows" | envsubst(ne)'
+
+       will output
+
+              the  meows
+
+       (ne) not empty, will fail if a references variable is empty
+
+       Running
+
+              myenv="" yq --null-input '"the ${myenv} meows" | envsubst(ne)'
+
+       will output
+
+              Error: variable ${myenv} set but empty
+
+       Running
+
+              yq --null-input '"the ${myenvnonexisting-dog} meows" | envsubst'
+
+       will output
+
+              the dog meows
+
+       Having a default specified skips over the missing variable.
+
+       Running
+
+              yq   --null-input   '"the   ${myenvnonexisting-dog}   meows"   |
+              envsubst(nu)'
+
+       will output
+
+              the dog meows
+
+       Fails, because the variable is explicitly set to blank.
+
+       Running
+
+              myEmptyEnv="" yq --null-input '"the ${myEmptyEnv-dog}  meows"  |
+              envsubst(ne)'
+
+       will output
+
+              Error: variable ${myEmptyEnv} set but empty
+
+       Given a sample.yml file of:
+
+              v: ${myenv}
+
+       then
+
+              myenv="cat meow" yq '.v |= envsubst' sample.yml
+
+       will output
+
+              v: cat meow
+
+       By default, all errors are returned at once.
+
+       Running
+
+              yq    --null-input    '"the   ${notThere}   ${alsoNotThere}"   |
+              envsubst(nu)'
+
+       will output
+
+              Error: variable ${notThere} not set variable ${alsoNotThere} not
+              set
+
+       Running
+
+              yq    --null-input    '"the   ${notThere}   ${alsoNotThere}"   |
+              envsubst(nu,ff)'
+
+       will output
+
+              Error: variable ${notThere} not set
+
+       This is a boolean operator that will return true if the LHS is equal to
+       the RHS and false otherwise.
+
+              .a == .b
+
+       It  is  most  often  used  with  the select operator to find particular
+       nodes:
+
+              select(.a == .b)
+
+       The not equals != operator returns false if the LHS  is  equal  to  the
+       RHS.
+
+
+
+
+       Given a sample.yml file of:
+
+              - cat - goat - dog
+
+       then
+
+              yq '.[] | (. == "*at")' sample.yml
+
+       will output
+
+              true true false
+
+       Given a sample.yml file of:
+
+              - cat - goat - dog
+
+       then
+
+              yq '.[] | (. != "*at")' sample.yml
+
+       will output
+
+              false false true
+
+       Given a sample.yml file of:
+
+              - 3 - 4 - 5
+
+       then
+
+              yq '.[] | (. == 4)' sample.yml
+
+       will output
+
+              false true false
+
+       Given a sample.yml file of:
+
+              - 3 - 4 - 5
+
+       then
+
+              yq '.[] | (. != 4)' sample.yml
+
+       will output
+
+              true false true
+
+       Running
+
+              yq --null-input 'null == ~'
+
+       will output
+
+              true
+
+       Given a sample.yml file of:
+
+              a: frog
+
+       then
+
+              yq 'select(.b != "thing")' sample.yml
+
+       will output
+
+              a: frog
+
+       Given a sample.yml file of:
+
+              a: frog
+
+       then
+
+              yq 'select(.b == .c)' sample.yml
+
+       will output
+
+              a: frog
+
+       Use  this  operation  to short-circuit expressions.  Useful for valida-
+       tion.
+
+       Given a sample.yml file of:
+
+              a: hello
+
+       then
+
+              yq 'select(.a == "howdy") or error(".a ["  +  .a  +  "]  is  not
+              howdy!")' sample.yml
+
+       will output
+
+              Error: .a [hello] is not howdy!
+
+       Running
+
+              numberOfCats="please"   yq   --null-input  'env(numberOfCats)  |
+              select(tag == "!!int") or error("numberOfCats is  not  a  number
+              :(")'
+
+       will output
+
+              Error: numberOfCats is not a number :(
+
+       with can be a convenient way of encapsulating validation.
+
+       Given a sample.yml file of:
+
+              name: Bob favouriteAnimal: cat
+
+       then
+
+              numberOfCats="3" yq '
+                  with(env(numberOfCats);    select(tag    ==    "!!int")   or
+              error("numberOfCats is not a number :(")) |
+                  .numPets = env(numberOfCats) ' sample.yml
+
+       will output
+
+              name: Bob favouriteAnimal: cat numPets: 3
+
+       Use eval to dynamically process an expression - for  instance  from  an
+       environment variable.
+
+       eval  takes  a  single argument, and evaluates that as a yq expression.
+       Any valid expression can be used, be it a path  .a.b.c  |  select(.  ==
+       "cat"), or an update .a.b.c = "gogo".
+
+       Tip: This can be a useful way to parameterise complex scripts.
+
+       Given a sample.yml file of:
+
+              pathExp: .a.b[] | select(.name == "cat") a:
+                b:
+                  - name: dog
+                  - name: cat
+
+       then
+
+              yq 'eval(.pathExp)' sample.yml
+
+       will output
+
+              name: cat
+
+       The env variable can be any valid yq expression.
+
+       Given a sample.yml file of:
+
+              a:
+                b:
+                  - name: dog
+                  - name: cat
+
+       then
+
+              pathEnv=".a.b[0].name"  valueEnv="moo" yq 'eval(strenv(pathEnv))
+              = strenv(valueEnv)' sample.yml
+
+       will output
+
+              a:
+                b:
+                  - name: moo
+                  - name: cat
+
+       File operators are most often used with merge  when  needing  to  merge
+       specific  files  together.  Note that when doing this, you will need to
+       use eval-all to ensure all yaml documents are loaded into memory before
+       performing the merge (as opposed to eval which runs the expression once
+       per document).
+
+       Note that the fileIndex operator has a short alias of fi.
+
+       Note the use of eval-all to ensure all documents are loaded  into  mem-
+       ory.
+
+              yq eval-all 'select(fi == 0) * select(filename == "file2.yaml")'
+              file1.yaml file2.yaml
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq 'filename' sample.yml
+
+       will output
+
+              sample.yml
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq 'file_index' sample.yml
+
+       will output
+
+              0
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       And another sample another.yml file of:
+
+              a: cat
+
+       then
+
+              yq eval-all 'file_index' sample.yml another.yml
+
+       will output
+
+              0 1
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq 'fi' sample.yml
+
+       will output
+
+              0
+
+       Filters an array (or map values) by the expression  given.   Equivalent
+       to doing map(select(exp)).
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq 'filter(. < 3)' sample.yml
+
+       will output
+
+              - 1 - 2
+
+       Given a sample.yml file of:
+
+              c:
+                things: cool
+                frog: yes d:
+                things: hot
+                frog: false
+
+       then
+
+              yq 'filter(.things == "cool")' sample.yml
+
+       will output
+
+              - things: cool
+                frog: yes
+
+       This recursively flattens arrays.
+
+       Recursively flattens all arrays
+
+       Given a sample.yml file of:
+
+              - 1 - - 2 - - - 3
+
+       then
+
+              yq 'flatten' sample.yml
+
+       will output
+
+              - 1 - 2 - 3
+
+       Given a sample.yml file of:
+
+              - 1 - - 2 - - - 3
+
+       then
+
+              yq 'flatten(1)' sample.yml
+
+       will output
+
+              - 1 - 2 - - 3
+
+       Given a sample.yml file of:
+
+              - []
+
+       then
+
+              yq 'flatten' sample.yml
+
+       will output
+
+              []
+
+       Given a sample.yml file of:
+
+              - foo: bar - - foo: baz
+
+       then
+
+              yq 'flatten' sample.yml
+
+       will output
+
+              - foo: bar - foo: baz
+
+       This is used to group items in an array by an expression.
+
+       Given a sample.yml file of:
+
+              - foo: 1
+                bar: 10 - foo: 3
+                bar: 100 - foo: 1
+                bar: 1
+
+       then
+
+              yq 'group_by(.foo)' sample.yml
+
+       will output
+
+              - - foo: 1
+                  bar: 10
+                - foo: 1
+                  bar: 1 - - foo: 3
+                  bar: 100
+
+       Given a sample.yml file of:
+
+              - cat: dog - foo: 1
+                bar: 10 - foo: 3
+                bar: 100 - no: foo for you - foo: 1
+                bar: 1
+
+       then
+
+              yq 'group_by(.foo)' sample.yml
+
+       will output
+
+              - - cat: dog
+                - no: foo for you - - foo: 1
+                  bar: 10
+                - foo: 1
+                  bar: 1 - - foo: 3
+                  bar: 100
+
+       This  operation returns true if the key exists in a map (or index in an
+       array), false otherwise.
+
+       Given a sample.yml file of:
+
+              - a: yes - a: ~ - a: - b: nope
+
+       then
+
+              yq '.[] | has("a")' sample.yml
+
+       will output
+
+              true true true false
+
+       Simply pipe in parent expressions into has
+
+       Given a sample.yml file of:
+
+              - a:
+                  b:
+                    c: cat - a:
+                  b:
+                    d: dog
+
+       then
+
+              yq '.[] | select(.a.b | has("c"))' sample.yml
+
+       will output
+
+              a:
+                b:
+                  c: cat
+
+       Given a sample.yml file of:
+
+              - [] - [1] - [1, 2] - [1, null] - [1, 2, 3]
+
+       then
+
+              yq '.[] | has(1)' sample.yml
+
+       will output
+
+              false false true true true
+
+       Use the keys operator to return map keys or array indices.
+
+       Given a sample.yml file of:
+
+              dog: woof cat: meow
+
+       then
+
+              yq 'keys' sample.yml
+
+       will output
+
+              - dog - cat
+
+       Given a sample.yml file of:
+
+              - apple - banana
+
+       then
+
+              yq 'keys' sample.yml
+
+       will output
+
+              - 0 - 1
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq '.[1] | key' sample.yml
+
+       will output
+
+              1
+
+       Given a sample.yml file of:
+
+              a: thing
+
+       then
+
+              yq '.a | key' sample.yml
+
+       will output
+
+              a
+
+       Given a sample.yml file of:
+
+              {}
+
+       then
+
+              yq 'key' sample.yml
+
+       will output
+
+
+       Given a sample.yml file of:
+
+              a:
+                x: 3
+                y: 4
+
+       then
+
+              yq '(.a.x | key) = "meow"' sample.yml
+
+       will output
+
+              a:
+                meow: 3
+                y: 4
+
+       Given a sample.yml file of:
+
+              a:
+                # comment on key
+                x: 3
+                y: 4
+
+       then
+
+              yq '.a.x | key | headComment' sample.yml
+
+       will output
+
+              comment on key
+
+       Given a sample.yml file of:
+
+              a:
+                b:
+                  - cat
+                c: frog
+
+       then
+
+              yq '[... | { "p": path | join("."), "isKey": is_key, "tag":  tag
+              }]' sample.yml
+
+       will output
+
+              - p: ""
+                isKey: false
+                tag: '!!map' - p: a
+                isKey: true
+                tag: '!!str' - p: a
+                isKey: false
+                tag: '!!map' - p: a.b
+                isKey: true
+                tag: '!!str' - p: a.b
+                isKey: false
+                tag: '!!seq' - p: a.b.0
+                isKey: false
+                tag: '!!str' - p: a.c
+                isKey: true
+                tag: '!!str' - p: a.c
+                isKey: false
+                tag: '!!str'
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true f: [] g: {} h: null
+
+       then
+
+              yq '.. | kind' sample.yml
+
+       will output
+
+              map scalar scalar scalar scalar seq map scalar
+
+       Unlike tag, kind is not affected by custom tags.
+
+       Given a sample.yml file of:
+
+              a: !!thing cat b: !!foo {} c: !!bar []
+
+       then
+
+              yq '.. | kind' sample.yml
+
+       will output
+
+              map scalar map seq
+
+       An example of how you can use kind
+
+       Given a sample.yml file of:
+
+              a:
+                b: 5
+                c: 3.2 e: true f: [] g: {} h: null
+
+       then
+
+              yq  '(..  |  select(kind == "scalar")) line_comment = "this is a
+              scalar"' sample.yml
+
+       will output
+
+              a:
+                b: 5 # this is a scalar
+                c: 3.2 # this is a scalar e: true # this is a scalar f: []  g:
+              {} h: null # this is a scalar
+
+       Returns  the  lengths of the nodes.  Length is defined according to the
+       type of the node.
+
+       returns length of string
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a | length' sample.yml
+
+       will output
+
+              3
+
+       Given a sample.yml file of:
+
+              a: null
+
+       then
+
+              yq '.a | length' sample.yml
+
+       will output
+
+              0
+
+       returns number of entries
+
+       Given a sample.yml file of:
+
+              a: cat c: dog
+
+       then
+
+              yq 'length' sample.yml
+
+       will output
+
+              2
+
+       returns number of elements
+
+       Given a sample.yml file of:
+
+              - 2 - 4 - 6 - 8
+
+       then
+
+              yq 'length' sample.yml
+
+       will output
+
+              4
+
+       Returns the line of the matching node.   Starts  from  1,  0  indicates
+       there was no line data.
+
+       Given a sample.yml file of:
+
+              a: cat b:
+                c: cat
+
+       then
+
+              yq '.b | line' sample.yml
+
+       will output
+
+              3
+
+       Pipe through the key operator to get the line of the key
+
+       Given a sample.yml file of:
+
+              a: cat b:
+                c: cat
+
+       then
+
+              yq '.b | key | line' sample.yml
+
+       will output
+
+              2
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a | line' sample.yml
+
+       will output
+
+              1
+
+       Running
+
+              yq --null-input '{"a": "new entry"} | line'
+
+       will output
+
+              0
+
+       The load operators allows you to load in content from another file.
+
+       Note  that  you  can  use string operators like + and sub to modify the
+       value in the yaml file to a path that exists in your system.
+
+       You can load files of the following supported types:
+
+
+       Format         Load Operator
+       -----------------------------
+       Yaml           load
+       XML            load_xml
+       Properties     load_props
+       Plain String   load_str
+       Base64         load_base64
+
+       Note that load_base64 only works for base64 encoded utf-8 strings.
+
+       ../../examples/thing.yml:
+
+              a: apple is included b: cool
+
+       small.xml:
+
+              <this>is some xml</this>
+
+       small.properties:
+
+              this.is = a properties file
+
+       base64.txt:
+
+              bXkgc2VjcmV0IGNoaWxsaSByZWNpcGUgaXMuLi4u
+
+       Given a sample.yml file of:
+
+              myFile: ../../examples/thing.yml
+
+       then
+
+              yq 'load(.myFile)' sample.yml
+
+       will output
+
+              a: apple is included b: cool.
+
+       Note that you can modify the filename in the load operator if needed.
+
+       Given a sample.yml file of:
+
+              something:
+                file: thing.yml
+
+       then
+
+              yq '.something |= load("../../examples/" + .file)' sample.yml
+
+       will output
+
+              something:
+                a: apple is included
+                b: cool.
+
+       Recursively match all the nodes (..) and then filter the ones that have
+       a `file' attribute.
+
+       Given a sample.yml file of:
+
+              something:
+                file: thing.yml over:
+                here:
+                  - file: thing.yml
+
+       then
+
+              yq  '(..  |  select(has("file")))  |=  load("../../examples/"  +
+              .file)' sample.yml
+
+       will output
+
+              something:
+                a: apple is included
+                b: cool.  over:
+                here:
+                  - a: apple is included
+                    b: cool.
+
+       This will work for any text based file
+
+       Given a sample.yml file of:
+
+              something:
+                file: thing.yml
+
+       then
+
+              yq '.something  |=  load_str("../../examples/"  +  .file)'  sam-
+              ple.yml
+
+       will output
+
+              something: |-
+                a: apple is included
+                b: cool.
+
+       Given a sample.yml file of:
+
+              cool: things
+
+       then
+
+              yq  '.more_stuff  =  load_xml("../../examples/small.xml")'  sam-
+              ple.yml
+
+       will output
+
+              cool: things more_stuff:
+                this: is some xml
+
+       Given a sample.yml file of:
+
+              cool: things
+
+       then
+
+              yq '.more_stuff = load_props("../../examples/small.properties")'
+              sample.yml
+
+       will output
+
+              cool: things more_stuff:
+                this:
+                  is: a properties file
+
+       This can be used as a convenient way to update a yaml document
+
+       Given a sample.yml file of:
+
+              this:
+                is: from yaml
+                cool: ay
+
+       then
+
+              yq  '.  *=  load_props("../../examples/small.properties")'  sam-
+              ple.yml
+
+       will output
+
+              this:
+                is: a properties file
+                cool: ay
+
+       Given a sample.yml file of:
+
+              cool: things
+
+       then
+
+              yq '.more_stuff = load_base64("../../examples/base64.txt")' sam-
+              ple.yml
+
+       will output
+
+              cool: things more_stuff: my secret chilli recipe is....
+
+       Maps values of an array.  Use map_values to map values of an object.
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq 'map(. + 1)' sample.yml
+
+       will output
+
+              - 2 - 3 - 4
+
+       Given a sample.yml file of:
+
+              a: 1 b: 2 c: 3
+
+       then
+
+              yq 'map_values(. + 1)' sample.yml
+
+       will output
+
+              a: 2 b: 3 c: 4
+
+       Arithmetic  modulo  operator,  returns  the remainder from dividing two
+       numbers.
+
+       If the lhs and rhs are ints then the expression will be calculated with
+       ints.
+
+       Given a sample.yml file of:
+
+              a: 13 b: 2
+
+       then
+
+              yq '.a = .a % .b' sample.yml
+
+       will output
+
+              a: 1 b: 2
+
+       If  the  lhs  or  rhs are floats then the expression will be calculated
+       with floats.
+
+       Given a sample.yml file of:
+
+              a: 12 b: 2.5
+
+       then
+
+              yq '.a = .a % .b' sample.yml
+
+       will output
+
+              a: !!float 2 b: 2.5
+
+       If the lhs is an int and rhs is a 0 the result is an error.
+
+       Given a sample.yml file of:
+
+              a: 1 b: 0
+
+       then
+
+              yq '.a = .a % .b' sample.yml
+
+       will output
+
+              Error: cannot modulo by 0
+
+       If the lhs is a float and rhs is a 0 the result is NaN.
+
+       Given a sample.yml file of:
+
+              a: 1.1 b: 0
+
+       then
+
+              yq '.a = .a % .b' sample.yml
+
+       will output
+
+              a: !!float NaN b: 0
+
+       Like the multiple operator in jq, depending on the operands, this  mul-
+       tiply operator will do different things.  Currently numbers, arrays and
+       objects are supported.
+
+       Objects are merged deeply matching on matching keys.  By default, array
+       values override and are not deeply merged.
+
+       Note that when merging objects, this operator returns the merged object
+       (not the parent).  This will be clearer in the examples below.
+
+       You can control how objects are merged by using one or more of the fol-
+       lowing  flags.   Multiple  flags  can be used together, e.g. .a *+? .b.
+       See examples below
+
+
+
+
+
+
+       This uses the load operator to merge file2 into file1.
+
+              yq '. *= load("file2.yml")' file1.yml
+
+       Note the use of eval-all to ensure all documents are loaded  into  mem-
+       ory.
+
+              yq eval-all '. as $item ireduce ({}; . * $item )' *.yml
+
+       By default - yq merge is naive.  It merges maps when they match the key
+       name, and arrays are merged either by appending them together, or merg-
+       ing the entries by their position in the array.
+
+       For more complex array merging (e.g. merging items that match on a cer-
+       tain key) please see the example https://mikefarah.gitbook.io/yq/opera-
+       tors/multiply-merge#merge-arrays-of-objects-together-matching-on-a-key
+       here
+
+       Given a sample.yml file of:
+
+              a: 3 b: 4
+
+       then
+
+              yq '.a *= .b' sample.yml
+
+       will output
+
+              a: 12 b: 4
+
+       Given a sample.yml file of:
+
+              a:
+                field: me
+                fieldA: cat b:
+                field:
+                  g: wizz
+                fieldB: dog
+
+       then
+
+              yq '.a * .b' sample.yml
+
+       will output
+
+              field:
+                g: wizz fieldA: cat fieldB: dog
+
+       Given a sample.yml file of:
+
+              a:
+                field: me
+                fieldA: cat b:
+                field:
+                  g: wizz
+                fieldB: dog
+
+       then
+
+              yq '. * {"a":.b}' sample.yml
+
+       will output
+
+              a:
+                field:
+                  g: wizz
+                fieldA: cat
+                fieldB: dog b:
+                field:
+                  g: wizz
+                fieldB: dog
+
+       Given a sample.yml file of:
+
+              a: {things: great} b:
+                also: "me"
+
+       then
+
+              yq '. * {"a":.b}' sample.yml
+
+       will output
+
+              a: {things: great, also: "me"} b:
+                also: "me"
+
+       Given a sample.yml file of:
+
+              a:
+                - 1
+                - 2
+                - 3 b:
+                - 3
+                - 4
+                - 5
+
+       then
+
+              yq '. * {"a":.b}' sample.yml
+
+       will output
+
+              a:
+                - 3
+                - 4
+                - 5 b:
+                - 3
+                - 4
+                - 5
+
+       Given a sample.yml file of:
+
+              a:
+                thing: one
+                cat: frog b:
+                missing: two
+                thing: two
+
+       then
+
+              yq '.a *? .b' sample.yml
+
+       will output
+
+              thing: two cat: frog
+
+       Given a sample.yml file of:
+
+              a:
+                thing: one
+                cat: frog b:
+                missing: two
+                thing: two
+
+       then
+
+              yq '.a *n .b' sample.yml
+
+       will output
+
+              thing: one cat: frog missing: two
+
+       Given a sample.yml file of:
+
+              a:
+                array:
+                  - 1
+                  - 2
+                  - animal: dog
+                value: coconut b:
+                array:
+                  - 3
+                  - 4
+                  - animal: cat
+                value: banana
+
+       then
+
+              yq '.a *+ .b' sample.yml
+
+       will output
+
+              array:
+                - 1
+                - 2
+                - animal: dog
+                - 3
+                - 4
+                - animal: cat value: banana
+
+       Given a sample.yml file of:
+
+              a:
+                thing:
+                  - 1
+                  - 2 b:
+                thing:
+                  - 3
+                  - 4
+                another:
+                  - 1
+
+       then
+
+              yq '.a *?+ .b' sample.yml
+
+       will output
+
+              thing:
+                - 1
+                - 2
+                - 3
+                - 4
+
+       Merging arrays deeply  means  arrays  are  merged  like  objects,  with
+       indices  as  their  key.   In this case, we merge the first item in the
+       array and do nothing with the second.
+
+       Given a sample.yml file of:
+
+              a:
+                - name: fred
+                  age: 12
+                - name: bob
+                  age: 32 b:
+                - name: fred
+                  age: 34
+
+       then
+
+              yq '.a *d .b' sample.yml
+
+       will output
+
+              - name: fred
+                age: 34 - name: bob
+                age: 32
+
+       This is a fairly complex expression - you can use it as is by providing
+       the environment variables as seen in the example below.
+
+       It  merges  in  the  array provided in the second file into the first -
+       matching on equal keys.
+
+       Explanation:
+
+       The approach, at a high level, is to reduce into a merged map (keyed by
+       the unique key) and then convert that back into an array.
+
+       First  the  expression  will  create a map from the arrays keyed by the
+       idPath, the unique field we want to merge by.  The reduce  operator  is
+       merging  `({};  .   * $item )', so array elements with the matching key
+       will be merged together.
+
+       Next, we convert the map back to an array, using reduce again, concate-
+       nating all the map values together.
+
+       Finally, we set the result of the merged array back into the first doc.
+
+       Thanks Kev from stackoverflow
+
+       Given a sample.yml file of:
+
+              myArray:
+                - a: apple
+                  b: appleB
+                - a: kiwi
+                  b: kiwiB
+                - a: banana
+                  b: bananaB something: else
+
+       And another sample another.yml file of:
+
+              newArray:
+                - a: banana
+                  c: bananaC
+                - a: apple
+                  b: appleB2
+                - a: dingo
+                  c: dingoC
+
+       then
+
+              idPath=".a"  originalPath=".myArray"   otherPath=".newArray"  yq
+              eval-all ' (
+                ((  (eval(strenv(originalPath))  + eval(strenv(otherPath)))  |
+              .[] | {(eval(strenv(idPath))):  .}) as $item ireduce  ({};  .  *
+              $item )) as $uniqueMap
+                |  (  $uniqueMap  | to_entries | .[]) as $item ireduce([]; . +
+              $item.value)  )  as   $mergedArray   |   select(fi   ==   0)   |
+              (eval(strenv(originalPath)))   =   $mergedArray   '   sample.yml
+              another.yml
+
+       will output
+
+              myArray:
+                - a: apple
+                  b: appleB2
+                - a: kiwi
+                  b: kiwiB
+                - a: banana
+                  b: bananaB
+                  c: bananaC
+                - a: dingo
+                  c: dingoC something: else
+
+       Given a sample.yml file of:
+
+              a: cat b: dog
+
+       then
+
+              yq '. * {"a": {"c": .a}}' sample.yml
+
+       will output
+
+              a:
+                c: cat b: dog
+
+       Given a sample.yml file of:
+
+              a: &cat
+                c: frog b:
+                f: *cat c:
+                g: thongs
+
+       then
+
+              yq '.c * .b' sample.yml
+
+       will output
+
+              g: thongs f: *cat
+
+       Given a sample.yml file of:
+
+              a:
+                c: &cat frog b:
+                f: *cat c:
+                g: thongs
+
+       then
+
+              yq '.c * .a' sample.yml
+
+       will output
+
+              g: thongs c: &cat frog
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar * .foobarList' sample.yml
+
+       will output
+
+              c: foobarList_c !!merge <<:
+                - *foo
+                - *bar thing: foobar_thing b: foobarList_b
+
+       When custom tags are encountered, yq will try to decode the  underlying
+       type.
+
+       Given a sample.yml file of:
+
+              a: !horse 2 b: !goat 3
+
+       then
+
+              yq '.a = .a * .b' sample.yml
+
+       will output
+
+              a: !horse 6 b: !goat 3
+
+       Custom tags will be maintained.
+
+       Given a sample.yml file of:
+
+              a: !horse
+                cat: meow b: !goat
+                dog: woof
+
+       then
+
+              yq '.a = .a * .b' sample.yml
+
+       will output
+
+              a: !horse
+                cat: meow
+                dog: woof b: !goat
+                dog: woof
+
+       Use  the  c option to clobber custom tags.  Note that the second tag is
+       now used.
+
+       Given a sample.yml file of:
+
+              a: !horse
+                cat: meow b: !goat
+                dog: woof
+
+       then
+
+              yq '.a *=c .b' sample.yml
+
+       will output
+
+              a: !goat
+                cat: meow
+                dog: woof b: !goat
+                dog: woof
+
+       Running
+
+              yq --null-input 'null * {"some": "thing"}'
+
+       will output
+
+              some: thing
+
+       Running
+
+              yq --null-input '{"some": "thing"} * null'
+
+       will output
+
+              some: thing
+
+       Running
+
+              yq --null-input 'null * ["some"]'
+
+       will output
+
+              - some
+
+       Running
+
+              yq --null-input '["some"] * null'
+
+       will output
+
+              - some
+
+       Parent simply returns the parent nodes of the matching nodes.
+
+       Given a sample.yml file of:
+
+              a:
+                nested: cat
+
+       then
+
+              yq '.a.nested | parent' sample.yml
+
+       will output
+
+              nested: cat
+
+       Given a sample.yml file of:
+
+              a:
+                fruit: apple
+                name: bob b:
+                fruit: banana
+                name: sam
+
+       then
+
+              yq '.. | select(. == "banana") | parent' sample.yml
+
+       will output
+
+              fruit: banana name: sam
+
+       Given a sample.yml file of:
+
+              {}
+
+       then
+
+              yq 'parent' sample.yml
+
+       will output
+
+
+       The path operator can be used to get the traversal  paths  of  matching
+       nodes  in  an  expression.   The path is returned as an array, which if
+       traversed in order will lead to the matching node.
+
+       You can get the key/index of matching nodes by using the path  operator
+       to return the path array then piping that through .[-1] to get the last
+       element of that array, the key.
+
+       Use setpath to set a value to the path array returned by path, and sim-
+       ilarly delpaths for an array of path arrays.
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+
+       then
+
+              yq '.a.b | path' sample.yml
+
+       will output
+
+              - a - b
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+
+       then
+
+              yq '.a.b | path | .[-1]' sample.yml
+
+       will output
+
+              b
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - dog
+
+       then
+
+              yq '.a.[] | select(. == "dog") | path' sample.yml
+
+       will output
+
+              - a - 1
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - dog
+
+       then
+
+              yq '.a.[] | select(. == "dog") | path | .[-1]' sample.yml
+
+       will output
+
+              1
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - dog
+                - frog
+
+       then
+
+              yq '.a[] | select(. == "*og") | [{"path":path, "value":.}]' sam-
+              ple.yml
+
+       will output
+
+              - path:
+                  - a
+                  - 1
+                value: dog - path:
+                  - a
+                  - 2
+                value: frog
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+
+       then
+
+              yq 'setpath(["a", "b"]; "things")' sample.yml
+
+       will output
+
+              a:
+                b: things
+
+       Running
+
+              yq --null-input 'setpath(["a", "b"]; "things")'
+
+       will output
+
+              a:
+                b: things
+
+       Like pick but recursive.  This uses ireduce to deeply set the  selected
+       paths into an empty object.
+
+       Given a sample.yml file of:
+
+
+              parentA: bob parentB:
+                child1: i am child1
+                child2: i am child2 parentC:
+                child1: me child1
+                child2: me child2
+
+       then
+
+              yq '(.parentB.child2, .parentC.child1) as $i
+                ireduce({}; setpath($i | path; $i))' sample.yml
+
+       will output
+
+              parentB:
+                child2: i am child2 parentC:
+                child1: me child1
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - frog
+
+       then
+
+              yq 'setpath(["a", 0]; "things")' sample.yml
+
+       will output
+
+              a:
+                - things
+                - frog
+
+       Running
+
+              yq --null-input 'setpath(["a", 0]; "things")'
+
+       will output
+
+              a:
+                - things
+
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+                c: dog
+                d: frog
+
+       then
+
+              yq 'delpaths([["a", "c"], ["a", "d"]])' sample.yml
+
+       will output
+
+              a:
+                b: cat
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - frog
+
+       then
+
+              yq 'delpaths([["a", 0]])' sample.yml
+
+       will output
+
+              a:
+                - frog
+
+       delpaths does not work with a single path array
+
+       Given a sample.yml file of:
+
+              a:
+                - cat
+                - frog
+
+       then
+
+              yq 'delpaths(["a", 0])' sample.yml
+
+       will output
+
+              Error:  DELPATHS: expected entry [0] to be a sequence, but its a
+              !!str. Note that delpaths takes an array of  path  arrays,  e.g.
+              [["a", "b"]]
+
+       Filter  a  map by the specified list of keys.  Map is returned with the
+       key in the order of the pick list.
+
+       Similarly, filter an array by the specified list of indices.
+
+       Note that the order of the keys matches the pick order and non existent
+       keys are skipped.
+
+       Given a sample.yml file of:
+
+              myMap:
+                cat: meow
+                dog: bark
+                thing: hamster
+                hamster: squeak
+
+       then
+
+              yq '.myMap |= pick(["hamster", "cat", "goat"])' sample.yml
+
+       will output
+
+              myMap:
+                hamster: squeak
+                cat: meow
+
+       Note that the order of the indices matches the pick order and non exis-
+       tent indices are skipped.
+
+       Given a sample.yml file of:
+
+              - cat - leopard - lion
+
+       then
+
+              yq 'pick([2, 0, 734, -5])' sample.yml
+
+       will output
+
+              - lion - cat
+
+       Pipe the results of an expression into another.  Like the  bash  opera-
+       tor.
+
+       Given a sample.yml file of:
+
+              a:
+                b: cat
+
+       then
+
+              yq '.a | .b' sample.yml
+
+       will output
+
+              cat
+
+       Given a sample.yml file of:
+
+              a: cow b: sheep c: same
+
+       then
+
+              yq '.a = "cat" | .b = "dog"' sample.yml
+
+       will output
+
+              a: cat b: dog c: same
+
+       This  operator  recursively matches (or globs) all children nodes given
+       of a particular element, including that  node  itself.   This  is  most
+       often used to apply a filter recursively against all matches.
+
+       Use it to find/manipulate particular values.
+
+       ing map keys:
+
+              yq '.. style= "flow"' file.yaml
+
+       The  also  includes  map keys in the results set.  This is particularly
+       useful in YAML as unlike JSON, map keys can have their own styling  and
+       tags and also use anchors and aliases.
+
+       For instance to set the style of all nodes in a yaml doc, including the
+       map keys:
+
+              yq '... style= "flow"' file.yaml
+
+       Given a sample.yml file of:
+
+              a: frog
+
+       then
+
+              yq '..' sample.yml
+
+       will output
+
+              a: frog frog
+
+       Note that this example has wrapped the expression in []  to  show  that
+       there  are two matches returned.  You do not have to wrap in [] in your
+       path expression.
+
+       Given a sample.yml file of:
+
+              a:
+                name: frog
+                b:
+                  name: blog
+                  age: 12
+
+       then
+
+              yq '[.. | select(has("name"))]' sample.yml
+
+       will output
+
+              - name: frog
+                b:
+                  name: blog
+                  age: 12 - name: blog
+                age: 12
+
+       Given a sample.yml file of:
+
+              a:
+                nameA: frog
+                b:
+                  nameB: frog
+                  age: 12
+
+       then
+
+              yq '.. | select(. == "frog")' sample.yml
+
+       will output
+
+              frog frog
+
+       Note that the map key appears in the results
+
+       Given a sample.yml file of:
+
+              a: frog
+
+       then
+
+              yq '...' sample.yml
+
+       will output
+
+              a: frog a frog
+
+       Given a sample.yml file of:
+
+              a: &cat
+                c: frog b: *cat
+
+       then
+
+              yq '[..]' sample.yml
+
+       will output
+
+              - a: &cat
+                  c: frog
+                b: *cat - &cat
+                c: frog - frog - *cat
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar | [..]' sample.yml
+
+       will output
+
+              - c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing - foobar_c - *foo - foobar_thing
+
+       Reduce is a powerful way to process a collection of  data  into  a  new
+       form.
+
+              <exp> as $<name> ireduce (<init>; <block>)
+
+       e.g.
+
+              .[] as $item ireduce (0; . + $item)
+
+       On  the  LHS  we  are  configuring the collection of items that will be
+       reduced <exp> as well as what each  element  will  be  called  $<name>.
+       Note that the array has been splatted into its individual elements.
+
+       On  the  RHS there is <init>, the starting value of the accumulator and
+       <block>, the expression that will update the accumulator for each  ele-
+       ment  in the collection.  Note that within the block expression, . will
+       evaluate to the current value of the accumulator.
+
+       Reduce syntax in yq is a little different from jq - as  yq  (currently)
+       isn't  as  sophisticated  as  jq  and  its only supports infix notation
+       (e.g. a + b, where the operator is in the middle of the two parameters)
+       (e.g. reduce a b is like writing + a b).
+
+       To that end, the reduce operator is called ireduce for  backwards  com-
+       patibility if a jq like prefix version of reduce is ever added.
+
+       Given a sample.yml file of:
+
+              - 10 - 2 - 5 - 3
+
+       then
+
+              yq '.[] as $item ireduce (0; . + $item)' sample.yml
+
+       will output
+
+              20
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       And another sample another.yml file of:
+
+              b: dog
+
+       then
+
+              yq  eval-all  '.  as  $item ireduce ({}; . * $item )' sample.yml
+              another.yml
+
+       will output
+
+              a: cat b: dog
+
+       Given a sample.yml file of:
+
+              - name: Cathy
+                has: apples - name: Bob
+                has: bananas
+
+       then
+
+              yq '.[] as $item ireduce ({}; .[$item | .name] = ($item |  .has)
+              )' sample.yml
+
+       will output
+
+              Cathy: apples Bob: bananas
+
+       Reverses the order of the items in an array
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq 'reverse' sample.yml
+
+       will output
+
+              - 3 - 2 - 1
+
+       Use sort with reverse to sort in descending order.
+
+       Given a sample.yml file of:
+
+              - a: banana - a: cat - a: apple
+
+       then
+
+              yq 'sort_by(.a) | reverse' sample.yml
+
+       will output
+
+              - a: cat - a: banana - a: apple
+
+       Select is used to filter arrays and maps by a boolean expression.
+
+
+
+
+       Given a sample.yml file of:
+
+              - cat - goat - dog
+
+       then
+
+              yq '.[] | select(. == "*at")' sample.yml
+
+       will output
+
+              cat goat
+
+       Given a sample.yml file of:
+
+              - go-kart - goat - dog
+
+       then
+
+              yq '.[] | select(. == "go*")' sample.yml
+
+       will output
+
+              go-kart goat
+
+       Given a sample.yml file of:
+
+              - ago - go - meow - going
+
+       then
+
+              yq '.[] | select(. == "*go*")' sample.yml
+
+       will output
+
+              ago go going
+
+       See more regular expression examples under the string operator docs .
+
+       Given a sample.yml file of:
+
+              - this_0 - not_this - nor_0_this - thisTo_4
+
+       then
+
+              yq '.[] | select(test("[a-zA-Z]+_[0-9]$"))' sample.yml
+
+       will output
+
+              this_0 thisTo_4
+
+       Given a sample.yml file of:
+
+              things: cat bob: goat horse: dog
+
+       then
+
+              yq '.[] | select(. == "cat" or test("og$"))' sample.yml
+
+       will output
+
+              cat dog
+
+       Given a sample.yml file of:
+
+              name: bob legs: 2 game: poker
+
+       then
+
+              yq 'with_entries(select(.key | test("ame$")))' sample.yml
+
+       will output
+
+              name: bob game: poker
+
+       Note the brackets around the entire LHS.
+
+       Given a sample.yml file of:
+
+              a:
+                things: cat
+                bob: goat
+                horse: dog
+
+       then
+
+              yq  '(.a.[]  |  select(.  == "cat" or . == "goat")) |= "rabbit"'
+              sample.yml
+
+       will output
+
+              a:
+                things: rabbit
+                bob: rabbit
+                horse: dog
+
+       cally secure random number generator to randomise the array order.
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3 - 4 - 5
+
+       then
+
+              yq 'shuffle' sample.yml
+
+       will output
+
+              - 5 - 2 - 4 - 1 - 3
+
+       Given a sample.yml file of:
+
+              cool:
+                - 1
+                - 2
+                - 3
+                - 4
+                - 5
+
+       then
+
+              yq '.cool |= shuffle' sample.yml
+
+       will output
+
+              cool:
+                - 5
+                - 2
+                - 4
+                - 1
+                - 3
+
+       The  slice  array operator takes an array as input and returns a subar-
+       ray.  Like the jq equivalent, .[10:15] will return an array  of  length
+       5,  starting  from index 10 inclusive, up to index 15 exclusive.  Nega-
+       tive numbers count backwards from the end of the array.
+
+       You may leave out the first or second number, which will will refer  to
+       the start or end of the array respectively.
+
+       Given a sample.yml file of:
+
+              - cat - dog - frog - cow
+
+       then
+
+              yq '.[1:3]' sample.yml
+
+       will output
+
+              - dog - frog
+
+       Starts from the start of the array
+
+       Given a sample.yml file of:
+
+              - cat - dog - frog - cow
+
+       then
+
+              yq '.[:2]' sample.yml
+
+       will output
+
+              - cat - dog
+
+       Finishes at the end of the array
+
+       Given a sample.yml file of:
+
+              - cat - dog - frog - cow
+
+       then
+
+              yq '.[2:]' sample.yml
+
+       will output
+
+              - frog - cow
+
+       Given a sample.yml file of:
+
+              - cat - dog - frog - cow
+
+       then
+
+              yq '.[1:-1]' sample.yml
+
+       will output
+
+              - dog - frog
+
+       using an expression to find the index
+
+       Given a sample.yml file of:
+
+              - cat - dog - frog - cow
+
+       then
+
+              yq '(.[] | select(. == "dog") | key + 1) as $pos | .[0:($pos)] +
+              ["rabbit"] + .[$pos:]' sample.yml
+
+       will output
+
+              - cat - dog - rabbit - frog - cow
+
+       The Sort Keys operator sorts maps by their keys (based on their  string
+       value).   This  operator  does not do anything to arrays or scalars (so
+       you can easily recursively apply it to all maps).
+
+       Sort is particularly useful for diffing two different yaml documents:
+
+              yq -i -P 'sort_keys(..)'  file1.yml  yq  -i  -P  'sort_keys(..)'
+              file2.yml diff file1.yml file2.yml
+
+       Note  that yq does not yet consider anchors when sorting by keys - this
+       may result in invalid yaml documents if you are using merge anchors.
+
+       For more advanced sorting, using to_entries to convert the  map  to  an
+       array, then sort/process the array as you like (e.g. using sort_by) and
+       convert back to a map using from_entries.   See  https://mikefarah.git-
+       book.io/yq/operators/entries#custom-sort-map-keys here  for an example.
+
+       Given a sample.yml file of:
+
+              c: frog a: blah b: bing
+
+       then
+
+              yq 'sort_keys(.)' sample.yml
+
+       will output
+
+              a: blah b: bing c: frog
+
+       Note the array elements are left unsorted, but maps inside  arrays  are
+       sorted
+
+       Given a sample.yml file of:
+
+              bParent:
+                c: dog
+                array:
+                  - 3
+                  - 1
+                  - 2 aParent:
+                z: donkey
+                x:
+                  - c: yum
+                    b: delish
+                  - b: ew
+                    a: apple
+
+       then
+
+              yq 'sort_keys(..)' sample.yml
+
+       will output
+
+              aParent:
+                x:
+                  - b: delish
+                    c: yum
+                  - a: apple
+                    b: ew
+                z: donkey bParent:
+                array:
+                  - 3
+                  - 1
+                  - 2
+                c: dog
+
+       Sorts  an  array.   Use sort to sort an array as is, or sort_by(exp) to
+       sort by a particular expression (e.g. subfield).
+
+       To sort by descending order, pipe the results through the reverse oper-
+       ator after sorting.
+
+       Note that at this stage, yq only sorts scalar fields.
+
+       Given a sample.yml file of:
+
+              - a: banana - a: cat - a: apple
+
+       then
+
+              yq 'sort_by(.a)' sample.yml
+
+       will output
+
+              - a: apple - a: banana - a: cat
+
+       Given a sample.yml file of:
+
+              - a: dog - a: cat
+                b: banana - a: cat
+                b: apple
+
+       then
+
+              yq 'sort_by(.a, .b)' sample.yml
+
+       will output
+
+              - a: cat
+                b: apple - a: cat
+                b: banana - a: dog
+
+       Use sort with reverse to sort in descending order.
+
+       Given a sample.yml file of:
+
+              - a: banana - a: cat - a: apple
+
+       then
+
+              yq 'sort_by(.a) | reverse' sample.yml
+
+       will output
+
+              - a: cat - a: banana - a: apple
+
+       Given a sample.yml file of:
+
+              cool:
+                - a: banana
+                - a: cat
+                - a: apple
+
+       then
+
+              yq '.cool |= sort_by(.a)' sample.yml
+
+       will output
+
+              cool:
+                - a: apple
+                - a: banana
+                - a: cat
+
+       Note that you can give sort_by complex expressions, not just paths
+
+       Given a sample.yml file of:
+
+              cool:
+                - b: banana
+                - a: banana
+                - c: banana
+
+       then
+
+              yq '.cool |= sort_by(keys | .[0])' sample.yml
+
+       will output
+
+              cool:
+                - a: banana
+                - b: banana
+                - c: banana
+
+       Note the order of the elements in unchanged when equal in sorting.
+
+       Given a sample.yml file of:
+
+              - a: banana
+                b: 1 - a: banana
+                b: 2 - a: banana
+                b: 3 - a: banana
+                b: 4
+
+       then
+
+              yq 'sort_by(.a)' sample.yml
+
+       will output
+
+              - a: banana
+                b: 1 - a: banana
+                b: 2 - a: banana
+                b: 3 - a: banana
+                b: 4
+
+       Given a sample.yml file of:
+
+              - a: 10 - a: 100 - a: 1
+
+       then
+
+              yq 'sort_by(.a)' sample.yml
+
+       will output
+
+              - a: 1 - a: 10 - a: 100
+
+       Given a sample.yml file of:
+
+              - a: 12-Jun-2011 - a: 23-Dec-2010 - a: 10-Aug-2011
+
+       then
+
+              yq 'with_dtf("02-Jan-2006"; sort_by(.a))' sample.yml
+
+       will output
+
+              - a: 23-Dec-2010 - a: 12-Jun-2011 - a: 10-Aug-2011
+
+       Given a sample.yml file of:
+
+              - 8 - 3 - null - 6 - true - false - cat
+
+       then
+
+              yq 'sort' sample.yml
+
+       will output
+
+              - null - false - true - 3 - 6 - 8 - cat
+
+       This operator splits all matches into separate documents
+
+       Running
+
+              yq --null-input 'split_doc'
+
+       will output
+
+
+       Given a sample.yml file of:
+
+              - a: cat - b: dog
+
+       then
+
+              yq '.[] | split_doc' sample.yml
+
+       will output
+
+              a: cat --- b: dog
+
+       This  uses  Golang's  native regex functions under the hood - See their
+       docs  for the supported syntax.
+
+       Case   insensitive   tip:   prefix    the    regex    with    (?i)    -
+       e.g. test("(?i)cats)".
+
+       This operator returns the substring match details of the given regEx.
+
+       Capture  returns named RegEx capture groups in a map.  Can be more con-
+       venient than match depending on what you are doing.
+
+       Returns true if the string matches the RegEx, false otherwise.
+
+       Substitutes matched substrings.  The first parameter is  the  regEx  to
+       match  substrings  within  the  original  string.  The second parameter
+       specifies what to replace those matches with.  This can refer  to  cap-
+       ture groups from the first RegEx.
+
+       Bash is notorious for chomping on precious trailing newline characters,
+       making it tricky to set strings with newlines properly.  In particular,
+
+       For instance to get this yaml:
+
+              a: |
+                cat
+
+       Using $( exp ) wont work, as it will trim the trailing newline.
+
+              m=$(echo "cat\n") yq -n '.a = strenv(m)' a: cat
+
+       However, using printf works:
+
+              printf -v m "cat\n" ; m="$m" yq -n '.a = strenv(m)' a: |
+                cat
+
+       As well as having multiline expressions:
+
+              m="cat "  yq -n '.a = strenv(m)' a: |
+                cat
+
+       Similarly,  if you're trying to set the content from a file, and want a
+       trailing newline:
+
+              IFS= read -rd '' output <  <(cat  my_file)  output=$output  ./yq
+              '.data.values = strenv(output)' first.yml
+
+       Works with unicode characters
+
+       Given a sample.yml file of:
+
+
+       then
+
+              yq 'upcase' sample.yml
+
+       will output
+
+
+       Works with unicode characters
+
+       Given a sample.yml file of:
+
+
+       then
+
+              yq 'downcase' sample.yml
+
+       will output
+
+
+       Given a sample.yml file of:
+
+              - cat - meow - 1 - null - true
+
+       then
+
+              yq 'join("; ")' sample.yml
+
+       will output
+
+              cat; meow; 1; ; true
+
+       Given a sample.yml file of:
+
+              - ' cat' - 'dog ' - ' cow cow ' - horse
+
+       then
+
+              yq '.[] | trim' sample.yml
+
+       will output
+
+              cat dog cow cow horse
+
+       Given a sample.yml file of:
+
+              foo bar foo
+
+       then
+
+              yq 'match("foo")' sample.yml
+
+       will output
+
+              string: foo offset: 0 length: 3 captures: []
+
+       Given a sample.yml file of:
+
+              foo bar FOO
+
+       then
+
+              yq '[match("(?i)foo"; "g")]' sample.yml
+
+       will output
+
+              - string: foo
+                offset: 0
+                length: 3
+                captures: [] - string: FOO
+                offset: 8
+                length: 3
+                captures: []
+
+       Given a sample.yml file of:
+
+              abc abc
+
+       then
+
+              yq '[match("(ab)(c)"; "g")]' sample.yml
+
+       will output
+
+              - string: abc
+                offset: 0
+                length: 3
+                captures:
+                  - string: ab
+                    offset: 0
+                    length: 2
+                  - string: c
+                    offset: 2
+                    length: 1 - string: abc
+                offset: 4
+                length: 3
+                captures:
+                  - string: ab
+                    offset: 4
+                    length: 2
+                  - string: c
+                    offset: 6
+                    length: 1
+
+       Given a sample.yml file of:
+
+              foo bar foo foo  foo
+
+       then
+
+              yq '[match("foo (?P<bar123>bar)? foo"; "g")]' sample.yml
+
+       will output
+
+              - string: foo bar foo
+                offset: 0
+                length: 11
+                captures:
+                  - string: bar
+                    offset: 4
+                    length: 3
+                    name: bar123 - string: foo  foo
+                offset: 12
+                length: 8
+                captures:
+                  - string: null
+                    offset: -1
+                    length: 0
+                    name: bar123
+
+       Given a sample.yml file of:
+
+              xyzzy-14
+
+       then
+
+              yq 'capture("(?P<a>[a-z]+)-(?P<n>[0-9]+)")' sample.yml
+
+       will output
+
+              a: xyzzy n: "14"
+
+       Given a sample.yml file of:
+
+              cat cat
+
+       then
+
+              yq 'match("cat")' sample.yml
+
+       will output
+
+              string: cat offset: 0 length: 3 captures: []
+
+       Given a sample.yml file of:
+
+              cat cat
+
+       then
+
+              yq '[match("cat"; "g")]' sample.yml
+
+       will output
+
+              - string: cat
+                offset: 0
+                length: 3
+                captures: [] - string: cat
+                offset: 4
+                length: 3
+                captures: []
+
+       Like jq's equivalent, this works like match but only returns true/false
+       instead of full match details
+
+       Given a sample.yml file of:
+
+              - cat - dog
+
+       then
+
+              yq '.[] | test("at")' sample.yml
+
+       will output
+
+              true false
+
+       This uses Golang's regex, described here .  Note the use of |=  to  run
+       in context of the current string value.
+
+       Given a sample.yml file of:
+
+              a: dogs are great
+
+       then
+
+              yq '.a |= sub("dogs", "cats")' sample.yml
+
+       will output
+
+              a: cats are great
+
+       This  uses  Golang's regex, described here .  Note the use of |= to run
+       in context of the current string value.
+
+       Given a sample.yml file of:
+
+              a: cat b: heat
+
+       then
+
+              yq '.[] |= sub("(a)", "${1}r")' sample.yml
+
+       will output
+
+              a: cart b: heart
+
+       When custom tags are encountered, yq will try to decode the  underlying
+       type.
+
+       Given a sample.yml file of:
+
+              a: !horse cat b: !goat heat
+
+       then
+
+              yq '.[] |= sub("(a)", "${1}r")' sample.yml
+
+       will output
+
+              a: !horse cart b: !goat heart
+
+       Given a sample.yml file of:
+
+              cat; meow; 1; ; true
+
+       then
+
+              yq 'split("; ")' sample.yml
+
+       will output
+
+              - cat - meow - "1" - "" - "true"
+
+       Given a sample.yml file of:
+
+              word
+
+       then
+
+              yq 'split("; ")' sample.yml
+
+       will output
+
+              - word
+
+       The  style  operator  can  be  used  to  get  or set the style of nodes
+       (e.g. string style, yaml style)
+
+       Given a sample.yml file of:
+
+              a:
+                b: thing
+                c: something
+
+       then
+
+              yq '.a.b = "new" | .a.b style="double"' sample.yml
+
+       will output
+
+              a:
+                b: "new"
+                c: something
+
+       Given a sample.yml file of:
+
+              a:
+                b: thing
+                c: something
+
+       then
+
+              yq 'with(.a.b ; . = "new" | . style="double")' sample.yml
+
+       will output
+
+              a:
+                b: "new"
+                c: something
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="tagged"' sample.yml
+
+       will output
+
+              !!map a: !!str cat b: !!int 5 c: !!float 3.2 e: !!bool true
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="double"' sample.yml
+
+       will output
+
+              a: "cat" b: "5" c: "3.2" e: "true"
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '... style="double"' sample.yml
+
+       will output
+
+              "a": "cat" "b": "5" "c": "3.2" "e": "true"
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="single"' sample.yml
+
+       will output
+
+              a: 'cat' b: '5' c: '3.2' e: 'true'
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="literal"' sample.yml
+
+       will output
+
+              a: |-
+                cat b: |-
+                5 c: |-
+                3.2 e: |-
+                true
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="folded"' sample.yml
+
+       will output
+
+              a: >-
+                cat b: >-
+                5 c: >-
+                3.2 e: >-
+                true
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '.. style="flow"' sample.yml
+
+       will output
+
+              {a: cat, b: 5, c: 3.2, e: true}
+
+       Set empty (default) quote style, note the usage of ...  to  match  keys
+       too.  Note that there is a --prettyPrint/-P short flag for this.
+
+       Given a sample.yml file of:
+
+              a: cat "b": 5 'c': 3.2 "e": true
+
+       then
+
+              yq '... style=""' sample.yml
+
+       will output
+
+              a: cat b: 5 c: 3.2 e: true
+
+       Given a sample.yml file of:
+
+              a: single b: double
+
+       then
+
+              yq '.[] style |= .' sample.yml
+
+       will output
+
+              a: 'single' b: "double"
+
+       Given a sample.yml file of:
+
+              {a: "cat", b: 'thing'}
+
+       then
+
+              yq '.. | style' sample.yml
+
+       will output
+
+              flow double single
+
+       You  can  use  subtract  to subtract numbers as well as remove elements
+       from an array.
+
+       Running
+
+              yq --null-input '[1,2] - [2,3]'
+
+       will output
+
+              - 1
+
+       Running
+
+              yq --null-input '[[1], 1, 2] - [[1], 3]'
+
+       will output
+
+              - 1 - 2
+
+       Note that order of the keys does not matter
+
+       Given a sample.yml file of:
+
+              - a: b
+                c: d - a: b
+
+       then
+
+              yq '. - [{"c": "d", "a": "b"}]' sample.yml
+
+       will output
+
+              - a: b
+
+       If the lhs or rhs are floats then the  expression  will  be  calculated
+       with floats.
+
+       Given a sample.yml file of:
+
+              a: 3 b: 4.5
+
+       then
+
+              yq '.a = .a - .b' sample.yml
+
+       will output
+
+              a: -1.5 b: 4.5
+
+       If both the lhs and rhs are ints then the expression will be calculated
+       with ints.
+
+       Given a sample.yml file of:
+
+              a: 3 b: 4
+
+       then
+
+              yq '.a = .a - .b' sample.yml
+
+       will output
+
+              a: -1 b: 4
+
+       Given a sample.yml file of:
+
+              a: 3 b: 5
+
+       then
+
+              yq '.[] -= 1' sample.yml
+
+       will output
+
+              a: 2 b: 4
+
+       You can subtract durations from dates.  Assumes RFC3339 date time  for-
+       mat, see date-time operators  for more information.
+
+       Given a sample.yml file of:
+
+              a: 2021-01-01T03:10:00Z
+
+       then
+
+              yq '.a -= "3h10m"' sample.yml
+
+       will output
+
+              a: 2021-01-01T00:00:00Z
+
+       Use  with_dtf to specify your datetime format.  See date-time operators
+        for more information.
+
+       Given a sample.yml file of:
+
+              a: Saturday, 15-Dec-01 at 6:00AM GMT
+
+       then
+
+              yq 'with_dtf("Monday, 02-Jan-06 at 3:04PM MST", .a  -=  "3h1m")'
+              sample.yml
+
+       will output
+
+              a: Saturday, 15-Dec-01 at 2:59AM GMT
+
+       When  custom tags are encountered, yq will try to decode the underlying
+       type.
+
+       Given a sample.yml file of:
+
+              a: !horse 2 b: !goat 1
+
+       then
+
+              yq '.a -= .b' sample.yml
+
+       will output
+
+              a: !horse 1 b: !goat 1
+
+       The tag  operator  can  be  used  to  get  or  set  the  tag  of  nodes
+       (e.g. !!str, !!int, !!bool).
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true f: []
+
+       then
+
+              yq '.. | tag' sample.yml
+
+       will output
+
+              !!map !!str !!int !!float !!bool !!seq
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true f: []
+
+       then
+
+              yq '.. | type' sample.yml
+
+       will output
+
+              !!map !!str !!int !!float !!bool !!seq
+
+       Given a sample.yml file of:
+
+              a: str
+
+       then
+
+              yq '.a tag = "!!mikefarah"' sample.yml
+
+       will output
+
+              a: !!mikefarah str
+
+       Given a sample.yml file of:
+
+              a: cat b: 5 c: 3.2 e: true
+
+       then
+
+              yq '(.. | select(tag == "!!int")) tag= "!!str"' sample.yml
+
+       will output
+
+              a: cat b: "5" c: 3.2 e: true
+
+       Parses  the  input  as a number.  yq will try to parse values as an int
+       first, failing that it will try float.  Values  that  already  ints  or
+       floats will be left alone.
+
+       Given a sample.yml file of:
+
+              - "3" - "3.1" - "-1e3"
+
+       then
+
+              yq '.[] | to_number' sample.yml
+
+       will output
+
+              3 3.1 -1e3
+
+       Given a sample.yml file of:
+
+              - 3 - 3.1 - -1e3
+
+       then
+
+              yq '.[] | to_number' sample.yml
+
+       will output
+
+              3 3.1 -1e3
+
+       Running
+
+              yq --null-input '.a.b | to_number'
+
+       will output
+
+              Error:  cannot  convert  node  value  [null]  at path a.b of tag
+              !!null to number
+
+       This is the simplest (and perhaps most used) operator.  It is  used  to
+       navigate deeply into yaml structures.
+
+       Given a sample.yml file of:
+
+              a:
+                b: apple
+
+       then
+
+              yq '.a' sample.yml
+
+       will output
+
+              b: apple
+
+       Often used to pipe children into other operators
+
+       Given a sample.yml file of:
+
+              - b: apple - c: banana
+
+       then
+
+              yq '.[]' sample.yml
+
+       will output
+
+              b: apple c: banana
+
+       Just like splat, but won't error if you run it against scalars
+
+       Given a sample.yml file of:
+
+              cat
+
+       then
+
+              yq '.[]' sample.yml
+
+       will output
+
+
+       Use quotes with square brackets around path elements with special char-
+       acters
+
+       Given a sample.yml file of:
+
+              "{}": frog
+
+       then
+
+              yq '.["{}"]' sample.yml
+
+       will output
+
+              frog
+
+       Given a sample.yml file of:
+
+              a:
+                "key.withdots":
+                  "another.key": apple
+
+       then
+
+              yq '.a["key.withdots"]["another.key"]' sample.yml
+
+       will output
+
+              apple
+
+       Use quotes with square brackets around path elements with special char-
+       acters
+
+       Given a sample.yml file of:
+
+              "red rabbit": frog
+
+       then
+
+              yq '.["red rabbit"]' sample.yml
+
+       will output
+
+              frog
+
+       Expressions  within  []  can  be used to dynamically lookup / calculate
+       keys
+
+       Given a sample.yml file of:
+
+              b: apple apple: crispy yum banana: soft yum
+
+       then
+
+              yq '.[.b]' sample.yml
+
+       will output
+
+              crispy yum
+
+       Nodes are added dynamically while traversing
+
+       Given a sample.yml file of:
+
+              c: banana
+
+       then
+
+              yq '.a.b' sample.yml
+
+       will output
+
+              null
+
+       Like jq, does not output an error when the yaml  is  not  an  array  or
+       object as expected
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq '.a?' sample.yml
+
+       will output
+
+
+       Given a sample.yml file of:
+
+              a:
+                cat: apple
+                mad: things
+
+       then
+
+              yq '.a."*a*"' sample.yml
+
+       will output
+
+              apple things
+
+       Given a sample.yml file of:
+
+              a: &cat
+                c: frog b: *cat
+
+       then
+
+              yq '.b' sample.yml
+
+       will output
+
+              *cat
+
+       Given a sample.yml file of:
+
+              a: &cat
+                c: frog b: *cat
+
+       then
+
+              yq '.b[]' sample.yml
+
+       will output
+
+              frog
+
+       Given a sample.yml file of:
+
+              a: &cat
+                c: frog b: *cat
+
+       then
+
+              yq '.b.c' sample.yml
+
+       will output
+
+              frog
+
+       Given a sample.yml file of:
+
+              - 1 - 2 - 3
+
+       then
+
+              yq '.[0]' sample.yml
+
+       will output
+
+              1
+
+       Given a sample.yml file of:
+
+              [[], [cat]]
+
+       then
+
+              yq '.[1][0]' sample.yml
+
+       will output
+
+              cat
+
+       Given a sample.yml file of:
+
+              2: cat
+
+       then
+
+              yq '.[2]' sample.yml
+
+       will output
+
+              cat
+
+       Given a sample.yml file of:
+
+              a: b
+
+       then
+
+              yq '.[0]' sample.yml
+
+       will output
+
+              null
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar.a' sample.yml
+
+       will output
+
+              foo_a
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar.c' sample.yml
+
+       will output
+
+              foo_c
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar.thing' sample.yml
+
+       will output
+
+              foobar_thing
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobar[]' sample.yml
+
+       will output
+
+              foo_c foo_a foobar_thing
+
+       Note that the later merge anchors override previous
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobarList.thing' sample.yml
+
+       will output
+
+              bar_thing
+
+       Given a sample.yml file of:
+
+              foo: &foo
+                a: foo_a
+                thing: foo_thing
+                c: foo_c bar: &bar
+                b: bar_b
+                thing: bar_thing
+                c: bar_c foobarList:
+                b: foobarList_b
+                !!merge <<:
+                  - *foo
+                  - *bar
+                c: foobarList_c foobar:
+                c: foobar_c
+                !!merge <<: *foo
+                thing: foobar_thing
+
+       then
+
+              yq '.foobarList[]' sample.yml
+
+       will output
+
+              bar_b foo_a bar_thing foobarList_c
+
+       Given a sample.yml file of:
+
+              a:
+                - a
+                - b
+                - c
+
+       then
+
+              yq '.a[0, 2]' sample.yml
+
+       will output
+
+              a c
+
+       This operator is used to combine different results together.
+
+       Running
+
+              yq --null-input '1, true, "cat"'
+
+       will output
+
+              1 true cat
+
+       Given a sample.yml file of:
+
+              a: fieldA b: fieldB c: fieldC
+
+       then
+
+              yq '.a, .c' sample.yml
+
+       will output
+
+              fieldA fieldC
+
+       This is used to filter out duplicated items in an array.  Note that the
+       original order of the array is maintained.
+
+       Note that unique maintains the original order of the array.
+
+       Given a sample.yml file of:
+
+              - 2 - 1 - 3 - 2
+
+       then
+
+              yq 'unique' sample.yml
+
+       will output
+
+              - 2 - 1 - 3
+
+       Unique works on the node value, so it considers  different  representa-
+       tions of nulls to be different
+
+       Given a sample.yml file of:
+
+              - ~ - null - ~ - null
+
+       then
+
+              yq 'unique' sample.yml
+
+       will output
+
+              - ~ - null
+
+       Run against the node tag to unique all the nulls
+
+       Given a sample.yml file of:
+
+              - ~ - null - ~ - null
+
+       then
+
+              yq 'unique_by(tag)' sample.yml
+
+       will output
+
+              - ~
+
+       Given a sample.yml file of:
+
+              - name: harry
+                pet: cat - name: billy
+                pet: dog - name: harry
+                pet: dog
+
+       then
+
+              yq 'unique_by(.name)' sample.yml
+
+       will output
+
+              - name: harry
+                pet: cat - name: billy
+                pet: dog
+
+       Like  the jq equivalents, variables are sometimes required for the more
+       complex expressions (or swapping values between fields).
+
+       Note that there is also an additional ref operator that holds a  refer-
+       ence  (instead  of  a  copy) of the path, allowing you to make multiple
+       changes to the same path.
+
+       Given a sample.yml file of:
+
+              a: cat
+
+       then
+
+              yq '.a as $foo | $foo' sample.yml
+
+       will output
+
+              cat
+
+       Given a sample.yml file of:
+
+              - cat - dog
+
+       then
+
+              yq '.[] as $foo | $foo' sample.yml
+
+       will output
+
+              cat dog
+
+       Example taken from  https://stedolan.github.io/jq/manual/#Variable/Sym-
+       bolicBindingOperator:...as$identifier%7C...  jq
+
+       Given a sample.yml file of:
+
+              "posts":
+                - "title": First post
+                  "author": anon
+                - "title": A well-written article
+                  "author": person1 "realnames":
+                "anon": Anonymous Coward
+                "person1": Person McPherson
+
+       then
+
+              yq '.realnames as $names | .posts[] | {"title":.title, "author":
+              $names[.author]}' sample.yml
+
+       will output
+
+              title: First post author: Anonymous Coward title: A well-written
+              article author: Person McPherson
+
+       Given a sample.yml file of:
+
+              a: a_value b: b_value
+
+       then
+
+              yq '.a as $x  | .b as $y | .b = $x | .a = $y' sample.yml
+
+       will output
+
+              a: b_value b: a_value
+
+       Note: You may find the with operator more useful.
+
+       Given a sample.yml file of:
+
+              a:
+                b: thing
+                c: something
+
+       then
+
+              yq '.a.b ref $x | $x = "new" | $x style="double"' sample.yml
+
+       will output
+
+              a:
+                b: "new"
+                c: something
+
+       Use the with operator to conveniently make multiple updates to a deeply
+       nested path, or to update array elements relatively to each other.  The
+       first argument expression sets the root context, and the second expres-
+       sion runs against that root context.
+
+       Given a sample.yml file of:
+
+              a:
+                deeply:
+                  nested: value
+
+       then
+
+              yq 'with(.a.deeply.nested; . = "newValue" |  .  style="single")'
+              sample.yml
+
+       will output
+
+              a:
+                deeply:
+                  nested: 'newValue'
+
+       Given a sample.yml file of:
+
+              a:
+                deeply:
+                  nested: value
+                  other: thing
+
+       then
+
+              yq  'with(.a.deeply; .nested = "newValue" | .other= "newThing")'
+              sample.yml
+
+       will output
+
+              a:
+                deeply:
+                  nested: newValue
+                  other: newThing
+
+       The second expression runs with each element of the array as it's  con-
+       textual root.  This allows you to make updates relative to the element.
+
+       Given a sample.yml file of:
+
+              myArray:
+                - a: apple
+                - a: banana
+
+       then
+
+              yq 'with(.myArray[]; .b = .a + " yum")' sample.yml
+
+       will output
+
+              myArray:
+                - a: apple
+                  b: apple yum
+                - a: banana
+                  b: banana yum
+
+       Encode and decode to and from JSON.  Supports multiple  JSON  documents
+       in a single file (e.g. NDJSON).
+
+       Note  that  YAML is a superset of (single document) JSON - so you don't
+       have to use the JSON parser to read JSON when there is  only  one  JSON
+       document  in  the  input.   You  will probably want to pretty print the
+       result in this case, to get idiomatic YAML styling.
+
+       JSON is a subset of yaml, so all you need to do is prettify the output
+
+       Given a sample.json file of:
+
+              {"cat": "meow"}
+
+       then
+
+              yq -p=json sample.json
+
+       will output
+
+              cat: meow
+
+       JSON is a subset of yaml, so all you need to do is prettify the output
+
+       Given a sample.json file of:
+
+              {"a":"Easy! as one two three","b":{"c":2,"d":[3,4]}}
+
+       then
+
+              yq -p=json sample.json
+
+       will output
+
+              a: Easy! as one two three b:
+                  c: 2
+                  d:
+                      - 3
+                      - 4
+
+       Given a sample.yml file of:
+
+              cat: meow
+
+       then
+
+              yq -o=json '.' sample.yml
+
+       will output
+
+              {
+                "cat": "meow" }
+
+       Given a sample.yml file of:
+
+              cat: meow # this is a comment, and it will be dropped.
+
+       then
+
+              yq -o=json -I=0 '.' sample.yml
+
+       will output
+
+              {"cat":"meow"}
+
+       Given a sample.yml file of:
+
+              cat: meow # this is a comment, and it will be dropped.
+
+       then
+
+              yq -o=json '.' sample.yml
+
+       will output
+
+              {
+                "cat": "meow" }
+
+       Anchors are dereferenced
+
+       Given a sample.yml file of:
+
+              cat: &ref meow anotherCat: *ref
+
+       then
+
+              yq -o=json '.' sample.yml
+
+       will output
+
+              {
+                "cat": "meow",
+                "anotherCat": "meow" }
+
+       Each matching node is converted into a json doc.   This  is  best  used
+       with 0 indent (json document per line)
+
+       Given a sample.yml file of:
+
+              things: [{stuff: cool}, {whatever: cat}]
+
+       then
+
+              yq -o=json -I=0 '.things[]' sample.yml
+
+       will output
+
+              {"stuff":"cool"} {"whatever":"cat"}
+
+       Given a sample.json file of:
+
+              {"this":  "is  a multidoc json file"} {"each": ["line is a valid
+              json document"]} {"a number": 4}
+
+       then
+
+              yq -p=json -o=json -I=0 sample.json
+
+       will output
+
+              {"this":"is a multidoc json file"}  {"each":["line  is  a  valid
+              json document"]} {"a number":4}
+
+       The parser can also handle multiple multi-line json documents in a sin-
+       gle file (despite this not being in the  JSON  Lines  /  NDJSON  spec).
+       Typically  you  would  have  one entire JSON document per line, but the
+       parser also supports multiple multi-line json documents
+
+       Given a sample.json file of:
+
+              {
+                  "this": "is a multidoc json file" } {
+                  "it": [
+                      "has",
+                      "consecutive",
+                      "json documents"
+                  ] } {
+                  "a number": 4 }
+
+       then
+
+              yq -p=json -o=json -I=2 sample.json
+
+       will output
+
+              {
+                "this": "is a multidoc json file" } {
+                "it": [
+                  "has",
+                  "consecutive",
+                  "json documents"
+                ] } {
+                "a number": 4 }
+
+       Documents are indexed by the documentIndex or di operator.
+
+       Given a sample.json file of:
+
+              {"this": "is a multidoc json file"} {"each": ["line is  a  valid
+              json document"]} {"a number": 4}
+
+       then
+
+              yq  -p=json  -o=json -I=0 '(select(di == 1) | .each ) += "cool"'
+              sample.json
+
+       will output
+
+              {"this":"is a multidoc json file"}  {"each":["line  is  a  valid
+              json document","cool"]} {"a number":4}
+
+       Use expressions as you normally would.
+
+       Given a sample.json file of:
+
+              {"this":  "is  a multidoc json file"} {"each": ["line is a valid
+              json document"]} {"a number": 4}
+
+       then
+
+              yq -p=json -o=json  -I=0  '(select(has("each"))  |  .each  )  +=
+              "cool"' sample.json
+
+       will output
+
+              {"this":"is  a  multidoc  json  file"} {"each":["line is a valid
+              json document","cool"]} {"a number":4}
+
+       Given a sample.json file of:
+
+              {"this": "is a multidoc json file"} {"each": ["line is  a  valid
+              json document"]} {"a number": 4}
+
+       then
+
+              yq -p=json sample.json
+
+       will output
+
+              this: is a multidoc json file --- each:
+                  - line is a valid json document --- a number: 4
+
+       Encode/Decode/Roundtrip CSV and TSV files.
+
+       Currently  supports  arrays  of  homogeneous  flat objects, that is: no
+
+              - name: Bobo
+                type: dog - name: Fifi
+                type: cat
+
+       As well as arrays of arrays of scalars (strings/numbers/booleans):
+
+              - [Bobo, dog] - [Fifi, cat]
+
+       Decode assumes the first CSV/TSV row is the header row,  and  all  rows
+       beneath  are  the  entries.   The  data  will be coded into an array of
+       objects, using the header rows as keys.
+
+              name,type Bobo,dog Fifi,cat
+
+       Given a sample.yml file of:
+
+              - [i, like, csv] - [because, excel, is, cool]
+
+       then
+
+              yq -o=csv sample.yml
+
+       will output
+
+              i,like,csv because,excel,is,cool
+
+       Given a sample.yml file of:
+
+              - [i, like, csv] - [because, excel, is, cool]
+
+       then
+
+              yq -o=tsv sample.yml
+
+       will output
+
+              i   like    csv because excel   is  cool
+
+       Given a sample.yml file of:
+
+              - name: Gary
+                numberOfCats: 1
+                likesApples: true
+                height: 168.8 - name: Samantha's Rabbit
+                numberOfCats: 2
+                likesApples: false
+                height: -188.8
+
+       then
+
+              yq -o=csv sample.yml
+
+       will output
+
+              name,numberOfCats,likesApples,height  Gary,1,true,168.8   Saman-
+              tha's Rabbit,2,false,-188.8
+
+       Add  the  header  row manually, then the we convert each object into an
+       array of values - resulting in an array of arrays.   Pick  the  columns
+       and call the header whatever you like.
+
+       Given a sample.yml file of:
+
+              - name: Gary
+                numberOfCats: 1
+                likesApples: true
+                height: 168.8 - name: Samantha's Rabbit
+                numberOfCats: 2
+                likesApples: false
+                height: -188.8
+
+       then
+
+              yq  -o=csv '[["Name", "Number of Cats"]] +  [.[] | [.name, .num-
+              berOfCats ]]' sample.yml
+
+       will output
+
+              Name,Number of Cats Gary,1 Samantha's Rabbit,2
+
+       First entry is used to determine the headers, and it is missing  `like-
+       sApples', so it is not included in the csv.  Second entry does not have
+       `numberOfCats' so that is blank
+
+       Given a sample.yml file of:
+
+              - name: Gary
+                numberOfCats: 1
+                height: 168.8 - name: Samantha's Rabbit
+                height: -188.8
+                likesApples: false
+
+       then
+
+              yq -o=csv sample.yml
+
+       will output
+
+              name,numberOfCats,height Gary,1,168.8 Samantha's Rabbit,,-188.8
+
+       First row is assumed to be the header row.
+
+       Given a sample.csv file of:
+
+              name,numberOfCats,likesApples,height  Gary,1,true,168.8   Saman-
+              tha's Rabbit,2,false,-188.8
+
+       then
+
+              yq -p=csv sample.csv
+
+       will output
+
+              - name: Gary
+                numberOfCats: 1
+                likesApples: true
+                height: 168.8 - name: Samantha's Rabbit
+                numberOfCats: 2
+                likesApples: false
+                height: -188.8
+
+       First row is assumed to be the header row.
+
+       Given a sample.tsv file of:
+
+              name     numberOfCats     likesApples  height  Gary     1   true
+              168.8 Samantha's Rabbit   2   false   -188.8
+
+       then
+
+              yq -p=tsv sample.tsv
+
+       will output
+
+              - name: Gary
+                numberOfCats: 1
+                likesApples: true
+                height: 168.8 - name: Samantha's Rabbit
+                numberOfCats: 2
+                likesApples: false
+                height: -188.8
+
+       Given a sample.csv file of:
+
+              name,numberOfCats,likesApples,height  Gary,1,true,168.8   Saman-
+              tha's Rabbit,2,false,-188.8
+
+       then
+
+              yq  -p=csv  -o=csv  '(.[] | select(.name == "Gary") | .numberOf-
+              Cats) = 3' sample.csv
+
+       will output
+
+              name,numberOfCats,likesApples,height  Gary,3,true,168.8   Saman-
+              tha's Rabbit,2,false,-188.8
+
+       Given a sample.lua file of:
+
+              return {
+                  ["country"] = "Australia"; -- this place
+                  ["cities"] = {
+                      "Sydney",
+                      "Melbourne",
+                      "Brisbane",
+                      "Perth",
+                  }; };
+
+       then
+
+              yq -oy '.' sample.lua
+
+       will output
+
+              country: Australia cities:
+                - Sydney
+                - Melbourne
+                - Brisbane
+                - Perth
+
+       Given a sample.yml file of:
+
+              --- country: Australia # this place cities: - Sydney - Melbourne
+              - Brisbane - Perth
+
+       then
+
+              yq -o=lua '.' sample.yml
+
+       will output
+
+              return {
+                  ["country"] = "Australia"; -- this place
+                  ["cities"] = {
+                      "Sydney",
+                      "Melbourne",
+                      "Brisbane",
+                      "Perth",
+                  }; };
+
+       Uses the --lua-unquoted option to produce a nicer-looking output.
+
+       Given a sample.yml file of:
+
+              --- country: Australia # this place cities: - Sydney - Melbourne
+              - Brisbane - Perth
+
+       then
+
+              yq -o=lua --lua-unquoted '.' sample.yml
+
+       will output
+
+              return {
+                  country = "Australia"; -- this place
+                  cities = {
+                      "Sydney",
+                      "Melbourne",
+                      "Brisbane",
+                      "Perth",
+                  }; };
+
+       Uses  the  --lua-globals  option  to  export the values into the global
+       scope.
+
+       Given a sample.yml file of:
+
+              --- country: Australia # this place cities: - Sydney - Melbourne
+              - Brisbane - Perth
+
+       then
+
+              yq -o=lua --lua-globals '.' sample.yml
+
+       will output
+
+              country = "Australia"; -- this place cities = {
+                  "Sydney",
+                  "Melbourne",
+                  "Brisbane",
+                  "Perth", };
+
+       Given a sample.yml file of:
+
+              --- hello: world tables:
+                like: this
+                keys: values
+                ? look: non-string keys
+                : True numbers:
+                - decimal: 12345
+                - hex: 0x7fabc123
+                - octal: 0o30
+                - float: 123.45
+                - infinity: .inf
+                  plus_infinity: +.inf
+                  minus_infinity: -.inf
+                - not: .nan
+
+       then
+
+              yq -o=lua '.' sample.yml
+
+       will output
+
+              return {
+                  ["hello"] = "world";
+                  ["tables"] = {
+                      ["like"] = "this";
+                      ["keys"] = "values";
+                      [{
+                          ["look"] = "non-string keys";
+                      }] = true;
+                  };
+                  ["numbers"] = {
+                      {
+                          ["decimal"] = 12345;
+                      },
+                      {
+                          ["hex"] = 0x7fabc123;
+                      },
+                      {
+                          ["octal"] = 24;
+                      },
+                      {
+                          ["float"] = 123.45;
+                      },
+                      {
+                          ["infinity"] = (1/0);
+                          ["plus_infinity"] = (1/0);
+                          ["minus_infinity"] = (-1/0);
+                      },
+                      {
+                          ["not"] = (0/0);
+                      },
+                  }; };
+
+       Encode/Decode/Roundtrip  to/from  a  property  file.   Line comments on
+       value nodes will be copied across.
+
+       By default, empty maps and arrays are not encoded - see  below  for  an
+       example on how to encode a value for these.
+
+       Note that empty arrays and maps are not encoded by default.
+
+       Given a sample.yml file of:
+
+              #  block  comments come through person: # neither do comments on
+              maps
+                  name: Mike Wazowski # comments on values appear
+                  pets:
+                  - cat # comments on array values appear
+                  food: [pizza] # comments on arrays  do  not  emptyArray:  []
+              emptyMap: []
+
+       then
+
+              yq -o=props sample.yml
+
+       will output
+
+              #  block  comments come through # comments on values appear per-
+              son.name = Mike Wazowski
+
+              # comments on array  values  appear  person.pets.0  =  cat  per-
+              son.food.0 = pizza
+
+       Note  that string values with blank characters in them are encapsulated
+       with double quotes
+
+       Given a sample.yml file of:
+
+              # block comments come through person: # neither do  comments  on
+              maps
+                  name: Mike Wazowski # comments on values appear
+                  pets:
+                  - cat # comments on array values appear
+                  food:  [pizza]  #  comments  on arrays do not emptyArray: []
+              emptyMap: []
+
+       then
+
+              yq -o=props --unwrapScalar=false sample.yml
+
+       will output
+
+              # block comments come through # comments on values  appear  per-
+              son.name = "Mike Wazowski"
+
+              #  comments  on  array  values  appear  person.pets.0 = cat per-
+              son.food.0 = pizza
+
+       Given a sample.yml file of:
+
+              # block comments come through person: # neither do  comments  on
+              maps
+                  name: Mike Wazowski # comments on values appear
+                  pets:
+                  - cat # comments on array values appear
+                  food:  [pizza]  #  comments  on arrays do not emptyArray: []
+              emptyMap: []
+
+       then
+
+              yq -o=props '... comments = ""' sample.yml
+
+       will output
+
+              person.name = Mike Wazowski person.pets.0 = cat person.food.0  =
+              pizza
+
+       Use a yq expression to set the empty maps and sequences to your desired
+       value.
+
+       Given a sample.yml file of:
+
+              # block comments come through person: # neither do  comments  on
+              maps
+                  name: Mike Wazowski # comments on values appear
+                  pets:
+                  - cat # comments on array values appear
+                  food:  [pizza]  #  comments  on arrays do not emptyArray: []
+              emptyMap: []
+
+       then
+
+              yq -o=props '(.. | select( (tag == "!!map" or tag =="!!seq") and
+              length == 0)) = ""' sample.yml
+
+       will output
+
+              #  block  comments come through # comments on values appear per-
+              son.name = Mike Wazowski
+
+              # comments on array  values  appear  person.pets.0  =  cat  per-
+              son.food.0 = pizza emptyArray = emptyMap =
+
+       Given a sample.properties file of:
+
+              #  block  comments come through # comments on values appear per-
+              son.name = Mike Wazowski
+
+              # comments on array  values  appear  person.pets.0  =  cat  per-
+              son.food.0 = pizza
+
+       then
+
+              yq -p=props sample.properties
+
+       will output
+
+              person:
+                  # block comments come through
+                  # comments on values appear
+                  name: Mike Wazowski
+                  pets:
+                      # comments on array values appear
+                      - cat
+                  food:
+                      - pizza
+
+       If  you have a numeric map key in your property files, use array_to_map
+       to convert them to maps.
+
+       Given a sample.properties file of:
+
+              things.10 = mike
+
+       then
+
+              yq -p=props '.things |= array_to_map' sample.properties
+
+       will output
+
+              things:
+                  10: mike
+
+       Given a sample.properties file of:
+
+              # block comments come through # comments on values  appear  per-
+              son.name = Mike Wazowski
+
+              #  comments  on  array  values  appear  person.pets.0 = cat per-
+              son.food.0 = pizza
+
+       then
+
+              yq -p=props -o=props '.person.pets.0 = "dog"' sample.properties
+
+       will output
+
+              # block comments come through # comments on values  appear  per-
+              son.name = Mike Wazowski
+
+              #  comments  on  array  values  appear  person.pets.0 = dog per-
+              son.food.0 = pizza
+
+       These examples are intended to show how you can use multiple  operators
+       together so you get an idea of how you can perform complex data manipu-
+       lation.
+
+       Please see the details operator docs  for details  on  each  individual
+       operator.
+
+       We  have  an  array  and we want to find the elements with a particular
+       name.
+
+       Given a sample.yml file of:
+
+              - name: Foo
+                numBuckets: 0 - name: Bar
+                numBuckets: 0
+
+       then
+
+              yq '.[] | select(.name == "Foo")' sample.yml
+
+       will output
+
+              name: Foo numBuckets: 0
+
+
+         select all the nodes that have a name property set to `Foo'.
+
+
+       name.
+
+       Given a sample.yml file of:
+
+              - name: Foo
+                numBuckets: 0 - name: Bar
+                numBuckets: 0
+
+       then
+
+              yq '(.[] | select(.name == "Foo") | .numBuckets) |= . + 1'  sam-
+              ple.yml
+
+       will output
+
+              - name: Foo
+                numBuckets: 1 - name: Bar
+                numBuckets: 0
+
+         the items.
+
+         from all the matching items
+
+         sion is passed to the |= operator as the left hand  side  expression,
+         with . + 1 as the right hand side expression.
+
+         which is referenced as dot (.).
+
+
+
+       name in reference to its type.
+
+       Given a sample.yml file of:
+
+              myArray:
+                - name: Foo
+                  type: cat
+                - name: Bar
+                  type: dog
+
+       then
+
+              yq 'with(.myArray[]; .name = .name + " - " + .type)' sample.yml
+
+       will output
+
+              myArray:
+                - name: Foo - cat
+                  type: cat
+                - name: Bar - dog
+                  type: dog
+
+         the first given expression, and run the second expression against it.
+
+         each item in that array
+
+         item, updating the name to be a concatenation of the original name as
+         well as the type.
+
+
+       Given a sample.yml file of:
+
+              myArray:
+                - name: Foo
+                  numBuckets: 1
+                - name: Bar
+                  numBuckets: 0
+
+       then
+
+              yq '.myArray |= sort_by(.numBuckets)' sample.yml
+
+       will output
+
+              myArray:
+                - name: Bar
+                  numBuckets: 0
+                - name: Foo
+                  numBuckets: 1
+
+
+         array.
+
+         = (.myArray | sort_by(.numBuckets))
+
+       Lets
+
+       Given a sample.yml file of:
+
+              - type: foo
+                names:
+                  - Fred
+                  - Catherine - type: bar
+                names:
+                  - Zelda - type: foo
+                names: Fred - type: foo
+                names: Ava
+
+       then
+
+              yq '[.[] | select(.type == "foo") | .names] | flatten |  sort  |
+              unique' sample.yml
+
+       will output
+
+              - Ava - Catherine - Fred
+
+         of type "foo"
+
+         do this so we can work on the child items, for instance, filter items
+         out using the select operator.
+
+         we're  doing working on the children, we wrap everything back into an
+         array  using  square  brackets  around  the   expression.    [.[]   |
+         select(.type == "foo") | .names]
+
+         arrays of strings as well as strings on their own.
+
+         So now we have a flat list of all the name value strings
+
+         unique list of the names!
+
+         ples.
+
+       Note  that  comments  are dropped and values will be enclosed in single
+       quotes as needed.
+
+       Given a sample.yml file of:
+
+              # comment name: Mike Wazowski eyes:
+                color: turquoise
+                number: 1 friends:
+                - James P. Sullivan
+                - Celia Mae
+
+       then
+
+              yq -o=shell sample.yml
+
+       will output
+
+              name='Mike    Wazowski'    eyes_color=turquoise    eyes_number=1
+              friends_0='James P. Sullivan' friends_1='Celia Mae'
+
+       Keys that would be illegal as variable keys are adapted.
+
+       Given a sample.yml file of:
+
+              ascii_=_symbols:  replaced  with  _  "ascii_ _controls": dropped
+              (this   example   uses   \t)   nonascii_x_characters:    dropped
+              (via unicode NFKD)
+
+       then
+
+              yq -o=shell sample.yml
+
+       will output
+
+              ascii___symbols='replaced with _' ascii__controls='dropped (this
+              example       uses       \t)'       nonascii__characters=dropped
+              effort_expended_to_preserve_accented_latin_letters='moderate
+              (via unicode NFKD)'
+
+       Empty  values are encoded to empty variables, but empty arrays and maps
+       are skipped.
+
+       Given a sample.yml file of:
+
+              empty:
+                value:
+                array: []
+                map:   {}
+
+       then
+
+              yq -o=shell sample.yml
+
+       will output
+
+              empty_value=
+
+       Single quotes in values are encoded as `"'"' (close single quote,  dou-
+       ble-quoted single quote, open single quote).
+
+       Given a sample.yml file of:
+
+              name: Miles O'Brien
+
+       then
+
+              yq -o=shell sample.yml
+
+       will output
+
+              name='Miles O'"'"'Brien'
+
+       Decode from TOML.  Note that yq does not yet support outputting in TOML
+       format (and therefore it cannot roundtrip)
+
+       Given a sample.toml file of:
+
+              A = "hello" B = 12
+
+       then
+
+              yq -oy '.' sample.toml
+
+       will output
+
+              A: hello B: 12
+
+       Given a sample.toml file of:
+
+              person.name = "hello" person.address = "12 cat st"
+
+       then
+
+              yq -oy '.' sample.toml
+
+       will output
+
+              person:
+                name: hello
+                address: 12 cat st
+
+       Given a sample.toml file of:
+
+              person.name = "hello" person.address = "12 cat st"
+
+       then
+
+              yq '.person.name' sample.toml
+
+       will output
+
+              hello
+
+       Given a sample.toml file of:
+
+              name = { first = "Tom", last = "Preston-Werner" }
+
+       then
+
+              yq -oy '.' sample.toml
+
+       will output
+
+              name:
+                first: Tom
+                last: Preston-Werner
+
+       Given a sample.toml file of:
+
+
+              [owner.contact] name = "Tom Preston-Werner" age = 36
+
+              [[owner.addresses]] street = "first street" suburb = "ok"
+
+              [[owner.addresses]] street = "second street" suburb = "nice"
+
+       then
+
+              yq -oy '.' sample.toml
+
+       will output
+
+              owner:
+                contact:
+                  name: Tom Preston-Werner
+                  age: 36
+                addresses:
+                  - street: first street
+                    suburb: ok
+                  - street: second street
+                    suburb: nice
+
+       Encode and decode to and from XML.  Whitespace  is  not  conserved  for
+       round trips - but the order of the fields are.
+
+       Consecutive xml nodes with the same name are assumed to be arrays.
+
+       XML content data, attributes processing instructions and directives are
+       all created as plain fields.
+
+       This can be controlled by:
+
+
+       Flag                      Default                    Sample XML
+       -----------------------------------------------------------------------------
+       --xml-attribute-prefix    + (changing to +@ soon)    Legs in <cat legs="4"/>
+       --xml-content-name        +content                   Meow    in    <cat>Meow
+                                                            <fur>true</true></cat>
+       --xml-directive-name      +directive                 <!DOCTYPE config system
+                                                            "blah">
+       --xml-proc-inst-prefix    +p_                        <?xml version="1"?>
+
+       {% hint style="warning" %} Default Attribute Prefix will be changing in
+       v4.30!   In  order  to  avoid  name conflicts (e.g. having an attribute
+       named "content" will create a field that clashes with the default  con-
+       tent name of "+content") the attribute prefix will be changing to "+@".
+
+       This will affect users that have not set their own prefix and  are  not
+       roundtripping XML changes.
+
+       {% endhint %}
+
+       In   addition   to  the  above  flags,  there  are  the  following  xml
+       encoder/decoder options controlled by flags:
+
+
+       Flag                      Default                    Description
+       -----------------------------------------------------------------------------
+       --xml-strict-mode         false                      Strict  mode   enforces
+                                                            the requirements of the
+                                                            XML      specification.
+                                                            When  switched  off the
+                                                            parser   allows   input
+                                                            containing  common mis-
+                                                            takes.  See the  Golang
+                                                            xml  decoder   for more
+                                                            details.
+       --xml-keep-namespace      true                       Keeps the namespace  of
+                                                            attributes
+
+
+       --xml-raw-token           true                       Does  not  verify  that
+                                                            start and end  elements
+                                                            match   and   does  not
+                                                            translate  name   space
+                                                            prefixes  to their cor-
+                                                            responding URLs.
+       --xml-skip-proc-inst      false                      Skips  over  processing
+                                                            instructions,
+                                                            e.g. <?xml         ver-
+                                                            sion="1"?>
+       --xml-skip-directives     false                      Skips  over directives,
+                                                            e.g. <!DOCTYPE   config
+                                                            system "blah">
+
+       See below for examples
+
+       Notice  how all the values are strings, see the next example on how you
+       can fix that.
+
+       Given a sample.xml file of:
+
+              <?xml version="1.0" encoding="UTF-8"?> <cat>
+                <says>meow</says>
+                <legs>4</legs>
+                <cute>true</cute> </cat>
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              +p_xml: version="1.0" encoding="UTF-8" cat:
+                says: meow
+                legs: "4"
+                cute: "true"
+
+       All values are assumed to be strings when parsing XML, but you can  use
+       the  from_yaml operator on all the strings values to autoparse into the
+       correct type.
+
+       Given a sample.xml file of:
+
+              <?xml version="1.0" encoding="UTF-8"?> <cat>
+                <says>meow</says>
+                <legs>4</legs>
+                <cute>true</cute> </cat>
+
+       then
+
+              yq -oy ' (.. | select(tag == "!!str")) |= from_yaml' sample.xml
+
+       will output
+
+              +p_xml: version="1.0" encoding="UTF-8" cat:
+                says: meow
+                legs: 4
+                cute: true
+
+       Consecutive nodes with identical xml names are assumed to be arrays.
+
+       Given a sample.xml file of:
+
+              <?xml  version="1.0"   encoding="UTF-8"?>   <animal>cat</animal>
+              <animal>goat</animal>
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              +p_xml: version="1.0" encoding="UTF-8" animal:
+                - cat
+                - goat
+
+       In  XML,  if  your array has a single item, then yq doesn't know its an
+       array.  This is how you can consistently force it to be an array.  This
+       handles the 3 scenarios of having nothing in the array, having a single
+       item and having multiple.
+
+       Given a sample.xml file of:
+
+              <zoo><animal>cat</animal></zoo>
+
+       then
+
+              yq -oy '.zoo.animal |= ([] + .)' sample.xml
+
+       will output
+
+              zoo:
+                animal:
+                  - cat
+
+       Given a sample.xml file of:
+
+              <zoo><thing><frog>boing</frog></thing></zoo>
+
+       then
+
+              yq -oy '.. |= [] + .' sample.xml
+
+       will output
+
+              - zoo:
+                  - thing:
+                      - frog:
+                          - boing
+
+       Attributes are converted to fields, with the default  attribute  prefix
+       `+'.  Use '-xml-attribute-prefix` to set your own.
+
+       Given a sample.xml file of:
+
+              <?xml version="1.0" encoding="UTF-8"?> <cat legs="4">
+                <legs>7</legs> </cat>
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              +p_xml: version="1.0" encoding="UTF-8" cat:
+                +@legs: "4"
+                legs: "7"
+
+       Content  is  added  as a field, using the default content name of +con-
+       tent.  Use --xml-content-name to set your own.
+
+       Given a sample.xml file of:
+
+              <?xml version="1.0" encoding="UTF-8"?> <cat legs="4">meow</cat>
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              +p_xml: version="1.0" encoding="UTF-8" cat:
+                +content: meow
+                +@legs: "4"
+
+       Multiple content texts are collected into a sequence.
+
+       Given a sample.xml file of:
+
+              <root>    value    <!--    comment-->anotherValue    <a>frog</a>
+              cool!</root>
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              root:
+                +content: # comment
+                  - value
+                  - anotherValue
+                  - cool!
+                a: frog
+
+       DTD entities are processed as directives.
+
+       Given a sample.xml file of:
+
+
+              <?xml  version="1.0"?> <!DOCTYPE root [ <!ENTITY writer "Blah.">
+              <!ENTITY copyright "Blah"> ]> <root>
+                  <item>&writer;&copyright;</item> </root>
+
+       then
+
+              yq '.' sample.xml
+
+       will output
+
+              <?xml version="1.0"?> <!DOCTYPE root [ <!ENTITY writer  "Blah.">
+              <!ENTITY copyright "Blah"> ]> <root>
+                <item>&amp;writer;&amp;copyright;</item> </root>
+
+       DTDs are directives, skip over directives to skip DTDs.
+
+       Given a sample.xml file of:
+
+
+              <?xml  version="1.0"?> <!DOCTYPE root [ <!ENTITY writer "Blah.">
+              <!ENTITY copyright "Blah"> ]> <root>
+                  <item>&writer;&copyright;</item> </root>
+
+       then
+
+              yq --xml-skip-directives '.' sample.xml
+
+       will output
+
+              <?xml version="1.0"?> <root>
+                <item>&amp;writer;&amp;copyright;</item> </root>
+
+       A best attempt is made to preserve comments.
+
+       Given a sample.xml file of:
+
+
+              <!-- before cat --> <cat>
+                  <!-- in cat before -->
+                  <x>3<!-- multi line comment for x --></x>
+                  <!-- before y -->
+                  <y>
+                      <!-- in y before -->
+                      <d><!-- in d before -->z<!-- in d after --></d>
+
+                      <!-- in y after -->
+                  </y>
+                  <!-- in_cat_after --> </cat> <!-- after cat -->
+
+       then
+
+              yq -oy '.' sample.xml
+
+       will output
+
+              # before cat cat:
+                # in cat before
+                x: "3" # multi
+                # line comment
+                # for x
+                # before y
+
+                y:
+                  # in y before
+                  # in d before
+                  d: z # in d after
+                  # in y after
+                # in_cat_after # after cat
+
+       Defaults to true
+
+       Given a sample.xml file of:
+
+              <?xml      version="1.0"?>      <map      xmlns="some-namespace"
+              xmlns:xsi="some-instance" xsi:schemaLocation="some-url"></map>
+
+       then
+
+              yq --xml-keep-namespace=false '.' sample.xml
+
+       will output
+
+              <?xml  version="1.0"?>  <map  xmlns="some-namespace"  xsi="some-
+              instance" schemaLocation="some-url"></map>
+
+       instead of
+
+              <?xml      version="1.0"?>      <map      xmlns="some-namespace"
+              xmlns:xsi="some-instance" xsi:schemaLocation="some-url"></map>
+
+       Defaults to true
+
+       Given a sample.xml file of:
+
+              <?xml      version="1.0"?>      <map      xmlns="some-namespace"
+              xmlns:xsi="some-instance" xsi:schemaLocation="some-url"></map>
+
+       then
+
+              yq --xml-raw-token=false '.' sample.xml
+
+       will output
+
+              <?xml      version="1.0"?>      <map      xmlns="some-namespace"
+              xmlns:xsi="some-instance"    some-instance:schemaLocation="some-
+              url"></map>
+
+       instead of
+
+              <?xml      version="1.0"?>      <map      xmlns="some-namespace"
+              xmlns:xsi="some-instance" xsi:schemaLocation="some-url"></map>
+
+       Given a sample.yml file of:
+
+              cat: purrs
+
+       then
+
+              yq -o=xml '.' sample.yml
+
+       will output
+
+              <cat>purrs</cat>
+
+       Given a sample.yml file of:
+
+              pets:
+                cat:
+                  - purrs
+                  - meows
+
+       then
+
+              yq -o=xml '.' sample.yml
+
+       will output
+
+              <pets>
+                <cat>purrs</cat>
+                <cat>meows</cat> </pets>
+
+       Fields  with  the  matching  xml-attribute-prefix  are  assumed  to  be
+       attributes.
+
+       Given a sample.yml file of:
+
+              cat:
+                +@name: tiger
+                meows: true
+
+       then
+
+              yq -o=xml '.' sample.yml
+
+       will output
+
+              <cat name="tiger">
+                <meows>true</meows> </cat>
+
+       Fields with the matching xml-content-name is assumed to be content.
+
+       Given a sample.yml file of:
+
+              cat:
+                +@name: tiger
+                +content: cool
+
+       then
+
+              yq -o=xml '.' sample.yml
+
+       will output
+
+              <cat name="tiger">cool</cat>
+
+# yml to xml
+       Given a sample.yml file of:
+              +p_xml:   version="1.0"   +directive:   'DOCTYPE  config  SYSTEM
+              "/etc/iwatch/iwatch.dtd" ' apple:
+                +p_coolioo: version="1.0"
+                +directive: 'CATYPE meow purr puss '
+                b: things
+       then
+              yq -o=xml '.' sample.yml
+       will output
+              <?xml     version="1.0"?>      <!DOCTYPE      config      SYSTEM
+              "/etc/iwatch/iwatch.dtd"       >      <apple><?coolioo      ver-
+              sion="1.0"?><!CATYPE meow purr puss >
+                <b>things</b> </apple>

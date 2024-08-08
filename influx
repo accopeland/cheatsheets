@@ -1,0 +1,44 @@
+---
+syntax: bash
+tags: [ dev ts ]
+---
+
+# description
+time series db. See also 'flux' language
+
+# install
+brew install influxdb  # cask
+https://dl.influxdata.com/influxdb/releases/influxdb2-2.3.0-darwin-amd64.tar.gz
+
+# docs
+https://docs.influxdata.com/influxdb/v2.3/
+
+# usage
+influxd
+influx config create -n default -u http://localhost:8086 -o example-org -t mySuP3rS3cr3tT0keN -a
+
+# see telegraf
+Use Telegraf to quickly write data to InfluxDB Cloud
+https://www.influxdata.com/time-series-platform/telegraf/
+
+Collect and write data
+Collect and write data to InfluxDB using the Telegraf plugins, the InfluxDB v2 API, the influx command line interface (CLI), the InfluxDB UI (the user interface for InfluxDB 2.3), or the InfluxDB v2 API client libraries.
+For details, see Automatically configure Telegraf and Manually update Telegraf configurations.
+
+# Scrape data
+InfluxDB OSS lets you scrape Prometheus-formatted metrics from HTTP endpoints. For details, see Scrape data.
+
+# API, CLI, and client libraries
+https://docs.influxdata.com/influxdb/v2.3/api/#tag/Write
+
+# Query data
+Query data using Flux, the UI, and the influx command line interface. See Query data.
+
+# Process data
+Use InfluxDB tasks to process and downsample data. See Process data.
+
+# Visualize data
+Build custom dashboards to visualize your data. See Visualize data.
+
+# Monitor and alert
+Monitor your data and sends alerts based on specified logic. See Monitor and alert.

@@ -1,0 +1,34 @@
+# description
+COllection of starting points for IAAS
+
+# tools
+terraform
+openstack
+brume (https://brume.readthedocs.io/en/latest/why.html)
+CloudFormation
+pulumi
+chef / puppet
+boto
+
+
+# terraform v. pulumi
+Feature		Pulumi								Terraform
+---------------- --------------------------------------------------------------- --------------------------------------------------------
+Language Support| Python, TypeScript, JavaScript, Go, C#, F#, Java, YAML	|HashiCorp Configuration Language (HCL)
+IDE Support  	| Code completion, strong typing, resource doc, etc.		|Limited
+State Management| Pulumi Service by default, self-managed available		| Self-managed by default, managed SaaS offering available.
+Providers	| cloud with 100% same-day coverage plus Terraform-providers 	| multiple IaaS, SaaS, and PaaS providers.
+Cloud Native 	|Richly typed. CRDs & in-cluster support for GitOps delivery.	| Core API typed. Generic support for CRD.
+Dynamic Provider| Yes								| No
+Reuse & Modular	| Reuse functions, classes, packages, and Pulumi components	| Constrained. Can only reuse Terraform modules.
+Test & Validatio| Unit, property, and integration testing. 			| Integration testing only
+Execution Modes | CLI or programmatic with Automation API.			| CLI commands or perform remote runs with SaaS offering.
+Embed Appl Code | Yes, via Automation API					| No
+3rd-party CI/CD | Yes								| Yes
+Policy as Code	| Yes								| Yes
+Secrets Mgmt	| Yes. Secrets are encrypted in transit and in the state file.	| No. Secrets stored in Vault;not encrypted in state file.
+Audit 		| Yes								| Limited
+Adopt Resources	| Yes. Generates code as part of the import process.		| Yes. No code generation capabilities.
+Aliases		| Yes								| Limited
+Transformations	| Yes								| No
+Import other IaC|  Yes								| No

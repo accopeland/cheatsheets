@@ -1,0 +1,18 @@
+# description
+estimate infrastructure cost from terraform plan *before* deployment
+
+# auth
+infracost auth login
+ - Use this URL:
+    https://dashboard.infracost.io/login?cli_port=55013&cli_state=4455c37f-7aa2-459a-9abf-c909a758e67f&cli_version=v0.10.33&os=darwin&utm_source=cli
+
+# api key log in/sign up at https://dashboard.infracost.io,
+copy your API key from Org Settings and run `infracost configure set api_key MY_KEY`
+
+# credentials
+API key /Users/copeland/.config/infracost/credentials.yml
+
+# costs
+	cd terraform-project
+  infracost breakdown --path=.
+

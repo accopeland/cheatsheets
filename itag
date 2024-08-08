@@ -1,0 +1,117 @@
+itagger/2.0 - https://bitbucket.org/berkeleylab/jgi_itagger
+
+usearch/utax
+	# see http://drive5.com/usearch/manual/faq_utax_largedb.html
+	read QC : ec, merging , [chimera removal]
+	(usearch -fastq_mergepairs foo.fastq -reverse foo.fastq -relabel @ -fastqout merge.fq
+	(usearch -fastq_filter merge.fq -fastq_maxee 1.0 -relabel Filt -fastaout filt.fa
+	Dereplicate
+	(usearch -derep_fulllength all.fa -relabel Uniq -sizeout -fastaout all.derep.fa
+	OTU clustering
+	(usearch -cluster_otus all.derep.fa -minsize 2 -relabel Otu -otus all.otus.fa
+	Tax assignment
+	(usearch -makeudb_utax 16S_ref.fa -output 16S_ref.udb -report 16S_report.txt
+	(usearch -utax all.otus.fa -db 16S_ref.udb -strand both -fastaout all.otus.tax.fa
+	Assign reads to OTUs
+	(usearch -usearch_global merge.fa -db all.otus.tax.fa -strand plus -id 0.97 -otutabout otutab.txt -biomout otutab.json
+
+lotus - http://psbweb05.psb.ugent.be/lotus/index.html
+	Demultiplex and filter fasta or fastq sequences
+	(sdm
+	Denoise, remove chimeric sequences and cluster sequences into OTUs
+	(sdm
+	Determine taxonomic origin of each OTU
+	(uchime/uparse
+	Construct sample-wise OTU abundance tables
+	(usearch
+	Construct genus, family, class, order and phylum abundance tables
+	(RDP, BLAST LCA, ClustalOmega, FastTree
+	Reconstruct OTU phylogenetic tree
+
+dada2 -  R library
+	http://benjjneb.github.io/dada2/bigdata.html
+	# input: demuxed, per-sample, fq.gz (fwd)
+	Filtering - fastqFilter(trimLeft=10,truncLen=240,maxEE=1,truncQ=11,maxN=0,...)
+	SampleInference
+	- dereplicate : derepFastq(samp.fq.gz)
+	- learn error rates : dd=dada(derep.samp.fq.gz,err=NULL,selfConsist=TRUE,...); Erate=dd$[[1]]$err_out
+	- sample inference with dada algorithm : dds=dada(derep.fq.gz,err=Erate,...)
+	- make sequence table : stab=makeSequenceTable(dds)
+	- remove chimeras :  stab=removeBimeraDenovo(stab,...)
+
+
+stampa - https://github.com/frederic-mahe/stampa
+	check the input fasta file,
+	create and work in a sub-directory,
+	split it in smaller chunks,
+	for each chunk, launch a vsearch job (LSF scheduler),
+	collect all the results,
+	solve ties by computing last common ancestor assignments,
+	output a table of taxonomic assignments.
+
+swarm -  https://github.com/frederic-mahe/swarm/wiki/Fred's-metabarcoding-pipeline
+	Dereplicate (vsearch)
+	Cluster (swarm)
+	OTU identification (vsearch)
+	Tax assignment (vsearch + python)
+	OTU table (qiime::otu_contingency_table.py)
+	Filter OTU table (awk)
+
+qiime::vsearch - https://gist.github.com/gregcaporaso/f3c042e5eb806349fa18
+	Dereplicate : vsearch --derep_fulllength seqs --output rep-set.fna --uc vsearch-derep.uc --relabel_sha1 --relabel_keep
+	Generate Biom: biom from-uc -i vsearch-derep.uc -o vsearch-derep.biom --rep-set-fp rep-set.fna
+	Filter OTUs : filter_otus_from_otu_table.py -i vsearch-derep.biom -o vsearch-derep.ms2.biom -s 2
+			filter_fasta.py -f rep-set.fna -o rep-set.ms2.fna -b vsearch-derep.ms2.biom
+	Build tree :
+		ssu-align rep-set.ms2.fna ssu-align-ms2/
+		# mask the alignment and output as fasta
+		# as far as I can tell, ssu-mask can only write to current directory, hence my
+		# pair of cd commands here to keep results of ssu-* contained
+		cd ssu-align-ms2 ; ssu-mask --afa -a ssu-align-ms2.bacteria.stk ; cd ..
+		# build the tree
+		export OMP_NUM_THREADS=29; FastTreeMP -nosupport -fastest -nt ssu-align-ms2/ssu-align-ms2.bacteria.mask.afa > rep-set.ms2.tre
+	Tax assignment :
+		parallel_assign_taxonomy_rdp.py -r 99_otus.fasta -t 99_otu_taxonomy.txt -i rep-set.ms2.fna -o rdp-assigned-tax-99/ \
+		-O 20 biom add-metadata -i vsearch-derep.ms2.biom -o vsearch-derep.ms2.rdp-tax-99.biom \
+		--observation-metadata-fp rdp-assigned-tax-99/rep-set.ms2_tax_assignments.txt --observation-header ID,taxonomy --sc-separated taxonomy
+
+
+vsearch implementation of qiime::pick_open_reference_otus.py (https://gist.github.com/ConstantinoSchillebeeckx/cc04cd8d9fb13a9fa01323153089513c)
+	Sort : vsearch --fasta_width 0 --sortbysize seqs.fna -output seqs_sorted.fna;
+	Dereplicate : vsearch --derep_fulllength seqs_sorted.fna --output seqs_sorted_derep.fna --minuniquesize 2 --fasta_width 0 --sizeout;
+	Search GreenGenes : vsearch --fasta_width 0 --usearch_global seqs_sorted_derep.fna --threads 0 --dbmask none --qmask none --id 0.97 \
+		--top_hits_only --notmatched step2_otus/closed_ref_fail.fna \
+		--db /home/data_repo/pre_processing/otu_support_files/denovo_green_genes/97/rep_set/gg_13_5_pynast_left_2264_right_4052_rep_set.fasta \
+		--dbmatched step1_otus/closed_ref_centroids_db.fna --notrunclabels --maxaccepts 50 --maxrejects 50 --iddef 4;
+	[Subsample 10% and retry] :
+		vsearch --fasta_width 0 --fastx_subsample step2_otus/closed_ref_fail.fna --fastaout step2_otus/closed_ref_fail_subsample.fna \
+			--sample_pct 10 --relabel New.ReferenceOTU --notrunclabels --relabel_keep;
+	[Cluster denovo ] :
+		vsearch --fasta_width 0 --cluster_size step2_otus/closed_ref_fail_subsample.fna --clusterout_id \
+			--centroids step2_otus/new_ref_db.fna --id 0.97 --qmask none --notrunclabels;
+
+	[Search subsamp fails v ref] :
+		vsearch --fasta_width 0 --usearch_global step2_otus/closed_ref_fail.fna --threads 0 --dbmask none --qmask none --rowlen 0 \
+			--top_hits_only --notmatched step3_otus/new_ref_fail.fna --db step2_otus/new_ref_db.fna --id 0.97 \
+			--dbmatched step3_otus/new_ref_centroids.fna --notrunclabels  --maxaccepts 50 --maxrejects 50 --iddef 4;
+
+	[Cluster denovo ] :
+		vsearch --fasta_width 0 --cluster_size step3_otus/new_ref_fail.fna --clusterout_id --centroid step4_otus/new_ref_cleanup_centroids.fna \
+		--id 0.97 --qmask none --relabel New.CleanupReferenceOTU --notrunclabels --relabel_keep;
+
+	Cat centroids :
+		cat step1_otus/closed_ref_centroids_db.fna step3_otus/new_ref_centroids.fna step4_otus/new_ref_cleanup_centroids.fna >> rep_set.fna;
+		Search centroids : vsearch --fasta_width 0 --usearch_global seqs_sorted.fna --top_hits_only --threads 0 --dbmask none --qmask none --db rep_set.fna --id 0.97 --uc final.uc --maxaccepts 50 --maxrejects 50 --iddef 4;
+
+	Generate OTU table :
+		biom from-uc -i final.uc -o final.biom;
+		biom summarize-table -i final.biom -o final.log;
+	Filter OTUs : filter_otus_from_otu_table.py -i final.biom -o final_ms2.biom -s 2
+	Summarize :
+		biom summarize-table -i final_ms2.biom -o final_ms2.log;
+		filter_fasta.py -f rep_set.fna -o rep_set_ms2.fna -b final_ms2.biom
+
+	Tree :
+		parallel_align_seqs_pynast.py -i rep_set_ms2.fna -o pynast_aligned_seqs -T --jobs_to_start 10 --min_length 75
+		filter_alignment.py -i pynast_aligned_seqs/rep_set_ms2_aligned.fasta -o pynast_aligned_seqs/
+		make_phylogeny.py -i pynast_aligned_seqs/rep_set_ms2_aligned_pfiltered.fasta -o rep_set.tre

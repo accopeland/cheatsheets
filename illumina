@@ -1,0 +1,84 @@
+# description
+Notes on Illumina
+
+# optics patents
+https://patents.google.com/patent/US20230296516A1/en
+https://patents.google.com/patent/US20200319115A1/en?oq=20200319115
+https://patents.google.com/patent/US11408828B2/en?oq=20200319115
+https://patents.justia.com/patent/20200319115
+
+# optics articles
+https://www.illumina.com/science/genomics-research/articles/overcoming-the-diffraction-limit-with-super-resolution-optics-to.html
+https://aseq.substack.com/p/illumina-use-structured-illumination
+https://www.taylorfrancis.com/chapters/edit/10.1201/9781351129404-15/super-resolution-optical-microscopy-structured-illumination-liisa-hirvonen-trevor-smith
+
+# data
+https://basespace.illumina.com/datacentral
+
+# interop
+https://github.com/Illumina/interop
+
+# InterOp Metric Files
+Filename	Description
+CorrectedIntMetricsOut.bin	Per tile per cycle per channel average intensity values
+ErrorMetricsOut.bin	Per tile per cycle percente of incorrect calls for aligned clusters
+ExtractionMetricsOut.bin	Per tile per cycle per channel 90th percentile of intensity and FWHM values
+ImageMetricsOut.bin	Per tile per cycle per channel pixel value percentile for thumbnail autocontrast
+QMetricsOut.bin	Per tile per cycle subsampled basecall quality score histogram
+TileMetricsOut.bin	Per tile information about density, cluster count, passed filter, percent aligned
+IndexMetricsOut.bin	Per tile per lane index sequence information
+QMetrics2030Out.bin	Per tile per cycle Q20/Q30 scores
+QMetricsByLaneOut.bin	Per tile per cycle Q-score histogram per lane
+EmpiricalPhasingMetricOut.bin	Phasing weights per tile per cycle
+ExtendedTileMetricsOut.bin	Per tile occupancy metrics
+SummaryRunMetricsOut.bin	Per run summary metrics
+
+# read simulation
+bbtools::randomreads.sh
+InSilicoSeq (Gourlé H, et al. 2019; doi: 10.1093/bioinformatics/bty630)  https://github.com/HadrienG/InSilicoSeq
+MetaSim (Richter et al., 2008)
+NeSSM (Jia et al., 2013)
+BEAR (Johnson et al., 2014)
+FASTQSim (Shcherbina, 2014)
+GemSim (McElroy et al., 2012)
+Grinder (Angly et al., 2012)
+pIRS (Hu et al., 2012)
+FunctionSim (Lingling, 2014; https://cals.arizona.edu/∼anling/software/FunctionSIM.htm).
+ART (Huang et al., 2012)
+
+# read compression
+ZPAQ/IPAQ - generic compressor
+bzip 15M/s
+https://github.com/MueFab/genie (2023) MPEG-G
+bbtools::clumpify 20M/s
+https://github.com/BioinfoSZU/CURC (PgRC/CUDA) - need nvcc / cuda
+https://github.com/kowallus/PgRC (2020) threaded?, slower than spring better compression?
+https://github.com/Infinidat/slimfastq (2020) 46M/s single threaded (but see slimfastq.multi)
+** https://github.com/shubhamchandak94/Spring (2018) xx M/s
+https://github.com/refresh-bio/FaStore (2018) 100M/s
+https://github.com/OpenGene/repaq (2018) - .rfq.xz 5% of original FASTQ file, or <30% of .fq.gz
+https://github.com/fahaihi/PMFFRC - wrapper ?
+https://github.com/refresh-bio/fqsqueezer - (2019)  Very good compression; impractically slow
+
+https://github.com/yuansliu/minicom (2018) -- size limited
+https://github.com/yuansliu/mstcom.git (2019) - seems slow and cannot read gz
+https://github.com/shubhamchandak94/HARC (superceded by Spring)
+http://gatb.inria.fr/software/leon (2015)
+DSR2C [11],(2014)
+https://github.com/jkbonfield/fqzcomp (2014)
+MFCompress (2013)
+SCALCE (2012)
+BEETL [10],(2012)
+(Proprietary) https://www.petagene.com/downloads/#petasuite
+
+# read header
+@<instrument>:<run_number>:<flowcell_ID>:<lane>:<tile>:<x>:<y> <read>:<is_filtered>:<control_number>:<sample_number>
+@pi1-04:47:222Y2JLT3:1:1101:38262:1000 1:N:0:CNGCTTCC+GATCTATC
+sequence (the base calls; A, C, T, G and N).
+separator, which is simply a plus (+) sign.
+Phred +33 encoded qscores, using ASCII characters to represent the numerical quality scores.
+
+# novaseqX
+/global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/ (Perlmutter, DTN)
+
+

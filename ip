@@ -36,3 +36,6 @@ ip link set dev eth0 address aa:bb:cc:dd:ee:ff
 
 # To view neighbors (using ARP and NDP):
 ip neighbor show
+
+# brief output
+ip -4 -brief -oneline -human addr show dev hsn0 permanent up

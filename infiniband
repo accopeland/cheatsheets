@@ -1,0 +1,168 @@
+https://indico.cern.ch/event/218156/attachments/351726/490091/9_OFED_SW_stack.pdf
+
+# performance tests
+ /usr/bin/ib_write_bw
+ /usr/bin/ib_write_lat
+ /usr/bin/ib_read_bw
+ /usr/bin/ib_read_lat
+ /usr/bin/ib_send_bw
+ /usr/bin/ib_send_lat
+
+# kernel modules
+lsmod |grep ib
+
+# identify Mellanox
+lspci | grep Mellanox
+
+# query Mellanox
+mstconfig -d 04:00.0 q
+
+# device info
+ibv_devinfo
+
+# ibstat
+$ ibstat
+
+# interface
+ip link show ib0
+
+# RoCE (RXE)
+# t RDMA over Converged Ethernet (RoCE),
+rxe_cfg
+
+# rdma
+rdma link show
+
+# list available RDMA devices
+ibv_devices
+
+# ibhosts -- show all hosts on IB network
+ibhosts
+
+# ibswitches -- show all switches on IB network
+ibswitches
+
+# iblinkinfo --  show device names, Port GUIDs, number of virtual lanes, signal transfer rates, state, physical state, connections
+iblinkinfo
+
+# diagnose subnet -- show potential problems on your subnet. You can run it without options.
+# -lw <1x|4x|12x> specifies expected link width (virtual lanes) for adapter; checks if it is running as intended.
+# -ls <2.5|5|10> specifies expected link speed (signaling rate) for adapter; does'nt support >10 for FDR+ devices.
+# -c <count> overrides the default number of packets to be sent of 10.
+ibdiagnet -lw 4x -ls 5 -c 1000
+
+# qperf -- qperf can measure bandwidth and latency over RDMA (SDP, UDP, UD, and UC) or TCP/IP (including IPoIB)
+# qperf must be ran in server mode on one computer.
+
+# tcpip over ib
+qperf 192.168.2.2 tcp_bw tcp_lat
+
+# iperf   -- not an IB aware program, and is meant to test over TCP/IP or UDP. Even though qperf can test your IB TCP/IP performace using IPoIB, iperf is still another program you can use.  iperf must be ran in server mode on one computer.
+iperf3 -s  # server
+iperf3 -c 192.168.2.2  #And in client mode on another.
+
+# deubg
+dmesg | grep -Ei "Mellanox|InfiniBand|QLogic|Voltaire"
+
+# debug: does kernel see it
+ls -l /sys/class/infiniband
+
+# debug: check rate
+$ cat /sys/class/infiniband/<kernel module>/ports/<port number>/rate
+
+# perfquery
+
+# mode
+cat   /sys/class/net/ib0/mode
+datagram
+
+# see https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/pdf/configuring_infiniband_and_rdma_networks/red_hat_enterprise_linux-8-configuring_infiniband_and_rdma_networks-en-us.pdf
+# For reference:
+# IPv4 IANA reserved multicast addresses:
+# http://www.iana.org/assignments/multicast-addresses/multicast-addresses.txt
+# IPv6 IANA reserved multicast addresses:
+# http://www.iana.org/assignments/ipv6-multicast-addresses/ipv6-multicast-addresses.xml
+#
+# mtu =
+# 1 = 256
+# 2 = 512
+# 3 = 1024
+# 4 = 2048
+# 5 = 4096
+#
+# rate =
+# 2 = 2.5 GBit/s
+# 3 = 10 GBit/s
+# 4 = 30 GBit/s
+# 5 = 5 GBit/s
+# 6 = 20 GBit/s
+# 7 = 40 GBit/s
+# 8 = 60 GBit/s
+# 9 = 80 GBit/s
+# 10 = 120 GBit/s
+#
+# Default=0x7fff, rate=3, mtu=4, scope=2, defmember=full:
+ALL, ALL_SWITCHES=full;
+Default=0x7fff, ipoib, rate=3, mtu=4, scope=2:
+mgid=ff12:401b::ffff:ffff # IPv4 Broadcast address
+mgid=ff12:401b::1 # IPv4 All Hosts group
+mgid=ff12:401b::2 # IPv4 All Routers group
+mgid=ff12:401b::16 # IPv4 IGMP group
+mgid=ff12:401b::fb # IPv4 mDNS group
+mgid=ff12:401b::fc # IPv4 Multicast Link Local Name Resolution group
+mgid=ff12:401b::101 # IPv4 NTP group
+mgid=ff12:401b::202 # IPv4 Sun RPC
+mgid=ff12:601b::1 # IPv6 All Hosts group
+mgid=ff12:601b::2 # IPv6 All Routers group
+mgid=ff12:601b::16 # IPv6 MLDv2-capable Routers group
+mgid=ff12:601b::fb # IPv6 mDNS group
+mgid=ff12:601b::101 # IPv6 NTP group
+mgid=ff12:601b::202 # IPv6 Sun RPC group
+mgid=ff12:601b::1:3 # IPv6 Multicast Link Local Name Resolution group
+ALL=full, ALL_SWITCHES=full;
+ib0_2=0x0002, rate=7, mtu=4, scope=2, defmember=full:
+ALL, ALL_SWITCHES=full;
+ib0_2=0x0002, ipoib, rate=7, mtu=4, scope=2:
+mgid=ff12:401b::ffff:ffff # IPv4 Broadcast address
+mgid=ff12:401b::1 # IPv4 All Hosts group
+mgid=ff12:401b::2 # IPv4 All Routers group
+mgid=ff12:401b::16 # IPv4 IGMP group
+mgid=ff12:401b::fb # IPv4 mDNS group
+mgid=ff12:401b::fc # IPv4 Multicast Link Local Name Resolution group
+mgid=ff12:401b::101 # IPv4 NTP group
+mgid=ff12:401b::202 # IPv4 Sun RPC
+mgid=ff12:601b::1 # IPv6 All Hosts group
+mgid=ff12:601b::2 # IPv6 All Routers group
+mgid=ff12:601b::16 # IPv6 MLDv2-capable Routers group
+mgid=ff12:601b::fb # IPv6 mDNS group
+mgid=ff12:601b::101 # IPv6 NTP group
+mgid=ff12:601b::202 # IPv6 Sun RPC group
+mgid=ff12:601b::1:3 # IPv6 Multicast Link Local Name Resolution group
+ALL=full, ALL_SWITCHES=full;
+
+# network mgr
+   nmcli -t -f RUNNING general      #  tells you whether NetworkManager is running or not.
+       nmcli -t -f STATE general    # shows the overall status of NetworkManager.
+       nmcli radio wifi off         # switches Wi-Fi off.
+       nmcli connection show        # lists all connections NetworkManager has.
+       nmcli -p -m multiline -f all con show # shows all configured connections in multi-line mode.
+       nmcli connection show --active # lists all currently active connections.
+       nmcli -f name,autoconnect c s # shows all connection profile names and their auto-connect property.
+       nmcli -p connection show "My em1" # shows details for "My em1" connection profile.
+       nmcli --show-secrets connection show "My Wi-Fi" # shows details for "My Wi-Fi" conn profile with all passwords.
+       nmcli -f active connection show "My em1" # shows details for "My em1" active connection, like IP, DHCP information, etc.
+       nmcli -f profile con s "My conn" # shows static config details of connection profile "My conn" .
+       nmcli -p con up "My conn" ifname eth0 # activate conn profile "My conn" on eth0;  -p makes nmcli show progress
+
+# display the Reliable Connection (RC) streaming two-way bandwidth:
+qperf -v -i mlx4_0:1 192.0.2.1 rc_bi_bw
+  rc_bi_bw:
+  bw = 10.7 GB/sec
+  msg_rate = 163 K/sec
+  loc_id = mlx4_0
+  rem_id = mlx4_0:1
+  loc_cpus_used = 65 % cpus
+  rem_cpus_used = 62 % cpus
+
+# display the RC streaming one-way bandwidth:
+qperf -v -i mlx4_0:1 192.0.2.1 rc_bw

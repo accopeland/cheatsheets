@@ -1,0 +1,34 @@
+# description
+Tool for dealing with json
+
+# html header
+json MIME type : -H "Content-Type: application/json"
+
+# brew tools
+brew desc -d json : find tools for dealing with json
+
+# interacdtive json search
+jid < foo.json
+
+# docs
+http://programminghistorian.org/lessons/json-and-jq
+
+# see also
+jansson
+jc - convert x to json
+jid - interactive json query
+jiq - interactive json query
+fx -
+gron - make json grepable
+jq - json query
+jaq - (rust) jq clone;
+yq - seems VERY  slow
+record-query (rq) - rust tool for transforming
+dasel - data selector
+zq / zed  - go json tool; faster than jq
+jsontool (json) -
+Jaggr is a command line tool to aggregate in real time a series of JSON logs (for use w jplot)
+
+# alt relative speed
+# fast --> slow
+... > zq > jaq > jq >> yq

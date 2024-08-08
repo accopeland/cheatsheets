@@ -1,0 +1,509 @@
+# description
+
+# install
+
+# docs
+
+# setup
+chmod 700 ~/.jamo
+chmod 600 ~/.jamo/token
+
+# dori
+apptainer pull docker://doejgi/jamo:latest
+
+#JAT submission
+JAT is for archiving analysis results using JAMO. JAT allows validation of files and folders through a template.
+
+A template must be created for each type of analysis to be archived which describes the collection of files and data of valid, completed analysis.
+
+use the jat CLIl to submit the analysis by placing a metadata.json file in the root directory of the analysis folder. metadata.json file contains the collection of files and data produced by a particular analysis for an analysis type described by the template.
+
+An outline of the process of using 'jat' is:
+
+Describe your analysis by creating an analysis template in YAML.
+Submit your template to jat (example command line)
+Write a script to collect your analysis files and results and package into a 'metadata.json' file
+Submit the analysis using 'jat' (example command line)
+To submit analysis results to JAMO (i.e. archive and index the results), you must first create a template as described here (<link to analysis template>) then create a file called 'metadata.json' which contains the actual data from the analysis you wish to save.
+
+General JAMO search tips
+
+Finding all associated files
+
+JAMO's default search returns only the Illumina fastq seq units associated with your query. Therefore if your query is not Illumina data, i.e. if it is instead PacBio sequence data, no results will be returned. For example the library AXABH is a PacBio library.
+
+
+   jamo info library AXABH # nothing returned
+In the query above, no results are returned. If however the all argument is passed to JAMO then all associated files that JAMO knows about will be returned.
+
+
+   jamo info all library AXABH
+Using lists in queries
+
+
+jamo info all spid 23 45
+
+or
+
+jamo report select file_name where metadata.sequencing_project_id in '(23 45)'
+
+or
+
+jamo report select file_name where metadata.sequencing_project_id in '(' 23 45 ')'
+
+or
+
+jamo report select file_name where metadata.sequencing_project_id in \( 23 45 \)
+Simple custom queries
+
+Often you'd like to do custom queries and return specific fields in the queries. This can be accomplished using the report argument. The format for this is:
+
+
+jamo report select <FIELDS> where <QUERY_PARAMS>
+A simple example would be search for all the libraries in a pooled library.
+
+
+# Here the slash characters '\' break the query over multiple lines for legibility
+jamo report \
+  select \
+    metadata.library_name \
+  where \
+    metadata.parent_library_name = AUUPB
+In this query the <FIELDS> search for where metadata.library_name and the <QUERY_PARAMS> were metadata.parent_library_name = AUUPB.
+
+More complex custom queries
+
+After using simple queries like this, you wish to do more complex queries such as using additional query parameters or returning a larger number of fields. In the following example, the field file_name is added so this is returned in the result.
+
+
+# Here the slash characters '\' break the query over multiple lines for legibility
+jamo report \
+  select \
+    metadata.library_name, \
+    file_name \
+  where \
+    metadata.parent_library_name = AUUPB
+This returns the result:
+
+
+AUTZS   10107.5.148852.ATTACTC-TAATCTT-FAIL.fastq.gz
+AUTZS   10107.5.148852.ATTACTC-TAATCTT.anqdpht.fastq.gz
+AUTZS   10107.5.148852.ATTACTC-TAATCTT.fastq.gz
+AUTZZ   10107.5.148852.TCCGGAG-AGGCGAA-FAIL.fastq.gz
+AUTZZ   10107.5.148852.TCCGGAG-AGGCGAA.anqdpht.fastq.gz
+AUTZZ   10107.5.148852.TCCGGAG-AGGCGAA.fastq.gz
+# Remainder omitted ...
+Looking at the first column you can see each library is repeated three times. For example there are three entries for AUTZS. These are, based on the file ending, as follows:
+
+.fastq.gz The raw file that comes off the sequencer.
+-FAIL.fastq.gz All failed data that SDM could not correctly process.
+anqdpht.fastq.gz The RQC filtered fastq file. The RQC group filters out
+common contaminants and does basic quality processing and trimming.
+In general you should always use the RQC filtered data over the raw data. There should be a very good reason to include contaminants and poor quality reads in your analysis. Therefore the query can be updated to select only the fastq filtered files.
+
+
+# Here the slash characters '\' break the query over multiple lines for legibility
+jamo report \
+  select \
+    metadata.library_name, \
+    file_name \
+  where metadata.parent_library_name = AUUPB \
+    and metadata.fastq_type = filtered
+In the above query and metadata.fastq_type = filtered is appended to select for only the RQC fastq files. This illustrates the use of the and operator allows multiple additional query restrictions to be added.
+
+
+AUTZS   10107.5.148852.ATTACTC-TAATCTT.anqdpht.fastq.gz
+AUTZZ   10107.5.148852.TCCGGAG-AGGCGAA.anqdpht.fastq.gz
+AUUCU   10107.5.148852.CTGAAGC-TAATCTT.anqdpht.fastq.gz
+# Remainder omitted ...
+The returned result set now includes only the filtered fastq files.
+
+Using regex queries
+
+Regular expressions can be used either in ~/.jamo/queries or on the command line as shown below
+
+
+jamo info custom '{"metadata.proposal_name":{"$regex":"^Great"}}'
+Finding available JAMO query keys
+
+You may wish to make a JAMO query but don't which specific fields to look for. The jamo keys command is exactly for this purpose and allows you to search jamo for all available keys.
+
+
+jamo keys organism
+
+# Returns a list of keys containing 'organism'
+metadata.igc.organism
+metadata.organism
+metadata.organism_name
+metadata.pmo_project.ncbi_organism_name
+metadata.sow_segment.ncbi_organism_name
+You may also do sub string searching if you do not know the exact name of the key.
+
+
+jamo keys org
+Returning different output formats
+
+JAMO allows returning different output data formats from queries. The default returned values are tab delimited, however other formats can be selected using as <FORMAT> at the end of the query. For example this query returns comma separated values:
+
+
+jamo report \
+  select \
+    metadata.library_name, \
+    file_name, \
+    metadata.fastq_type \
+  where metadata.parent_library_name = AUUPB \
+  as csv
+
+# Note the headers here
+metadata.library_name,file_name,metadata.fastq_type
+AUTZS,10107.5.148852.ATTACTC-TAATCTT-FAIL.fastq.gz,sdm_failed
+AUTZS,10107.5.148852.ATTACTC-TAATCTT.fastq.gz,sdm_normal
+AUTZZ,10107.5.148852.TCCGGAG-AGGCGAA-FAIL.fastq.gz,sdm_failed
+AUTZZ,10107.5.148852.TCCGGAG-AGGCGAA.fastq.gz,sdm_normal
+# Remainder omitted ...
+Another example is generating JSON output:
+
+
+jamo report \
+  select \
+    metadata.library_name, \
+    file_name, \
+    metadata.fastq_type \
+  where metadata.parent_library_name = AUUPB \
+  as json
+
+
+# Huge JSON string returned
+[{"file_name": "10107.5.148852.ATTACTC-TAATCTT-FAIL.fastq.gz", #...
+This can be 'pretty printed' to make the JSON more human-readable. This requires loading the jq module first.
+
+
+# Need to load the jq module
+module load jq
+
+jamo report \
+  select \
+    metadata.library_name, \
+    file_name, \
+    metadata.fastq_type \
+  where metadata.parent_library_name = AUUPB \
+  as json \
+  | jq
+# At end here we pipe the output through jq to make it more readable.
+
+[
+  {
+    "file_name": "10107.5.148852.ATTACTC-TAATCTT-FAIL.fastq.gz",
+    "metadata.fastq_type": "sdm_failed",
+    "metadata.library_name": "AUTZS"
+  },
+  {
+    "file_name": "10107.5.148852.ATTACTC-TAATCTT.fastq.gz",
+    "metadata.fastq_type": "sdm_normal",
+    "metadata.library_name": "AUTZS"
+  },
+# Remainder omitted ...
+Specific recipes
+
+Update a metdata key for a released JAT key:
+
+jat update <jat_key>   <updatedmetadata.json>
+Dumps a JSON array of all the distinct analysis_project_ids in the system
+
+   curl http://sdm2.jgi-psf.org/api/metadata/distinct/metadata.analysis_project_id
+Show metadata for a jamo id
+
+   jamo show 52b87a2a166e730a5ae33df4
+jamo equivalent of select *
+
+   jamo report select metadata. where metadata.sequencing_project_id=1015449
+this case is especially useful for json formatting and piping into jq
+Show assembly stats for a particular template (e.g. microbial_isolate_improved_pacbio)
+
+   jamo report select metadata.jat_key,added_date, metadata.contig_bp, metadata.ctg_N50, metadata.ctg_max, metadata.n_contigs where metadata.template_name=microbial_isolate_improved_pacbio and metadata.jat_label=assembly
+Show plate location
+
+   jamo report select metadata.sow_segment.plate_location,metadata.sow_segment.sequencing_project_name where metadata.parent_library_name=AUXHP and metadata.fastq_type=filtered
+Get libraries in a pool
+
+   jamo report select metadata.library_name where metadata.fastq_type=sdm_normal and metadata.parent_library_name=<poolname>
+Get the list of fastqs in a pool library
+
+   jamo info plibrary <poolname>
+
+   jamo report select metadata.library_name, metadata.parent_library_name, file_name, metadata.sow_segment.sequencing_project_id, _id where  metadata.parent_library_name =ASCHA
+See if old house data is on tape archive (not really jamo)
+
+   curl -ss http://sdm2.jgi-psf.org/api/tape/files/${1:?"Whachu lookin for"}
+Search jamo by jat key
+
+   jamo info all custom metadata.jat_key=AUTO-4187
+Search jat by jat key
+
+   jat get metadata.json AUTO-4187
+List of all jat templates
+
+   jat import
+Return all keys for a given template
+
+   jat get template_keys <template>
+Determine which template defines a given key
+
+   jat get key_location <key>
+Search for metadata by library (same pattern for spid, taxonoid, dirnumber, ...)
+
+   jamo report select metadata.library_name,metadata.library_type,metadata.sequencing_project_id,metadata.sow_segment.target_fragment_size_bp,metadata.read_stats.num_reads,metadata.read_stats.bases,file_date,file_name,_id where metadata.library_name=$X and metadata.fastq_type!=sdm_failed
+Find assembly metadata for microbial_isolate_minimal
+
+   jamo report select file_date,user,metadata.jat_key,metadata.template_name,metadata.gold_data.ncbi_phylum, metadata.sequencing_project_id,metadata.assembler, metadata.gc_avg, metadata.n_scaffolds, metadata.scaf_bp, metadata.scaf_max, metadata.scaf_L50, metadata.n_contigs, metadata.contig_bp, metadata.ctg_max, metadata.ctg_L50 where metadata.jat_label=assembly and metadata.template_name=microbial_isolate_minimal
+Find assembly metadata for microbial_isolate_improved_pacbio
+
+   jamo report select file_date,user,metadata.jat_key,metadata.template_name,metadata.gold_data.ncbi_phylum, metadata.sequencing_project_id,metadata.assembler, metadata.gc_avg, metadata.n_scaffolds, metadata.scaf_bp, metadata.scaf_max, metadata.scaf_L50, metadata.n_contigs, metadata.contig_bp, metadata.ctg_max, metadata.ctg_L50 where metadata.jat_label=assembly and metadata.assembler=HGAP and metadata.template_name=microbial_isolate_improved_pacbio
+Find assembly metadata for fungal_min_release
+
+   jamo report select file_date,user,metadata.jat_key,metadata.template_name,metadata.organism_name,metadata.sequencing_project_id,metadata.assembler,metadata.ploidy,metadata.n_scaffolds, metadata.scaf_bp, metadata.scaf_L50 where metadata.template_name=fungal_min_release and file_type=scaffolds and metadata.jat_label=fungal_main_scaffolds
+Find assembly metadata for all fungal assemblies (using 'in' )
+
+   jamo report select file_date,user,metadata.jat_key,metadata.template_name,metadata.organism_name,metadata.sequencing_project_id,metadata.assembler,metadata.ploidy,metadata.n_scaffolds, metadata.scaf_bp, metadata.scaf_L50 where metadata.template_name in (fungal_min_release,fungal_std_release,fungal_minimal_pacbio_release,fungal_imp_releaes) and file_type=scaffolds and metadata.jat_label=fungal_main_scaffolds"
+Find assembly metadata for metagenome assemblies
+
+   jamo report select metadata.sequencing_project_id, metadata.assembler,metadata.n_scaffolds,metadata.n_contigs, metadata.scaf_bp,metadata.contig_bp,metadata.gap_pct,metadata.scaf_N50,metadata.scaf_L50,metadata.ctg_N50,metadata.ctg_L50, metadata.scaf_max  where metadata.jat_label=assembly and metadata.template_name=metagenome
+Find metadata for an organism
+
+   jamo info org <organism>
+Convert taxonoid to a name
+
+   jamo report select metadata.img.taxon_oid,metadata.sequencing_project_id,metadata.organism_name where metadata.img.taxon_oid = < taxonoid>
+Dump all taxonoid jamo knows about
+
+   jamo report select metadata.img.taxon_oid,metadata.img.add_date,metadata.img.jat_key_id,metadata.img.jgi_project_id,metadata.omics.img_submission_id where metadata.img.taxon_oid is not null
+Filter jamo results by date (using dategrep: https://github.com/hroptatyr/dateutils.git )
+
+   jamo report select added_DATE, metadata.jat_key, metadata.n_contigs where metadata.template_name=microbial_isolate_improved_pacbio and metadata.jat_label=assembly | dgrep --gt 2014-10-01
+- since dgrep is not installed on genepool, can also use gt, gte conditions in query:
+   jamo report select added_DATE, metadata.jat_key, metadata.n_contigs where metadata.template_name=microbial_isolate_improved_pacbio and metadata.jat_label=assembly and added_date gte '2016-11-01'
+Show everything for a fastq
+
+   curl http://sdm2.jgi-psf.org/api/metadata/files?file_name=(the fastq you are looking for)
+JAMO fetch tips
+After a "jamo fetch all spid 1022304" the "jamo info all spid 1022304" command shows a directory but it does not exist on the file system. For a folder there is a metadata key called current_location that is where the folder currently is after the fetch. It is zipped so you have to copy it:
+
+
+   $ jamo report select file_path,file_name, current_location where metadata.sequencing_project_id=1022304 and file_type=folder as tab
+For an APID get the associated release
+
+    $ jamo info all custom metadata.analysis_project_id=1056941 | grep AUTO
+For a sequencing project id, return the metagenome scaffolds assembly file
+
+   $jamo info all custom metadata.sequencing_project_id=1070027 and file_type=scaffolds
+If the dna directory for a release has been purged, then given an AUTO jat key retrieve the dna directory. All files will be put back in their original (/global/dna/dm_archive/....) location.
+
+$ jamo fetch custom '{"metadata.jat_key":"AUTO-4429"}'
+is there a way to return all of the metadata for a particular record or output type within a record with jamo report without knowing the specific keys? I'm not sure if it would be useful, especially in cases where various records contain different metadata which would result in heterogenous information in each column, but was just curious.
+For ex.
+
+Instead of
+
+
+   jamo report select file_date,user,metadata.jat_key,metadata.template_name,metadata.organism_name,metadata.sequencing_project_id,metadata.assembler,metadata.ploidy,metadata.n_scaffolds, metadata.scaf_bp, metadata.scaf_L50 where metadata.template_name=fungal_min_release and file_type=scaffolds and metadata.jat_label=fungal_main_scaffolds
+something like
+
+
+   jamo report select file_date,user,metadata.* where metadata.template_name=fungal_min_release and file_type=scaffolds and metadata.jat_label=fungal_main_scaffolds​
+See above. Use
+
+   jamo report select metadata.
+
+Anti-recipes: Things we'd like to work but don't or things we don't know how to do
+
+Linking jamo show and jamo info
+One thing I would like but am not sure if it is feasible would be to have a "jamo show" linked with "jamo info" maybe "jamo infoshow" which would dump the metadata for each retrieval in one large multi record yaml document.
+
+Option to change "jamo show" format per user
+for example a setting making json default.
+
+Filter jamo results by date (using jamo query )
+All user dates are strings, that is , anything in the metadata namespace, whereas all jamo dates are ISO dates so query methods differ depending on key. The JAMO ISO dates are: added_date dt_to_purge file_date modified
+Is it possible to link "jamo show" linked with "jamo info"
+maybe "jamo infoshow" which would dump the metadata for each retrieval in one large multi record yaml document.
+
+Option to change "jamo show" format per user
+for example a setting making json default.
+
+    jamo report select _id,metadata.proposal_id where metadata.sequencing_project_id=1015409 as json
+List folders for jat submissions ( submit directory for {library | SPID | Auto-Key | ...} )
+After submitting Improved Draft, the supporting data (i.e. recursive of the submit directory) will be saved to tape, and can be retrieved/restored. Assuming 'retrieve' part is correct, the restore submit directory can be listed with
+
+   jamo fetch all custom file_type=folder and metadata.library_name=AAGCB
+   [u'folder',_u'analysis'] /global/projectb/scratch/ayspunde/qc/impQD/pacbio/seqqc153/s5214/032931-cleanH5 BACKUP_COMPLETE 55917c120d87854fee5fe885
+   [u'folder',_u'analysis'] /global/dna/shared/rqc/pipelines/heisenberg/archive/00/00/09/94/final BACKUP_COMPLETE 55e0dd280d878556782dabaa
+
+JAT/FAMO FAQ
+
+Questions with answers
+
+Q: Is there a way to only request a single file back on disk?
+
+A: If your file name is unique, you can just fetch that particular file, e.g.
+
+> jamo fetch all filename 1018595.Schizopora_paradoxa_KUC8140.minimal.mito.scaffolds.fasta
+
+filename tends to restrict the search to SDM raw files, so you'll need to put the all in.
+
+You just need to construct your query in a way that selects the file in question. A couple ids that are unique across ALL files are file_id and _id. Or you can add to your query to select down to one.
+
+So for example:
+
+> jamo info custom '{"metadata.jat_key":"AUTO-4429"}' AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.README.txt RESTORED 52e9891f067c011a2113df5e AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/logs.tar RESTORED 52e98920067c011a2113df5f AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.main.scaffolds.fasta RESTORED 52e98921067c011a2113df60 AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.main.contigs.fasta RESTORED 52e98921067c011a2113df61 AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.main.agp RESTORED 52e98922067c011a2113df62 AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.mito.scaffolds.fasta RESTORED 52e98922067c011a2113df63 AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.mito.contigs.fasta RESTORED 52e98923067c011a2113df64 AUTO-4429 /global/dna/dm_archive/rqc/analyses/AUTO-4429/1018595.Schizopora_paradoxa_KUC8140.minimal.mito.agp RESTORED 52e98924067c011a2113df65 AUTO-4429 /global/projectb/scratch/jasmynp/fungal_minimal/Schizopora_paradoxa_KUC8140/release.minimal.20140128 RESTORED 52e98924067c011a2113df66
+
+logs.tar is probably not unique in the world of file names, so you could the the metadata _id that was returned and use that, e.g.
+
+> jamo fetch id 52e98920067c011a2113df5f
+
+or include it in your custom query,
+
+> jamo fetch custom '{"metadata.jat_key":"AUTO-4429","file_name":"logs.tar"}'
+
+You can always do this to see what does get returned.
+
+jamo info custom '{"metadata.jat_key":"AUTO-4429","file_name":"logs.tar"}'
+
+Q: How do I create a jamo custom query?
+
+A: Create a mongo query in ~/.jamo/queries e.g.
+
+Q: How can I find Sanger data in jamo?
+
+A: jamo info custom metadata.library_name=FABT
+
+Q: How do I query a jamo template 'tag' ?
+
+A: Template tags map to 'file_type'
+
+Q: How do I query a jamo template 'label' ?
+
+A: Template labels map to 'jat_label' e.g. label: fungal_main_scaffolds => jat_label=fungal_main_scaffolds
+
+Q: What's the process for creating or modifying a template?
+
+A: see https://github.com/cbcrg/benchfam
+
+# First create a new branch to work on
+$ git checkout -b <new_branch> # Edit your template or create your new template. If creating a new templates use git add. Commit changes using git commit. # Push your feature branch, which contains your changes to your template(s), to origin (i.e. bitbucket) $ git push origin <new_branch> # Now test out your changes or new template $ module load JAMO/dev $ jat import <new_branch>/<template_name> <path_to_metadata.json> # Once you have tested and finalized your changes, create a pull request to dev. # When creating the pull request, please check the box to close the branch after your pull request is merged.
+Q: What are the differences between running a query using 'jat report' and 'jamo report' ?
+
+A: (Andrew Tritt)
+
+They query different collections. JAMO is backed by a collection (the MongoDB equivalent of a table) storing file information and metadata about those files. JAT is backed by a collection storing information about analyses or "releases". So, jat report will return a entities whose primary key is something "AUTO-1234", jamo report returns entities whose primary key is something like "5698445f0d87851ee9727ec8".
+
+What does this mean for a user?
+
+jat report can query fields that are at the top-level of a template, jamo report can query fields that are at the file-level of a template.
+
+So, for example, jat report queries fields that you see here: https://sdm2.jgi-psf.org/analysis/analysis/AUTO-17839 jamo report queries fields that you see here: https://sdm2.jgi-psf.org/metadata/file/5698445f0d87851ee9727ec8
+
+One more thing about the fields you can query... what I said was a bit incomplete. You can query on more fields than what's in the template.
+
+I'm not sure if you know about data stores, but in case you don't...
+
+When a user submits an analysis to JAT, if it contains a key that triggers a store, more metadata will be populated. So, if a file or analysis gets added to JAMO or JAT, respectively, that contains metadata.sequencing_project_id, a service will be called that collects data from another location, like ITS, and adds that to the stored document (MongoDB equivalent of a row).
+
+So, in addition to querying by metadata.sequencing_project_id, you can query by metadata.sequencing_project.actually_sequencing_product_name, which gets populated due to metadata.sequencing_project_id being in the submission.
+
+A list of all the data stores can be found here: https://sdm2.jgi-psf.org/metadata/datastores
+
+Q: How are keys processed in a jamo query?
+
+A: Keys are processed in the order they are scanned and for any key appearing twice, only the second key is used in the select
+
+e.g. key.a>1000 and key.a<1200 will only see second key instead use the 'AND' using mongo query
+
+Q: Can I use mongo query language for jamo queries?
+
+A: Yes
+
+
+   jamo info all custom <mongo query>
+Q: Can I query by analysis_project_id and analysis_task_id?
+
+A: Yes, use keys - metadata.analysis_project_id - metadata.analysis_task_id
+
+Q: What collections are used for mongo queries of jat and jamo?
+
+A:
+
+jamo: everything in file collection jat: everything in analysis collection
+
+Q: Is there a table of all supported jamo query operators?
+
+A: See below. Note almost all need to be quoted unlike SQL.
+
+jamo report select <fields> where <where clause> [as format]
+
+Operator
+Example
+in
+jamo report select file_name where metadata.sequencing_project_id in '(1021535, 1021538, 1021541)'
+like
+jamo report select _id, file_name where file_name like 10203.1
+>, gt
+﻿jamo report select _id, added_date where added_date gt '2013-08-12'
+<, lt
+jamo report select _id, added_date where added_date lt '2014-01-01'
+>=, gte
+jamo report select _id, added_date where added_date gte '2013-08-12'
+<=, lte
+jamo report select _id, added_date where added_date lte '2013-08-12'
+!=, ne
+jamo report select _id, file_name where metadata.fastq_type '!=' sdm_failed
+=, eq
+jamo report select _id, file_name where metadata.fastq_type eq filtered
+in
+jamo report select _id, file_name where group in '(rqc, sdm)'
+nin
+jamo report select _id, file_name where file_type = fastq and group nin '(rqc, sdm)'
+exists [true|false]
+jamo report select file_name where group = rqc and metadata.portal.display.location exists false
+is null
+jamo report select file_name where group = rqc and metadata.rqc.usable is null
+is not null
+jamo report select file_name where group = rqc and metadata.rqc.usable is not null
+as X
+produces output in X format, options are txt, cvs, tab, json, yaml
+Note in and nin (not in) requires the list to be enclosed in parenthesis, commas are optional, e.g., '(sdm, rqc)' is equivalent to '(sdm rqc)'.
+
+Note that gt, lt, gte, lte, eq, ne, have been added for '>', '<', '>=', '<=', '!=', and '='. Note that all operators should work for both JAMO and JAT
+
+Note that you should always escape any character that has specific meaning to the shell, e.g. >, <, (, ), *, $, %, !, |, etc
+
+Note that the when passing strings with spaces, the shell will pass your string as two arguments if you do not quote it properly. E.g., use '"this is a string"' rather than 'this is a string'
+
+using "where metadata.sequencing_project.sequecing_product_name='Fungal Transcriptome, Annotation'" won't work, the 'Fungal Transcriptome, Annotation' needs to be double-quoted such as metadata.sequencing_project.sequencing_product_name="'Fungal Transcriptome, Annotation'"
+Note that in the where clause, JAMO uses Mongo's implicit and. If you list the same key more than once, only the last one will be used, e.g. added_date gte '2016-01-01' and added_date lt '2016-02-01' should return all data added before Feb 1, 2016, including data added before 2016.
+
+'like' creates an unanchored search, so searching for 10203.1 will search for '*10203.1*'
+
+'key exists true' will return records where the key exists, even if the value is null or empty (e.g. empty string)
+
+'key is null' will return records where the key does not exist, or if the key exists, the value is null
+
+'key is not null' will return records where the key exists and the value of the key is not null. Note that records with an empty string value will be returned
+
+Equality operators (>, >=, <, <=, =, !=, etc) do not currently work correctly for integers that have been stored in JAMO as strings. Numeric strings are converted to integers prior to querying, you may have to use a mongo-type query to get this data. Long term goal is to convert all numeric strings to numeric values.
+
+Equality operators should work for all date/date_time values. JAMO internal dates are internally stored as ISODates, dates coming from the api are stored as strings. Most dates are stored as 'YYYY-MM-DD HH:MM:SS'. User supplied values (e.g., dates) are generally not format enforced, so if a user decides to store a date in a different format, unexpected results will happen. Any dates added by SDM or by any of the SDM data stores, will be correct.
+
+Note that 'as txt' is the default (produces tab separated output, similar to at tab)
+
+Q: Is there a command line tool to save files in JAMO without needing a JAT template?
+
+A: Talk to SDM.
+
+Q: How can I check if my yaml template has a problem?
+
+A: use the command
+
+$ jat validate template (path-to-template)
+Anti-FAQ: Questions without answers
+
+your questions here...

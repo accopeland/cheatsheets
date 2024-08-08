@@ -1,0 +1,90 @@
+# description
+a clone of the JSON data processing tool jq in rust. jaq aims to support a large subset of jq's syntax and operations.
+jaq focuses on three goals: Correctness, Performance, and Simplicity
+
+
+# install
+cargo install jaq
+
+# docs
+https://jqlang.github.io/jq/manual/v1.6/
+
+# config
+
+# Basics
+ Identity (.)
+ Recursion (..)
+ Basic data types (null, boolean, number, string, array, object)
+ if-then-else (if .a < .b then .a else .b end)
+ Folding (reduce .[] as $x (0; . + $x), foreach .[] as $x (0; . + $x; . + .))
+ Error handling (try ... catch ...) (see the differences from jq)
+ String interpolation ("The successor of \(.) is \(.+1).")
+ Format strings (@json, @text, @csv, @tsv, @html, @sh, @base64, @base64d)
+
+# Paths
+ Indexing of arrays/objects (.[0], .a, .["a"])
+ Iterating over arrays/objects (.[])
+ Optional indexing/iteration (.a?, .[]?)
+ Array slices (.[3:7], .[0:-1])
+ String slices
+
+# Operators
+ Composition (|)
+ Binding (. as $x | $x)
+ Concatenation (,)
+ Plain assignment (=)
+ Update assignment (|=, +=, -=)
+ Alternation (//)
+ Logic (or, and)
+ Equality and comparison (.a == .b, .a < .b)
+ Arithmetic (+, -, *, /, %)
+ Negation (-)
+ Error suppression (?)
+# Definitions
+ Basic definitions (def map(f): [.[] | f];)
+ Recursive definitions (def r: r; r)
+
+# Core filters
+ Empty (empty)
+ Errors (error)
+ Input (inputs)
+ Length (length, utf8bytelength)
+ Rounding (floor, round, ceil)
+ String <-> JSON (fromjson, tojson)
+ String <-> integers (explode, implode)
+ String normalisation (ascii_downcase, ascii_upcase)
+ String prefix/postfix (startswith, endswith, ltrimstr, rtrimstr)
+ String splitting (split("foo"))
+ Array filters (reverse, sort, sort_by(-.), group_by, min_by, max_by)
+ Stream consumers (first, last, range, fold)
+ Stream generators (range, recurse)
+ Time (now, fromdateiso8601, todateiso8601)
+ More numeric filters (sqrt, sin, log, pow, ...) (list of numeric filters)
+ More time filters (strptime, strftime, strflocaltime, mktime, gmtime, and localtime)
+
+# Standard filters -- defined via more basic filters.
+ Undefined (null)
+ Booleans (true, false, not)
+ Special numbers (nan, infinite, isnan, isinfinite, isfinite, isnormal)
+ Type (type)
+ Filtering (select(. >= 0))
+ Selection (values, nulls, booleans, numbers, strings, arrays, objects, iterables, scalars)
+ Conversion (tostring, tonumber)
+ Iterable filters (map(.+1), map_values(.+1), add, join("a"))
+ Array filters (transpose, first, last, nth(10), flatten, min, max)
+ Object-array conversion (to_entries, from_entries, with_entries)
+ Universal/existential (all, any)
+ Recursion (walk)
+ I/O (input)
+ Regular expressions (test, scan, match, capture, splits, sub, gsub)
+ Time (fromdate, todate)
+
+# Numeric filters
+jaq imports many filters from libm and follows their type signature.
+
+# Not supported
+ Modules
+ SQL-style operators
+ Streaming
+
+

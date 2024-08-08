@@ -1,0 +1,26 @@
+# description
+shims for java management
+
+# usage
+jenv add   /usr/local/opt/openjdk@18
+jenv add   /usr/local/opt/openjdk@16
+
+# install
+brew install jenv
+# add bash_profile stuff
+jenv add /Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home
+oracle64-1.8.0.66 added
+1.8.0.66 added
+1.8 added
+
+# docs
+
+# brewed java
+brew cask install java6 # need for passwordsafeSWT
+jenv add /Library/Java/JavaVirtualMachines/openjdk-14.0.2.jdk/Contents/Home/
+
+jenv global 1.6
+
+# other
+jenv enable-plugins maven
+jenv enable-plugins export

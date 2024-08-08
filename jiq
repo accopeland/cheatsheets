@@ -1,0 +1,8 @@
+# description
+jid + jq
+
+# docs
+github.com/fiatjaf/jiq/cmd/jiq@latest
+
+# install
+go install github.com/fiatjaf/jiq/cmd/jiq@latest

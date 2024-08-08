@@ -1,0 +1,198 @@
+# description
+
+# install
+rye install jupyterlab
+
+# nope - python broken by PEP668 ...install
+#python3 -m ensurepip
+#python3 -m pip install jupyter-core
+#python3 -m pip install jupyter
+
+# remote -- probably also broken as of python3.12
+pipx install jupyterlab
+pipx install jupyter-core
+pipx install jupyter-client
+pipx install jupyter-kernel
+
+# usage
+jupyter notebook
+
+# config
+
+# docs
+https://www.dataquest.io/blog/jupyter-notebook-tips-tricks-shortcuts
+
+# example notebooks
+jupyter notebooks - http://bebi103.caltech.edu/2015/tutorials/
+
+# Error: update kernel - FileNotFoundError
+: [Errno 2] No such file or directory: '/usr/local/Cellar/r/3.3.3_1/R.framework/Resources/bin/R'
+https://irkernel.github.io/installation/
+# Fix
+R> install.packages(c('repr', 'IRdisplay', 'evaluate', 'crayon', 'pbdZMQ', 'devtools', 'uuid', 'digest'))
+R> devtools::install_github('IRkernel/IRkernel')
+R> IRkernel::installspec()
+
+# remote
+nersc$ module load python
+nersc$ conda create -n <environment-name> ipykernel <other-packages...>  #Activate env and use ipykernel install to set up a Jupyter kernelspec.
+nersc$ conda activate env  # Suppose our environment is called env:
+nersc$ python -m ipykernel install --user --name env --display-name MyEnviro # Installed kernelspec env $HOME/.local/share/jupyter/kernels/env
+nersc$ cat $HOME/.local/share/jupyter/kernels/env/kernel.json
+{
+  "argv": [
+    "$HOME/.conda/envs/env/bin/python",
+    "-m",
+    "ipykernel_launcher",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "MyEnviro",
+  "language": "python",
+  "metadata": {
+    "debugger": true
+  }
+}
+
+# sql
+# make sure you have the right python (and env)
+python3 -m pip install jupyterlab_sql
+jupyter serverextension enable jupyterlab_sql --py --sys-prefix
+jupyter lab build
+
+# list kernels
+jupyter-kernelspec list
+
+# remove
+jupyter-kernelspec rm <kernel>
+
+# shortcuts  - https://www.dataquest.io/blog/jupyter-notebook-tips-tricks-shortcuts/
+? <obj> : docstring
+%lsmagic
+%config InlineBackend.figure_format ='retina'
+!ls *.csv # shell commands
+
+# keyboard
+Shift + Enter : execute cell
+? <x> : doc
+Esc : command mode ; navigate around your notebook with arrow keys.
+command mode:
+A : insert a new cell above the current cell, B to insert a new cell below.
+M : change the current cell to Markdown, Y to change it back to code
+D + D : delete the current cell
+Enter : will take you from command mode back into edit mode for the given cell.
+Shift + Tab : show Docstring for object typed in code cell – keep pressing to cycle through a few modes of documentation.
+Ctrl + Shift + : split the current cell into two from where your cursor is.
+Esc + F : Find and replace on your code but not the outputs.
+Esc + O : Toggle cell output.
+Select Multiple Cells:
+Shift + J :
+Shift + Down : selects next sell downwards
+Shift + K or Shift + Up : select sells upwards
+Shift + M : merge multiple cells.
+
+# tricks
+# make global
+~/.ipython/profile_default/ipython_config.py
+c = get_config()
+c.InteractiveShell.ast_node_interactivity = "all"	# Run all nodes interactively
+# or in a single session
+from IPython.core.interactiveshell import InteractiveShell
+InteractiveShell.ast_node_interactivity = "all"
+from pydataset import data
+quakes = data('quakes')
+quakes.head()
+quakes.tail()
+
+# kernels
+> ~/Library/Jupyter/kernels/
+~/.julia/packages/IJulia/e8kqU/src/kernel.jl
+
+# jupyter kernels conda
+conda install jupyter # conda install bokeh
+jupyter kernelspec list
+
+# conda jupyter upgrade:
+conda install -c anaconda jupyter_core
+Solving environment: done
+
+# conda jupyter upgrade: conda install -c anaconda jupyter_core
+Solving environment: done
+
+# example notebooks
+jupyter notebooks - http://bebi103.caltech.edu/2015/tutorials/
+
+# Error: FileNotFoundError
+# Fix: update kernel
+: [Errno 2] No such file or directory: '/usr/local/Cellar/r/3.3.3_1/R.framework/Resources/bin/R'
+https://irkernel.github.io/installation/
+R> install.packages(c('repr', 'IRdisplay', 'evaluate', 'crayon', 'pbdZMQ', 'devtools', 'uuid', 'digest'))
+R> devtools::install_github('IRkernel/IRkernel')
+R> IRkernel::installspec()
+
+# sql
+# make sure you have the right python (and env)
+pip3 install jupyterlab_sql
+jupyter serverextension enable jupyterlab_sql --py --sys-prefix
+jupyter lab build
+
+# postgres - may need dwtunnel + vpn
+pip3 install ipython-sql Psycopg2 sqlalchemy
+import sqlalchemy as sa
+import psycopg2
+engine = sa.create_engine('postgresql://dw_user:dw_user@localhost:5432/dwprd1p')
+%load_ext sql  # Load the sql extension:
+%sql $engine.url  # Set up the connection:
+
+# sanddance
+jupyter - https://github.com/microsoft/SandDance/tree/master/python/jupyter-widget#sanddance-jupyter-widget
+import pandas as pd
+from pandas_sanddance import SandDanceWidget
+widget  = SandDanceWidget()
+widget.show()
+
+# notebooks
+https://github.com/jupyter/jupyter/wiki/A-gallery-of-interesting-Jupyter-Notebooks
+
+# polyglot notebook
+jupyter --kernel sos #
+iodide
+
+# examples
+http://bebi103.caltech.edu/2015/tutorials/
+
+# R
+IRkernel / R
+
+# which R is determined by IRkernel::InstallSpec()
+jupyter-notebook
+p Library/Jupyter/kernels/ir/kernel.json
+R --version
+brew cask versions R
+jupyter-notebook --kernel=ir
+%config InlineBackend.figure_formats = {'png', 'retina'}
+
+# bokeh
+bokeh.plotting.show(bokeh.mpl.to_bokeh()) # bokeh / js
+
+# sympy errors
+# Error: libpng warning: Application built with libpng-1.5.17 but running with 1.6.19
+# Fix: brew uninstall libpng -f
+brew install libpng
+python3 -m pip install --force-reinstall --upgrade matplotlib
+
+#  kernels (https://github.com/JuliaLang/IJulia.jl)
+jupyter-kernelspec list
+jupyter-kernelspec remove <krnl>
+
+# remote
+pipx install jupyterlab # on remote
+jupyter-lab --port 9090 --no-browser  # on remote
+ssh -L 9090:localhost:9090 accopeland@jgi-interactive00.jgi.lbl.gov # on localhost
+-- get token from stdout
+
+# julia kernel
+julia> Pkg.build("IJulia")
+julia> add IJulia
+julia> using IJulia
+julia> notebook(detached=true)

@@ -1,0 +1,710 @@
+# jira via python
+/global/u1/b/bfoster/scripts/jiraAddAttachment.py
+
+# stash-cli
+jira
+
+# JCLI
+https://bobswift.atlassian.net/wiki/display/JCLI/Reference
+
+# see jira.client.python.pdf for python lib examples (BFoster)
+
+# jira-cli examples
+java -jar jira-cli-5.7.0.jar --server https://jira.examplegear.com --action addVote --issue "ZSUB-1" --user "admin" --password ""
+java -jar jira-cli-5.7.0.jar --server https://jira.examplegear.com --action getProject --project "ZPROJECT" --user "user" --password ""
+java -jar jira-cli-5.7.0.jar --server https://jira.examplegear.com --action getProjectList --regex "ZPROJECT" --outputFormat 999 --user "user" --password ""
+java -jar jira-cli-5.7.0.jar --server https://jira.examplegear.com --action run --user "anon" --password ""
+
+# sandbox -- Jira offers sandbox test environments at
+http://go.atlassian.com/cloud-dev
+https://blog.developer.atlassian.com/cloud-ecosystem-dev-env/
+
+
+# jql time queries
+status was Completed   during ("2021/01/01", "2021/02/28") AND project in ("Sequence QC")
+resolved > startofDay(-770) AND resolved <startOfDay(-365)  AND project in ("Sequence QC")
+resolved > startofYear(-2) AND resolved <startOfYear(-1)  AND project in ("Sequence QC")
+resolution was in (Blocked,"On Hold") during("2021/01/01","2021/05/30")  AND project in ("Sequence QC")  ## No Results, no error
+resolution was in (Done, Completed) during ("2021/01/01", "2021/05/30") and resolution in (EMPTY,Cancelled,Unresolved)  # Whoa
+
+# project config: https://issues.jgi.doe.gov/plugins/servlet/project-config/USA/summary
+Looks like default assignee===Project Lead
+
+# date range
+project=PMOS AND summary~"Request for FD product change for FD"
+AND createdDate >=" 2020-09-30 00:00" and createdDate <= "2021-10-01 00:00"
+ORDER BY created ASC
+
+# go-jira
+config: ~/.jira.d/config.yml
+jira login # authenticate once , then store in keyring (see config)
+
+# API token -- https://id.atlassian.com/manage/api-tokens
+
+# Personal access token (PAT)--  jira-dev: ***REMOVED***
+curl -X POST {{baseUrlOfYourInstance}}/rest/pat/latest/tokens -H "Authorization: Bearer <Token>" -H "Content-Type: application/json" -d '{"name": "tokenName","expirationDuration": 90}'
+
+# date search: resolved > -30d
+
+# daysOpen : project = GAA AND text ~ "Metagenome - Pool" AND issuetype in subTaskIssueTypes() and cf[14005] < 50
+
+# archive
+guest/guest : https://issues-archive.jgi-psf.org/secure/Dashboard.jspa
+
+# jql date range query
+        created >= -5d
+
+# jira-cli / atlassian jira cli (https://bobswift.atlassian.net/wiki/display/JCLI/Examples)
+
+# attachment cli
+jira --action addAttachment --issue "ZATTACH-1" --file "-" --name "dataFromStandardInput.txt" --findReplace "xxx:yyy"
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/binary.bin" --verbose
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/data.txt" --findReplace "xxx:yyy" --verbose
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/data.txt" --name "data"
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/empty.txt"
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/large.zip"
+jira --action addAttachment --issue "ZATTACH-1" --file "src/itest/resources/Special name #&amp;?"
+jira --action addAttachment --issue "ZJIRACLI-3" --file "src/itest/resources/data.txt"
+jira --action addAttachment --issue "ZRUNNER-1" --file "src/itest/resources/data.txt"
+jira --action addAttachments --issue "ZATTACH-1" --file "src/itest/resources" --regex "((data)|(empty)).*" --recursive
+
+# comment cli
+jira --action addComment --issue "ZCLICLONE-1" --comment "my comment" --role "Developers"
+jira --action addComment --issue "ZCLICLONE-4" --comment "my comment"
+jira --action addComment --issue "ZCLICLONE-4" --comment "my group restricted comment" --group "jira-users"
+jira --action addComment --issue "ZCLICLONE-4" --comment "my role restricted comment" --role "Developers"
+jira --action addComment --issue "ZJIRACLI-3" --file "src/itest/resources/data.txt" --findReplace "xxx:yyy"
+jira --action addComment --issue "ZSUB-3" --comment " resolution: %original_resolution% resolutiondate: %original_resolutiondate% resolution_date: %original_resolution_date% " --dateFormat "yyyy-MM-dd HH:mm:ss"
+
+# component cli
+jira --action addComponent --project "ZEXPORT2" --name "C1" --description "C1 description"
+jira --action addComponent --project "zjiracli" --name "C1" --description "a generic description"
+jira --action addComponent --project "zjiracli" --name "C1" --description "a generic description" --replace
+jira --action addComponent --project "zjiracli" --name "C2" --lead "developer" --description "a generic description" --defaultAssignee "COMPONENT_LEAD"
+jira --action addComponent --project "zjiracli" --name "swap2" --description "a generic description"
+jira --action addCustomField --field "zzz_Number Field" --type "com.atlassian.jira.plugin.system.customfieldtypes:float" --continue --search "com.atlassian.jira.plugin.system.customfieldtypes:exactnumber"
+
+# add misc
+jira --action addCustomField --field "zzz_Radio Buttons" --type "com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons" --continue
+jira --action addCustomField --field "zzz_Select List (single choice)" --type "com.atlassian.jira.plugin.system.customfieldtypes:multiselect" --continue
+jira --action addGroup --group "Testgroup1" --preserveCase
+jira --action addLabels --issue "ZJIRACLI-8" --labels "addLabel1 addLabel2"
+
+# add remote link
+jira --action addRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkIssue" --link "remotely relates" --targetServer "https://jira.examplegear.com" --toIssue "JIRA-1"
+jira --action addRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkIssue" --link "remotely relates" --targetServer "JIRA 7.0.4" --toIssue "JIRA-1"
+jira --action addRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkIssueAndReverse" --link "remotely relates" --targetServer "JIRA 7.0.4" --toIssue "JIRA-2" --reverseLink "reversed relates"
+jira --action addRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkUrl" --url "https://google.com"
+jira --action addRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkUrl2" --url "https://google.com"
+
+# add transition
+jira --action addTransition --workflow "zjiracliworkflow_new" --name "test 2" --description "Transition for testing" --step "1" --transition "3" --screen "Default Screen"
+jira --action addTransition --workflow "zjiracliworkflow_new" --name "test 3" --description "Transition for testing" --step "1" --screen "29781"
+jira --action addTransition --workflow "zjiracliworkflow_new" --name "test 4" --description "Transition for testing" --step "1" --screen "BUMP: Software Development Default Issue Screen"
+jira --action addTransition --workflow "zjiracliworkflow_new" --name "test 9" --description "Transition for testing" --step "3"
+
+# add user
+jira --action addUser --userId "automation" --userEmail "testuser@x.com"
+jira --action addUser --userId "testuser1" --userFullName "Test User1" --userEmail "testuser1@x.com" --userPassword "..."
+jira --action addUser --userId "testuser2" --userFullName "Special User 2" --userEmail "testuser2@x.com"
+jira --action addUser --userId "Testuser3" --userEmail "testuser3@x.com" --preserveCase
+jira --action addUserToGroup --userId "Testuser3" --group "testgroup2" --autoGroup
+jira --action addUserToGroupWithFile --file "src/itest/resources/addUserToGroupWithFile.csv" --autoGroup
+jira --action addUserWithFile --file "src/itest/resources/addUserWithFile.csv" --autoGroup
+
+# add version
+jira --action addVersion --project "ZEXPORT2" --name "V1" --description "V1 description"
+jira --action addVersion --project "zjiracli for automated testing" --name "V2" --date "5/30/15" --startDate "9/30/14" --after "V1" --description "V2 description"
+jira --action addVersion --project "zjiracli for automated testing" --name "With Blanks"
+jira --action addVersion --project "zjiracli" --name "V1"
+jira --action addVersion --project "zjiracli" --version "V2" --date "5/30/15" --description "V2 description" --replace
+jira --action addVersion --project "ZRUNNER" --name "V1"
+jira --action addVersion --project "ZRUNNER" --name "V2"
+
+# vote
+jira --action addVote --issue "ZVOTEWATCH-1" --user "developer" --password ""
+
+# watchers
+jira --action addWatchers --issue "ZCLICLONE-4" --userId "user, developer"
+jira --action addWatchers --issue "ZSUB-1" --userId "admin, developer"
+jira --action addWatchers --issue "ZVOTEWATCH-1" --userId "invalid1, invalid2" --continue
+jira --action addWatchers --issue "ZVOTEWATCH-1" --userId "user, developer"
+
+# work
+jira --action addWork --issue "ZCLICLONE-4" --timeSpent "1h" --autoAdjust
+jira --action addWork --issue "ZWORK-1" --timeSpent "1d 1h" --date "1/02/11 9:00 a"
+jira --action addWork --issue "ZWORK-1" --timeSpent "3h 30m" --comment "My work log entry" --role "Developers" --group "jira-users"
+jira --action addWork --issue "ZWORK-1" --timeSpent "3h 30m" --date "2011-01-01" --dateFormat "yyyy-MM-dd" --group "jira-users"
+jira --action addWork --issue "ZWORK-1" --timeSpent "3h 30m" --estimate "3w"
+jira --action addWork --issue "ZWORK-1" --timeSpent "3m" --date "2011-01-01 22:33:01"
+jira --action addWork --issue "ZWORK-1" --timeSpent "3m" --date "2011-01-01"
+jira --action addWork --issue "ZWORK-1" --timeSpent "5" --userId "developer"
+jira --action addWork --issue "ZWORK-2" --timeSpent "2h"
+
+# assign
+jira --action assignIssue --issue "ZJIRACLI-5" --userId ""
+jira --action assignIssue --issue "ZJIRACLI-5" --userId "@default"
+jira --action assignIssue --issue "ZJIRACLI-5" --userId "automation"
+
+# associate
+jira --action associateWorkflow --name "zjiracliworkflow" --workflowScheme "zjiracliworkflow"
+
+# clone
+jira --action cloneIssue --issue "ZATTACH-1" --copyAttachments
+jira --action cloneIssue --issue "ZCLICLONE-3"
+jira --action cloneIssue --issue "ZCLICLONE-4" --parent "ZCLICLONE-2" --copySubtaskEstimates --copyLinks --copyWatchers --copyComments --useParentVersions --fieldExcludes "custom-multi-select,custom three" --quiet
+jira --action cloneIssue --issue "ZJIRACLI-3" --description "clone description"
+jira --action cloneIssue --issue "ZJIRACLI-3" --summary "clone summary" --comment "comment for cloned issue"
+jira --action cloneIssue --issue "ZJIRACLI-3" --summary "clone summary" --date "2013-12-30" --dateFormat "yyyy-MM-dd"
+jira --action cloneIssue --issue "ZLINKS-1" --summary "cloneThis is content." --link "Cloners"
+jira --action cloneIssue --project "ZAGILE" --issue "ZAGILE-3"
+jira --action cloneIssue --project "ZCLICLONE" --issue "ZCLICLONE-1"
+jira --action cloneIssue --project "ZCLICLONE" --issue "ZCLICLONE-1" --copyLinks
+jira --action cloneIssue --project "ZCLICLONEX" --issue "ZCLICLONE-1" --copySubtaskEstimates --copyLinks --copyWatchers --copyComments
+jira --action cloneIssues --copyAttachments --copySubtasks --jql "key = ZATTACH-1"
+jira --action cloneIssues --jql "issue = ZCLICLONE-1" --copySubtasks
+jira --action cloneIssues --project "ZCLICLONEX" --search "project = ZCLICLONE and issuetype = bug" --autoVersion --autoComponent
+jira --action cloneIssues --project "ZCLICLONEX" --search "project = ZCLICLONE and issuetype = bug" --autoVersion --autoComponent --propertyPrefix ""
+jira --action cloneIssues --project "ZCLICLONEX" --type "improvement" --search "project = ZCLICLONE and issuetype = bug"
+jira --action cloneIssues --project "ZCLICLONEX" --type "improvement" --search "project = ZCLICLONE and issuetype = bug" --propertyPrefix ""
+jira --action cloneIssues --project "zjiracliA" --search "project = zjiracli and issuetype = bug"
+jira --action cloneIssues --project "zjiracliA" --type "improvement" --search "project = zjiracli and issuetype = bug"
+jira --action cloneIssues --toProject "ZRUNNERC" --description "Bulk clone example" --search 'project = ZRUNNER and summary ~ "volume-*"'
+jira --action cloneIssues --type "task" --search "project = ZCLICLONE and issuetype = bug"
+jira --action cloneIssues --type "task" --search "project = ZCLICLONE and issuetype = bug" --propertyPrefix ""
+jira --action cloneIssues --type "task" --search "project = zjiracli and issuetype = bug"
+jira --action cloneProject --project "ZAGILE" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --toProject "ZAGILEC" --cloneIssues
+jira --action cloneProject --project "ZATTACH" --toProject "ZATTACH2" --cloneIssues --copyAttachments --copySubtasks
+jira --action cloneProject --project "ZCLICLONE" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --toProject "ZCLICLONEX"
+jira --action cloneProject --project "ZCLICLONEB" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --toProject "ZCLICLONEY"
+jira --action cloneProject --project "ZCLICLONES" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --toProject "ZCLICLONET"
+jira --action cloneProject --project "zjiracli" --search "type = 'bug'" --toProject "zjiracliB" --issueSecurityScheme "test restrictions" --copyVersions --copyComponents --copyRoleActors --cloneIssues --copyAttachments --copySubtasks --continue --copyLinks --copyWatchers --copyComments
+jira --action cloneProject --project "zjiracli" --toProject "zjiracliA" --name "ZcloneNameA"
+jira --action cloneProject --project "zjiracli" --toProject "zjiracliC" --cloneIssues --search "issuetype = bug" --autoVersion --debug
+jira --action cloneProject --project "zjiracliC" --toProject "zjiracliD"
+
+# copy
+jira --action copyAttachments --issue "ZATTACH-1" --toIssue "ZATTACH-2"
+jira --action copyAttachments --issue "ZATTACH-1" --toIssue "ZATTACH-3" --name "data.txt"
+jira --action copyComponent --project "zjiracli" --component "C1" --name "C3First" --description "override description"
+jira --action copyComponents --project "zjiracli" --toProject "zjiracliX"
+jira --action copyComponents --project "zjiracli" --toProject "zjiracliX" --components "C1, C2" --replace
+jira --action copyFieldValue --issue "ZJIRACLI-10" --field "custom1" --field2 "custom-versions" --asVersion --autoVersion
+jira --action copyFieldValue --issue "ZJIRACLI-10" --toIssue "ZJIRACLI-11" --field "custom1"
+jira --action copyFieldValue --issue "ZJIRACLI-10" --toIssue "ZJIRACLI-11" --field "fixVersions" --field2 "custom-versions" --asVersion
+jira --action copyFieldValue --issue "ZJIRACLI-10" --toIssue "ZJIRACLI-11" --field "summary" --field2 "custom2"
+jira --action copyProjectRoleActors --project "ZROLES" --toProject "ZROLESX"
+jira --action copyVersion --project "zjiracli" --toProject "zjiracliA" --name "V2" --after -1
+jira --action copyWorkflow --workflow "jira" --name "zjiracliworkflow_new" --description "Copy of jira for jiracliworkflow test"
+
+# create
+jira --action createBoard --name "ZAGILE" --type "kanban" --project "ZAGILE"
+jira --action createBoard --name "ZAGILE" --type "scrum" --project "ZAGILE"
+jira --action createFilter --name "ZFILTER" --description "ZFILTER description" --search "project = ZFILTER"
+
+# create issue
+jira --action createIssue --parent "ZSUB-1" --type "Sub-task" --summary "subtask2: %parent_summary%"
+jira --action createIssue --project "ZAGILE" --type "Bug" --summary "Sprint issue" --field "Sprint" --value 1
+jira --action createIssue --project "ZATTACH" --type "bug" --summary "For attachments"
+jira --action createIssue --project "ZATTACH" --type "Sub-task" --parent "ZATTACH-1" --summary "Subtask with attachments"
+jira --action createIssue --project "ZCLICLONE" --parent "ZCLICLONE-1" --summary "Subtask 2" --type "Sub-task2" --originalEstimate "1d" --custom "testcase1:xxx,custom three:333"
+jira --action createIssue --project "ZCLICLONE" --type "bug" --summary "Summary" --affectsVersions "V1" --fixVersions "V1,V2" --components "C2,C1" --field "custom-versions" --values "V2, V1" --autoVersion --autoComponent
+jira --action createIssue --project "zcustom" --type "bug" --summary "cascade issue" --custom "custom1:xxxx" --field "custom-cascade-select" --values "1,A" --asCascadeSelect
+jira --action createIssue --project "zcustom" --type "bug" --summary "cascade issue" --custom "custom1:xxxx" --field "custom-cascade-select" --values "1,A" --field2 "custom-multi-select" --values2 "s1" --asCascadeSelect
+jira --action createIssue --project "zcustom" --type "bug" --summary "cascade issue" --field "custom-cascade-select" --values "1,A" --asCascadeSelect
+jira --action createIssue --project "zcustom" --type "bug" --summary "checkbox" --field "custom-multi-checkbox" --values "check1,check2"
+jira --action createIssue --project "zcustom" --type "Story" --summary "json" --custom "{\"custom-datetime\":{\"offset\":15,\"value\":\"%now%\"},\"custom-date\":{\"offset\":\"15\",\"value\":\"2015-05-01\"},\"Story Points\":{\"offset\":\"5\",\"value\":\"10\"}}" --date "%now%" --dateFormat "yyyy-MM-dd HH:mm:ss"
+jira --action createIssue --project "zcustom" --type "Story" --summary "json" --custom "{\"custom-date\":{\"offset\":\"-30\",\"value\":\"%now%\"},\"Story Points\":{\"offset\":-4.2,\"value\":\"10.1\"}}" --date "{\"offset\":5,\"value\":\"%now%\"}" --dateFormat "yyyy-MM-dd"
+jira --action createIssue --project "zcustom" --type "story" --summary "mutli issue" --field "custom-multi-select" --values "s1,s2,s3" --field2 "testcase2" --values2 "No" --custom "testcase1:zzzzzzzzzz,Story Points:99.1"
+jira --action createIssue --project "ZFIELDS" --file "src/itest/resources/data.txt" --type "Bug" --summary "original summary" --assignee "automation" --environment "original environment" --fixVersions "V1,V2" --components "C1" --autoVersion --autoComponent
+jira --action createIssue --project "ZFIELDS" --file "src/itest/resources/data.txt" --type "Bug" --summary "This is content." --assignee "automation" --environment "x12345"
+jira --action createIssue --project "ZFIELDS" --type "Sub-task" --summary "This is content." --parent "ZFIELDS-1"
+jira --action createIssue --project "ZHISTORY" --type "task" --summary "Initial summary"
+jira --action createIssue --project "zjiracli for automated testing" --type "task" --summary "This is content." --assignee "automation" --comment "Added after create"
+jira --action createIssue --project "zjiracli" --file "src/itest/resources/data.txt" --type "1" --summary "This is content." --assignee "automation" --lookup --date "" --field "custom-multi-select" --values "s1,s2,s3" --originalEstimate "20m"
+jira --action createIssue --project "zjiracli" --file "target/output/jiracli/createIssueLongDescription.txt" --type "task" --summary "Long description"
+jira --action createIssue --project "zjiracli" --type "1" --summary "This is content." --labels "label1"
+jira --action createIssue --project "zjiracli" --type "1" --summary "This is content." --labels "xxx"
+jira --action createIssue --project "zjiracli" --type "Sub-task" --summary "This is content." --parent "ZJIRACLI-1"
+jira --action createIssue --project "zjiracli" --type "task" --summary "This is content."
+jira --action createIssue --project "zjiracli" --type "task" --summary "This is content." --field "custom1" --values "V1copy" --fixVersions "V1"
+jira --action createIssue --project "zjiracliB" --type "bug" --summary "secured issue" --security "developer-role"
+jira --action createIssue --project "zjiracliX" --type "bug" --summary "This is content."
+jira --action createIssue --project "zjiracliX" --type "Bug" --summary "This is content." --description "a generic description"
+jira --action createIssue --project "zlinks" --type "1" --summary "This is content."
+jira --action createIssue --project "zlinks" --type "Sub-task" --summary "This is content." --parent "ZLINKS-1"
+jira --action createIssue --project "ZRUNNER" --type "1" --summary "This is content"
+jira --action createIssue --project "ZSUB" --type "bug" --summary "Summary" --description "Description" --environment "Environment" --affectsVersions "V1" --fixVersions "V1,V2" --components "C1,C2" --autoVersion --autoComponent --assignee "automation" --labels "label1 label2" --security "developer-role" --field "custom1" --value "Custom1" --field2 "custom2" --values2 "Custom2"
+jira --action createIssue --project "zuser" --type "1" --summary "This is content" --assignee "automation"
+jira --action createIssue --project "zvotewatch" --type "1" --summary "summary text"
+jira --action createIssue --project "zwork" --type "1" --summary "This is content"
+jira --action createIssue --type "Sub-task" --summary "This is content." --parent "247925"
+jira --action createOrUpdateIssue --project "zjiracli" --type "bug" --summary "CreateOrUpdate - updated" --jql "project = zjiracli and summary ~ 'CreateOrUpdate: 1475978299944'"
+jira --action createOrUpdateIssue --project "zjiracli" --type "task" --summary "createOrUpdate: 1475978299944" --jql "custom1 ~ UNDEFINED-TEXT-DATA"
+
+# create project
+jira --action createProject --project "ZAGILE" --name "zjiracliagile" --description "GINT test: jiracliagile" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZATTACH" --name "zjiracliattachments" --description "GINT test: jiracliattachments" --lead "automation"
+jira --action createProject --project "ZCLICLONE" --lead "automation" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZCLICLONEB" --lead "automation" --type "business" --template "Task management" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZCLICLONES" --lead "automation" --template "Basic Service Desk" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZCUSTOM" --name "zjiraclicustom" --description "GINT test: jiraclicustom" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZEXPORT" --name "zjiracliexport" --description "GINT test: jiracliexport" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZEXPORT2" --name "zjiracliexport2" --description "GINT test: jiracliexport2" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZFIELDS" --name "zjiraclifields" --description "GINT test: jiraclifields" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZFILTER" --name "zjiraclifilter" --description "GINT test: jiraclifilter" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZHISTORY" --name "zjiraclihistory" --description "GINT test: jiraclihistory" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "zjiracli" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --lead "automation" --name "zjiracli for automated testing" --defaultAssignee "unassigned"
+jira --action createProject --project "zjiracliX" --workflowScheme "" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --lead "automation" --name "zjiracliX for automated testing"
+jira --action createProject --project "ZLINKS" --name "zjiraclilinks" --description "GINT test: jiraclilinks" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZPROJECT" --name "zjiracliproject" --description "GINT test: jiracliproject" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZPROJECTX" --workflowScheme "" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --lead "developer" --notificationScheme "" --category "another"
+jira --action createProject --project "ZPROJECTZ" --template "Kanban software development" --lead "admin"
+jira --action createProject --project "ZROLES" --name "zjiracliroles" --description "GINT test: jiracliroles" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZROLESX" --name "zjiraclirolesX" --description "GINT test: jiracliroles" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZRUNNER" --name "zjiraclirunner" --description "GINT test: jiraclirunner" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZRUNNERC" --name "zjiraclirunnerC" --description "GINT test: jiraclirunner" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZSUB" --name "zjiraclisub" --description "GINT test: jiraclisub" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme" --issueSecurityScheme "test restrictions" --category "standard"
+jira --action createProject --project "ZUSER" --name "zjiracliuser" --description "GINT test: jiracliuser" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZVOTEWATCH" --name "zjiraclivotewatch" --description "GINT test: jiraclivotewatch" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+jira --action createProject --project "ZWORK" --name "zjiracliwork" --description "GINT test: jiracliwork" --lead "automation" --workflowScheme "classic" --issueTypeScheme "Default Issue Type Scheme" --issueTypeScreenScheme "Default Issue Type Screen Scheme" --permissionScheme "Default Permission Scheme"
+
+# workflowScheme
+jira --action createWorkflowScheme --name "zjiracliworkflow" --description "Description for zjiracliworkflow" --workflow "zjiracliworkflow"
+
+# delete
+jira --action deleteBoard --board "NOT_FOUND" --continue
+jira --action deleteBoard --board "ZAGILE" --deleteFilter
+jira --action deleteBoard --id "804" --deleteFilter
+jira --action deleteBoard --id 1234567890 --continue
+jira --action deleteComponent --project "zjiracli" --component "swap1" --toComponent "swap2"
+jira --action deleteComponent --project "zjiracli" --component swap2
+jira --action deleteComponent --project "zjiracli" --name "auto1"
+jira --action deleteComponent --project "zjiracli" --name "auto2"
+jira --action deleteComponent --project "zjiracli" --name "C1" --continue
+jira --action deleteComponent --project "zjiracli" --name "C2" --continue
+jira --action deleteComponent --project "zjiracli" --name "C3" --continue
+jira --action deleteComponent --project "zjiracli" --name "C3First" --continue
+jira --action deleteComponent --project "zjiracliX" --component "C2"
+jira --action deleteComponent --project "zjiracliX" --component "C3"
+jira --action deleteComponent --project "zjiracliX" --name "C1"
+jira --action deleteComponent --project "zjiracliX" --name "C1" --continue
+jira --action deleteFilter --filter "NOT_FOUND" --continue
+jira --action deleteFilter --id "14951"
+jira --action deleteFilter --id 1234567890 --continue
+jira --action deleteFilter --name "ZFILTER"
+jira --action deleteIssue --issue "ZJIRACLI-1"
+jira --action deleteIssue --issue "ZJIRACLI-1" --continue
+jira --action deleteLink --issue "247879" --toIssue "247881" --link "10011"
+jira --action deleteLink --issue "ZLINKS-1" --toIssue "ZLINKS-3" --link "duplicates"
+jira --action deleteProject --project "NOT_FOUND" --continue
+jira --action deleteProject --project "ZAGILE"
+jira --action deleteProject --project "ZAGILEC"
+jira --action deleteProject --project "ZATTACH"
+jira --action deleteVersion --project "zjiracli" --version "auto1" --continue
+jira --action deleteVersion --project "zjiracli" --version "V2" --continue
+jira --action deleteVersion --project "zjiracli" --version "With Blanks" --continue
+jira --action deleteVersion --project "ZRUNNER" --version "auto1csv"
+jira --action deleteWorkflow --name "zjiracliworkflow"
+jira --action deleteWorkflow --name "zjiracliworkflow_new"
+jira --action deleteWorkflowScheme --name "zjiracliworkflow"
+
+# expoer
+jira --action exportData --project "ZEXPORT2" --exportType "Participants"
+jira --action exportData --project "ZEXPORT2" --file "target/output/jiracliexport2/exportDataProject.txt"
+jira --action exportSite --file "exportSite.zip"
+jira --action exportWorkflow --file "target/output/jiracliworkflow/exportWorkflow.txt" --name "jira"
+
+# get
+jira --action getApplicationLinkList
+jira --action getApplicationLinkList --regex "(?i)((confluence)|(jira)).*"
+jira --action getApplicationLinkList --type "jira"
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/binary.bin" --verbose
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/data.txt" --findReplace "xxx:yyy"
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/dataFromStandardInput.txt" --findReplace "xxx:yyy" --verbose
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/getAttachment2.txt" --name "data.txt" --findReplace "xxx:yyy"
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/large.zip" --verbose
+jira --action getAttachment --issue "ZATTACH-1" --file "target/output/jiracliattachments/Special name #&amp;?"
+jira --action getAttachmentList --issue "ZATTACH-1" --dateFormat "yyyy-MM-dd 'special format' HH:mm:ss:S z"
+jira --action getAttachmentList --issue "ZATTACH-1" --dateFormat "yyyy-MM-dd HH:mm:ss:S"
+jira --action getAvailableSteps --issue "ZJIRACLI-3"
+jira --action getBoardList
+jira --action getBoardList --regex "ZAGILE.*"
+jira --action getClientInfo
+jira --action getCommentList --issue "ZCLICLONE-6"
+jira --action getCommentList --issue "ZJIRACLI-1" --dateFormat "yyyy-MM-dd"
+jira --action getCommentList --issue "ZSUB-3" --limit 2
+jira --action getComments --issue "ZJIRACLI-12"
+jira --action getComments --issue "ZLINKS-1"
+jira --action getComponent --project "zjiracli" --component "C2"
+jira --action getComponent --project "zjiracli" --component "C3"
+jira --action getComponent --project "zjiracli" --component "C3First"
+jira --action getComponentList --project "zjiracli" --file "target/output/jiracli/getComponentList.txt"
+jira --action getCustomFieldList
+jira --action getCustomFieldList --regex "zzz_.*"
+jira --action getFieldList
+jira --action getFieldList --regex "customfield_.*"
+jira --action getFieldValue --issue "ZCUSTOM-1" --field "custom-cascade-select"
+jira --action getFieldValue --issue "ZCUSTOM-4" --field "custom-multi-select"
+jira --action getFieldValue --issue "ZCUSTOM-5" --field "custom-multi-checkbox"
+jira --action getFieldValue --issue "ZFIELDS-1" --field "custom1"
+jira --action getFieldValue --issue "ZFIELDS-1" --field "description"
+jira --action getFieldValue --issue "ZFIELDS-1" --field "environment"
+jira --action getFieldValue --issue "ZFIELDS-2" --field "custom-multi-select" --suppressId
+jira --action getFieldValue --issue "ZFIELDS-2" --field "custom-multi-select" --withId
+jira --action getFieldValue --issue "ZFIELDS-2" --field "custom1"
+jira --action getFieldValue --issue "ZFIELDS-3" --field "description" --withId
+jira --action getFieldValue --issue "ZFIELDS-3" --field "priority" --withId
+jira --action getFieldValue --issue "ZFIELDS-3" --field "reporter" --withId
+jira --action getFieldValue --issue "ZFIELDS-3" --field "summary" --withId
+jira --action getFieldValue --issue "ZFIELDS-3" --field "type" --withId
+jira --action getFieldValue --issue "ZJIRACLI-10" --field "custom-versions" --asVersion
+jira --action getFieldValue --issue "ZJIRACLI-11" --field "custom-versions" --asVersion
+jira --action getFieldValue --issue "ZJIRACLI-11" --field "custom1"
+jira --action getFieldValue --issue "ZJIRACLI-11" --field "custom2"
+jira --action getFieldValue --issue "ZJIRACLI-3" --field "affectsVersions"
+jira --action getFieldValue --issue "ZJIRACLI-3" --field "assignee" --dateFormat "d/MMM/yy"
+jira --action getFieldValue --issue "ZJIRACLI-3" --field "components"
+jira --action getFieldValue --issue "ZJIRACLI-5" --field "duedate" --dateFormat "yyyy.MM.dd"
+jira --action getFieldValue --issue "ZJIRACLI-5" --field "originalEstimate"
+jira --action getFieldValue --issue "ZJIRACLI-5" --field "parent"
+jira --action getFieldValue --issue "ZJIRACLI-5" --field "TIMEESTIMATE"
+jira --action getFieldValue --issue "ZJIRACLI-5" --field "timespent"
+jira --action getFieldValue --issue "ZJIRACLI-8" --field "labels"
+jira --action getFieldValue --issue "ZJIRACLIX-1" --field "assignee"
+jira --action getFieldValue --issue "ZJIRACLIX-2" --field "assignee"
+jira --action getFieldValue --issue "ZSUB-3" --field "testcase1"
+jira --action getFilter --id "14951"
+jira --action getGroupList
+jira --action getGroupList --regex "jira.*"
+jira --action getIssue --issue "ZAGILE-2" --dateFormat "yyyy-MM-dd hh:mm:ss.SSS" --outputFormat 2 --suppressId
+jira --action getIssue --issue "ZJIRACLI-3" --dateFormat "M/dd/yyyy HH:mm:ss" --outputFormat 2 --suppressId
+jira --action getIssue --issue "ZJIRACLI-3" --outputFormat 2 --cookies "cookies"
+jira --action getIssue --issue "ZJIRACLI-5" --field "assignee"
+jira --action getIssue --issue "ZJIRACLI-5" --outputFormat "2"
+jira --action getIssue --issue "ZJIRACLI-8" --outputFormat "2"
+jira --action getIssue --issue "ZJIRACLIB-2"
+jira --action getIssue --issue "ZJIRACLIB-2" --dateFormat "yyyy.MM.dd 'special format' HH:mm:ss z"""
+jira --action getIssue --issue "ZLINKS-1" --outputFormat 2
+jira --action getIssue --issue "ZSUB-1" --suppressId
+jira --action getIssue --issue "ZUSER-1"
+jira --action getIssue --issue "ZWORK-1" --outputFormat 2
+jira --action getIssue --issue "ZWORK-2" --outputFormat 2
+jira --action getIssue --project "ZCLICLONE" --issue "ZCLICLONE-2"
+jira --action getIssue --project "ZCLICLONE" --issue "ZCLICLONEX-6"
+jira --action getIssueHistoryList --issue "ZHISTORY-1"
+jira --action getIssueHistoryList --issue "ZHISTORY-1" --dateFormat "yyyy-MM-dd hh:mm:ss.SSS"
+jira --action getIssueList --file "target/output/jiracli/getIssueList.txt" --filter "all"
+jira --action getIssueList --file "target/output/jiracli/getIssueListAllFields.txt" --search "project = 'zjiracli'" --outputFormat 999
+jira --action getIssueList --file "target/output/jiracli/getIssueListAllFieldsExceptCustom.txt" --search "project = 'zjiracli'" --outputFormat 998
+jira --action getIssueList --file "target/output/jiracli/getIssueListChangeType.txt" --search "project = zjiracliA and type = 'improvement'"
+jira --action getIssueList --file "target/output/jiracli/getIssueListOutputFormat200.txt" --search "project = 'zjiracli'" --outputFormat 200
+jira --action getIssueList --file "target/output/jiracli/getIssueListSearch.txt" --search "project = zjiracli or project = zjiracliX"
+jira --action getIssueList --file "target/output/jiracliclone/getIssueListChangeType.txt" --search "project = ZCLICLONEX and type = 'improvement'"
+jira --action getIssueList --file "target/output/jiracliclone/getIssueListChangeTypePlus.txt" --search "project = ZCLICLONEX and type = 'improvement'"
+jira --action getIssueList --filter "all" --outputFormat 2 --limit 75
+jira --action getIssueList --jql "key = ZCUSTOM-4" --outputFormat "2" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --jql "key = ZCUSTOM-4" --outputFormat "4" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --jql "key = ZCUSTOM-4" --outputFormat "5" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --jql "key = ZCUSTOM-4" --outputFormat "999" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --jql "parent = ZCLICLONE-11 and summary ~ 'Subtask 1'"
+jira --action getIssueList --jql "project = 'zjiracli' order by key desc" --outputFormat 4 --dateFormat "yyyy-MM-dd"
+jira --action getIssueList --jql "project = 'zlinks'" --outputFormat 998 --dateFormat "yyyy-MM-dd"
+jira --action getIssueList --jql "project = ZCLICLONEZ and issuetype in subTaskIssueTypes()"
+jira --action getIssueList --project "ZAGILEC" --dateFormat "yyyy-MM-dd hh:mm:ss.SSS" --outputFormat 2 --suppressId --columns "Key,Summary,Epic Link"
+jira --action getIssueList --project "zjiracli" --file "target/output/jiracli/getIssueListProject.txt" --outputFormat 101
+jira --action getIssueList --search "issue = ZJIRACLIB-2" --outputFormat 2
+jira --action getIssueList --search "issue = ZJIRACLIB-2" --outputFormat 3
+jira --action getIssueList --search "issue = ZVOTEWATCH-1 and (watcher = 'user' or watcher = 'developer')"
+jira --action getIssueList --search "issue = ZVOTEWATCH-1 and watcher = 'user' and watcher = 'developer'"
+jira --action getIssueList --search "issue = ZWORK-1" --outputFormat 5
+jira --action getIssueList --search "issuetype in subTaskIssueTypes() and parent = ZJIRACLI-3"
+jira --action getIssueList --search "key = ZCUSTOM-4" --outputFormat "2" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --search "key = ZCUSTOM-4" --outputFormat "4" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --search "key = ZCUSTOM-4" --outputFormat "5" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --search "key = ZCUSTOM-4" --outputFormat "999" --columns "testcase1,testcase2,key,summary,labels,Subtasks,Business Value,custom three,custom-group-picker,custom-multi-user-picker,custom-user-picker,custom-versions,custom-multi-select,Story Points,testcase1,testcase2,last comment"
+jira --action getIssueList --search "project = 'zjiracli' and labels != null" --outputFormat 999
+jira --action getIssueList --search "project = 'zjiracli'" --outputFormat 999 --columns "key,2,custom1,custom2,description,"
+jira --action getIssueList --search "project = 'zjiracli'" --outputFormat 999 --dateFormat "yyyy.MM.dd" --columns "key,created,last comment user, last comment date, last comment"
+jira --action getIssueList --search "project = ZCLICLONEX and type = 'improvement'" --limit 1
+jira --action getIssueList --search "project = zjiracliA and type = 'improvement'" --limit 2
+jira --action getIssueList --search "project = zlinks and issue in linkedIssues(ZLINKS-1, 'duplicates')"
+jira --action getIssueList --search "project = zlinks and issue in linkedIssues(ZLINKS-1, 'duplicates')" --outputFormat 999
+jira --action getIssueList --search "project = ZRUNNER and labels = 'fieldValues'" --outputFormat 2
+jira --action getIssueTypeList
+jira --action getIssueTypeList --project "@all"
+jira --action getIssueTypeList --project "ZPROJECT"
+jira --action getLinkList --issue "ZLINKS-1"
+jira --action getLinkList --issue "ZLINKS-2"
+jira --action getLinkTypeList
+jira --action getProject --project "ZCLICLONET"
+jira --action getProject --project "zjiracliX" --suppressId
+jira --action getProjectCategoryList
+jira --action getProjectList --file "target/output/jiracli/getProjectListClone.txt" --outputFormat 2
+jira --action getProjectList --file "target/output/jiracliproject/getProjectList.txt"
+jira --action getProjectList --lead "developer" --lookup --regex "ZPROJECT.*"
+jira --action getProjectList --regex "ZPROJECT"
+jira --action getProjectRoleByUserList --userId "@all" --columns "User,Project,Administrators,Developers,Users,View" --regex "ZROLES"
+jira --action getProjectRoleByUserList --userId "automation" --columns "User,Project,Administrators,Developers,Users,View" --regex "ZROLES.*"
+jira --action getProjectRoleList
+jira --action getScreenList --regex "(?i).*default.*"
+jira --action getSecurityLevelList --project "zjiracli"
+jira --action getSecurityLevelList --project "zjiracliB"
+jira --action getServerInfo --dateFormat "yyyy-MM-dd"
+jira --action getServerInfo --outputFormat 2 --dateFormat "yyyy-MM-dd HH:mm"
+jira --action getServerInfo --outputFormat 999
+jira --action getStatusList
+jira --action getTransitionList --issue "ZJIRACLI-3"
+jira --action getTransitionList --issue "ZJIRACLI-3" --outputFormat 2
+jira --action getUser --userId "testuser1"
+jira --action getUser --userId "Testuser3"
+jira --action getUser --userKey "testuser3"
+jira --action getUserList --group "testgroup2"
+jira --action getUserList --group "testgroup2" --outputFormat 2
+jira --action getUserList --name "@all"
+jira --action getUserList --name "@all" --regex ".*@x.com"
+jira --action getUserList --name "@all" --regex "testuser1" --includeInactive --outputFormat 2
+jira --action getUserList --name "testuser" --outputFormat 1
+jira --action getUserList --name "testuser" --outputFormat 2
+jira --action getUserList --project "zuser" --role "developers"
+jira --action getVersion --project "zjiracli" --name "V1" --dateFormat "yyyy MM dd"
+jira --action getVersion --project "zjiracli" --version "auto2" --dateFormat "yyyy.MM.dd"
+jira --action getVersion --project "zjiracli" --version "V2" --dateFormat "yyyy.MM.dd"
+jira --action getVersion --project "zjiracli" --version "With Blanks"
+jira --action getVersion --project "zjiracliA" --version "V1" --dateFormat "yyyy.MM.dd"
+jira --action getVersion --project "zjiracliC" --version "V2" --outputFormat 999
+jira --action getVersionList --project "zjiracli"
+jira --action getVersionList --project "zjiracli" --file "target/output/jiracli/getVersionList.txt"
+jira --action getVersionList --project "zjiracli" --outputFormat 2
+jira --action getVersionList --project "zjiracli" --outputFormat 999 --dateFormat "yyyy.MM.dd"
+jira --action getVoterList --issue "ZVOTEWATCH-1"
+jira --action getVoterList --issue "ZVOTEWATCH-1" --outputFormat 2
+jira --action getVoterList --issue "ZVOTEWATCH-1" --outputFormat 999
+jira --action getWatcherList --issue "ZVOTEWATCH-1"
+jira --action getWatcherList --issue "ZVOTEWATCH-1" --outputFormat 2
+jira --action getWatcherList --issue "ZVOTEWATCH-1" --outputFormat 999
+jira --action getWorkflow --name "Agile Simplified" --dateFormat "yyyy-MM-dd"
+jira --action getWorkflowList --dateFormat "yyyy-MM-dd" --regex "(Agile Simplified)|(jira)"
+jira --action getWorkflowScheme --name "zjiracliworkflow"
+jira --action getWorkflowSchemeList
+jira --action getWorkList --issue "ZWORK-1"
+jira --action getWorkList --issue "ZWORK-1" --dateFormat "yyyy-MM-dd HH:mm:ss.SSS"
+
+jira --action importWorkflow --file "target/output/jiracliworkflow/exportWorkflow.txt" --name "zjiracliworkflow" --description "Imported workflow"
+
+# link
+jira --action linkIssue --issue "247879" --toIssue "247881" --link "10011" --comment "Link comment"
+jira --action linkIssue --issue "ZCLICLONE-4" --toIssue "ZCLICLONE-1" --link "relates"
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-2" --link "relates" --comment "Link with group" --group "jira-users"
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-2" --link "relates" --comment "Link with role and group" --role "Developers" --group "jira-users"
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-2" --link "relates" --comment "Link comment with role" --role "Developers"
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-2" --link "relates" --comment "Link comment"
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-3" --link "duplicate" --verbose
+jira --action linkIssue --issue "ZLINKS-1" --toIssue "ZLINKS-3" --link "relates"
+jira --action linkIssue --issue "ZSUB-1" --toIssue "ZSUB-2" --link "relates"
+
+# modify
+jira --action modifyFieldValue --issue "ZFIELDS-4" --field "fixVersions" --field2 "components" --findReplace "'V2:V3,V4', C1:C2" --autoVersion --autoComponent
+jira --action modifyFieldValue --issue "ZFIELDS-4" --field "summary" --field2 "environment" --findReplace "original:modified"
+
+jira --action releaseVersion --project "zjiracli" --name "V1" --continue
+jira --action releaseVersion --project "zjiracli" --name "V1" --dateFormat "yyyy.MM.dd" --description "V1 description released"
+
+# remove
+jira --action removeAttachment --issue "ZATTACH-1" --id "50183"
+jira --action removeAttachment --issue "ZATTACH-1" --name "data.txt"
+jira --action removeCustomField --field "12864" --continue
+jira --action removeCustomField --field "customfield_12866" --continue
+jira --action removeCustomField --field "zzz_Select List (single choice)" --continue
+jira --action removeGroup --group "testgroup2"
+jira --action removeLabels --issue "ZJIRACLI-8" --labels "addLabel1 addLabel2"
+jira --action removeProjectRoleActors --project "zjiracli" --role "users" --userId "user, admin"
+jira --action removeRemoteLink --issue "ZLINKS-1" --name "addRemoteLinkUrl2"
+jira --action removeUser --userId "testuser1"
+jira --action removeUserFromGroupWithFile --file "src/itest/resources/addUserToGroupWithFile.csv" --autoGroup
+jira --action removeUserProperty --userId "testuser1" --name "testProperty"
+jira --action removeUserWithFile --file "src/itest/resources/addUserWithFile.csv" --autoGroup
+jira --action removeVote --issue "ZVOTEWATCH-1" --user "developer" --password ""
+jira --action removeWatchers --issue "ZVOTEWATCH-1" --userId "invalid, xxxxxx" --continue
+jira --action removeWatchers --issue "ZVOTEWATCH-1" --userId "user, developer"
+jira --action removeWork --issue "ZWORK-1" --id "34402"
+
+# render
+jira --action renderRequest --file "target/output/jiracli/renderRequestInvalidType.txt" --type "INVALID" --verbose
+jira --action renderRequest --file "target/output/jiracliuser/renderRequestViewUser.txt" --request "/secure/admin/user/ViewUser.jspa" --requestParameters "name=testuser1"
+jira --action renderRequest --file "target/output/jiracliuser/renderRequestViewUserAfterRemove.txt" --request "/secure/admin/user/ViewUser.jspa" --requestParameters "name=testuser1"
+jira --action renderRequest --issue "ZJIRACLI-3" --file "target/output/jiracli/renderRequest.txt"
+jira --action renderRequest --project "zjiracli" --file "target/output/jiracli/verifyProjectIssueTypeScreenScheme.txt" --request "plugins/servlet/project-config/ZJIRACLI/summary"
+jira --action renderRequest --project "zjiracli" --file "target/output/jiracli/verifyUpdateProjectIssueTypeScreenSchemeDefault.txt" --request "plugins/servlet/project-config/ZJIRACLI/summary"
+jira --action renderRequest --request "/rest/project-templates/1.0/templates" --type "FORM_URL_ENCODED" --acceptType "JSON" --verbose
+
+# run
+jira --action run --file "-"
+jira --action run --file "src/itest/resources//renderRequest.txt" --findReplace "@project@:zjiracli"
+jira --action run --file "src/itest/resources/run.txt"
+jira --action run --file "src/itest/resources/runReplaceMap.txt" --common "--project ZRUNNER"
+jira --action run --file "src/itest/resources/runReplaceMapReference.txt" --common "--project ZRUNNER --labels JCLI528"
+jira --action run --file "src/itest/resources/runWithFindReplace.txt" --findReplace "##action##:getServerInfo"
+jira --action run --file "target/output/jiracliexport2/exportDataProject.txt" --findReplace "--project ZEXPORT2:--project ZEXPORT2E" --findReplaceRegex "--name [^-]*:"
+jira --action runFromAttachmentList --issue "ZRUNNER-1" --common "-a getAttachment --file ""target/output/jiraclirunner/Attachment-@attachment@"" --name @attachment@ --issue ZRUNNER-1"
+jira --action runFromAttachmentList --issue "ZRUNNER-1" --common "-a getAttachment --file ""target/output/jiraclirunner/Attachment-@attachment@"" --name @attachmentId@ --issue ZRUNNER-1"
+jira --action runFromComponentList --project "ZRUNNER" --common "-a getComponent --project ZRUNNER --version ""@component@""" --continue
+jira --action runFromCsv --file "src/itest/resources//runIgnoreFields.csv" --propertyFile "src/itest/resources//runIgnoreFields.properties" --common "--project ZRUNNER --action createIssue"
+jira --action runFromCsv --file "src/itest/resources/createUpdate.csv" --common "--project ZRUNNER"
+jira --action runFromCsv --file "src/itest/resources/import.csv" --propertyFile "src/itest/resources/import.properties" --common "--project ZRUNNER" --continue
+jira --action runFromCsv --file "src/itest/resources/import2.csv" --propertyFile "src/itest/resources/import.properties" --common "--project ZRUNNER --action createIssue" --continue
+jira --action runFromCsv --file "src/itest/resources/run.csv" --findReplace "@project@:ZRUNNER"
+jira --action runFromCsv --file "src/itest/resources/run2.csv" --common "-a createIssue --project ZRUNNER"
+jira --action runFromCsv --file "src/itest/resources/runFieldValues.csv" --common "--project ZRUNNER --action createIssue --type bug --summary xxx" --continue
+jira --action runFromCsv --file "src/itest/resources/runsimple.csv" --common "--action getProject"
+jira --action runFromCsv --file "src/itest/resources/runUsingProperties.csv" --propertyFile "src/itest/resources/runUsingProperties.properties" --common "-a createIssue --project ZRUNNER"
+jira --action runFromGroupList --regex "group number .*" --common "-a removeGroup --group ~@group@~" --special " ~"
+jira --action runFromGroupList --regex "jira.*" --limit 1 --common "-a getServerInfo --comment ~group: @group@~" --special " ~"
+jira --action runFromIssueList --common "--action deleteIssue --issue @issue@ " --search 'project = ZRUNNER and summary ~ "volume-*"'
+jira --action runFromIssueList --common: '--action cloneIssue --issue @issue@ --toProject ZRUNNERC --description "Bulk clone example" ' --search 'project = ZRUNNER and summary ~ "volume-*"'
+jira --action runFromIssueList --file "-" --search "project = 'zjiracli' and labels != null" --common "--action addLabels"
+jira --action runFromIssueList --file "-" --search "project = 'zjiracli' and labels != null" --common "--issue @issue@" --findReplace "##label##:done-by-action"
+jira --action runFromIssueList --jql "issuetype = Sub-task" --common "-a getIssue --issue @parent@ --comment issue:@issue@,id:@issueId@,project:@project@,projectId:@projectId@,parent:@parent@,parentId:@parentId@" --limit 1
+jira --action runFromIssueList --jql "labels in (JCLI528)" --common "-a getIssue --issue @issue@ --outputFormat 999"
+jira --action runFromIssueList --search "project = 'zjiracli' and labels != null" --common "--action addLabels --issue @issue@ --labels done-by-action"
+jira --action runFromIssueList --search "project in (ZJIRACLI)" --common "-a getAttachmentList --outputFormat 999 --issue ""@issue@"" --file target/output/jiracliproject/attachmentList.csv --append" --continue
+jira --action runFromIssueList --search "project in (ZJIRACLI)" --common "-a getLinkList --issue ""@issue@"" --file target/output/jiracliproject/linkList.csv --append" --continue
+jira --action runFromIssueList --search "project in (ZJIRACLI, ZHISTORY)" --common "-a getIssueHistoryList --issue ""@issue@"" --file target/output/jiracliproject/historyList.csv --dateFormat: yyyy-MM-dd_hh:mm:ss.SSS --append" --continue
+jira --action runFromIssueList --search "project in (ZWORK)" --common "-a getWorkList --outputFormat 999 --issue ""@issue@"" --file target/output/jiracliwork/workList.csv --append" --continue
+jira --action runFromIssueTypeSchemeList --regex "Z[A-Z0-9]+\:.*" --common "--action deleteIssueTypeScheme --id @schemeId@ --continue" --limit 10
+jira --action runFromIssueTypeScreenSchemeList --regex "Z[A-Z0-9]+\:.*" --common "--action deleteIssueTypeScreenScheme --id @schemeId@ --continue" --limit 10
+jira --action runFromList --list "1, 2, 3" --common "--action createIssue --project ZRUNNER --type task --summary volume-@entry@ "
+jira --action runFromList --list "A,B" --common "-a getProject --project ZRUNNER --cookies target/output/jiraclirunner/cookies.txt -v" --verbose
+jira --action runFromList --list "A,B" --common "-a getProject --project ZRUNNER --cookies target/output/jiraclirunner/cookiesBoth.txt -v" --cookies "target/output/jiraclirunner/parentCookiesBoth.txt" --verbose
+jira --action runFromList --list "A,B" --common "-a getProject --project ZRUNNER -v" --cookies "target/output/jiraclirunner/parentCookies.txt" --verbose
+jira --action runFromList --list "aaa" --common "--action getServerInfo" --debug
+jira --action runFromList --list "Client, Server" --common "-a get@entry@Info"
+jira --action runFromList --list "custom, Default Issue Type Scheme, custom," --continue --common: '-a updateProject --project ZRUNNER --issueTypeScheme "@entry@"'
+jira --action runFromList --list "NOT_FOUND, ZRUNNER" --common "-a getProjectList --regex @entry@ --append -f target/output/jiraclirunner/runFromListAppend.txt" --clearFileBeforeAppend
+jira --action runFromList --list "xxx, yyy" --common "--action runFromProjectList --regex ~(?i)zjiracli|ZRUNNER~ --common ~--action getProject --project @project@ --comment @entry@ ~" --special " ~"
+jira --action runFromProjectList --common "-a getProject --project ""@project@""" --limit 5 --continue
+jira --action runFromProjectList --common "-a getProject --project ""@projectId@""" --continue --regex "ZRUNNER"
+jira --action runFromProjectList --lead "developer" --regex "ZPROJECT.*" --common "-a getProject --project @project@"
+jira --action runFromProjectList --regex "ZJIRACLI.*|ZPROJECT" --common "-a getComponentList --outputFormat 999 --project ""@project@"" --file target/output/jiracliproject/componentList.csv --append" --continue
+jira --action runFromProjectList --regex "ZJIRACLI.*|ZPROJECT" --common "-a getIssueTypeList --project ""@project@"" --file target/output/jiracliproject/issueTypeList.csv --append" --continue
+jira --action runFromProjectList --regex "ZJIRACLI.*|ZPROJECT" --common "-a getSecurityLevelList --outputFormat 999 --project ""@project@"" --file target/output/jiracliproject/securityLevelList.csv --append" --continue
+jira --action runFromProjectList --regex "ZJIRACLI.*|ZPROJECT" --common "-a getVersionList --outputFormat 999 --project ""@project@"" --file target/output/jiracliproject/versionList.csv --append" --continue
+jira --action runFromScreenList --regex "Z[A-Z0-9]+\:.*" --common "--action deleteScreen --id @screenId@ --continue" --limit 10
+jira --action runFromScreenSchemeList --regex "Z[A-Z0-9]+\:.*" --common "--action deleteScreenScheme --id @schemeId@ --continue" --limit 10
+jira --action runFromSql --file "src/itest/resources/run.sql" --host "localhost" --port "5433" --driver "postgresql" --database "test" --dbUser "automation" --dbPassword "..."
+jira --action runFromSql --sql "select 'getServerInfo' as action from test01 limit 2" --host "localhost" --port "5433" --driver "postgresql" --database "test" --dbUser "automation" --dbPassword "..."
+jira --action runFromUserList --name "@all" --limit 2 --regex "((admin)|(automation))" --common: "--action getServerInfo --comment @userId@"
+jira --action runFromVersionList --project "ZRUNNER" --common "-a getVersion --project @projectId@ --version ""@versionId@""" --continue --regex "V1"
+jira --action runFromVersionList --project "ZRUNNER" --common "-a getVersion --project ZRUNNER --version ""@version@""" --continue
+jira --action runFromWorkflowList --regex "((jira)|(Agile Simplified))" --limit 2 --file "-"
+jira --action runFromWorkflowSchemeList --regex ".*Simplified.*" --limit 2 --file "-"
+
+# set field
+jira --action setFieldValue --issue "ZCUSTOM-1" --field "custom-cascade-select" --values "1 - A"
+jira --action setFieldValue --issue "ZCUSTOM-1" --field "custom-cascade-select" --values "2,B" --asCascadeSelect
+jira --action setFieldValue --issue "ZFIELDS-1" --field "custom1" --values "'xxx,yyy'"
+jira --action setFieldValue --issue "ZFIELDS-1" --field "custom1" --values "The following should be on a new line: \n XXX"
+jira --action setFieldValue --issue "ZFIELDS-1" --field "custom1" --values "xxx,yyy"
+jira --action setFieldValue --issue "ZFIELDS-1" --field "environment" --values "" --field2 "custom1" --values2 "xxx"
+jira --action setFieldValue --issue "ZFIELDS-1" --file "src/itest/resources/data.txt" --field "environment" --appendText
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-group-picker" --values "jira-users"
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-multi-group-picker" --values "jira-users,jira-administrators"
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-multi-select" --values "s1,s2"
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-multi-select" --values "s3" --append
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-multi-user-picker" --values "automation"
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom-user-picker" --values "automation"
+jira --action setFieldValue --issue "ZFIELDS-2" --field "custom1" --values "append text" --appendText
+jira --action setFieldValue --issue "ZFIELDS-2" --file "src/itest/resources/data.txt" --field "custom1"
+jira --action setFieldValue --issue "ZFIELDS-3" --field "description" --verbose --value "aaa
+bbb"
+jira --action setFieldValue --issue "ZFIELDS-3" --field "priority" --verbose --value "blocker"
+jira --action setFieldValue --issue "ZFIELDS-3" --field "reporter" --verbose --value "automation"
+jira --action setFieldValue --issue "ZFIELDS-3" --field "summary" --verbose --value "xxx"
+jira --action setFieldValue --issue "ZFIELDS-3" --field "type" --verbose --value "sub-task2"
+jira --action setFieldValue --issue "ZHISTORY-1" --field "custom-multi-select" --values "s1,s2"
+jira --action setFieldValue --issue "ZJIRACLI-3" --field "custom-labels" --values "aaa, ccc" --subtract
+jira --action setFieldValue --issue "ZJIRACLI-3" --field "custom-labels" --values "aaa,bbb"
+jira --action setFieldValue --issue "ZJIRACLI-3" --field "custom-labels" --values "bbb" --subtract
+jira --action setFieldValue --issue "ZJIRACLI-3" --field "custom-labels" --values "ccc" --append
+jira --action setFieldValue --issue "ZJIRACLI-5" --field "custom-versions" --values "autoAppend" --asVersion --append --autoVersion
+jira --action setFieldValue --issue "ZJIRACLI-5" --field "custom-versions" --values "V1, V2" --asVersion
+jira --action setFieldValue --issue "ZJIRACLI-5" --field "custom-versions" --values "V1, V2" --asVersion --append
+jira --action setFieldValue --issue "ZSUB-1" --field "custom-versions" --value "%original_fixVersions%" --field2 "description" --values2 "%original_description% - %original_fixVersions%"
+jira --action setShareScope --value "global"
+
+# transition
+jira --action transitionIssue --issue "ZJIRACLI-3" --transition "5" --resolution "Fixed" --fixVersions "V1, V2" --comment "I fixed this. \n It will be good now." --type "Bug" --continue --priority "Major" --reporter "automation" --affectsVersions "" --environment "" --components ""
+jira --action transitionIssue --issue "ZJIRACLI-3" --transition "Start Progress"
+jira --action transitionIssue --issue "ZSUB-3" --transition "Resolve Issue" --field "testcase1" --values "subtasks: %parent_subtasks%" --comment "subtasks: %parent_subtasks%"
+jira --action unarchiveVersion --project "zjiracli" --name "V1"
+jira --action unreleaseVersion --project "zjiracli" --name "V1" --date "2015.12.31" --dateFormat "yyyy.MM.dd" --description "V1 description"
+
+# update
+jira --action updateComponent --project "zjiracli" --component "C3First" --name "C3" --description "a generic description" --lead "automation" --defaultAssignee "project_lead"
+jira --action updateComponent --project "ZSUB" --component "C1" --description "C1 description"
+jira --action updateComponent --project "ZSUB" --component "C2" --description "C2 description"
+jira --action updateFilter --id "14951" --search "project = ZFILTER AND resolution is EMPTY" --favorite
+jira --action updateIssue --issue "247925" --fixVersions "auto2" --autoVersion --append
+jira --action updateIssue --issue "ZCUSTOM-1" --field "custom-cascade-select" --values "1,A" --asCascadeSelect
+jira --action updateIssue --issue "ZCUSTOM-4" --field "custom-multi-select" --values "s1,s2,s3"
+jira --action updateIssue --issue "ZFIELDS-1" --description "append text" --appendText
+jira --action updateIssue --issue "ZHISTORY-1" --summary "Updated summary" --description "Updated description" --field "custom1" --values "updated value"
+jira --action updateIssue --issue "ZJIRACLI-3" --affectsVersions "swap1" --fixVersions "swap2" --autoVersion
+jira --action updateIssue --issue "ZJIRACLI-3" --components "auto1" --autoComponent
+jira --action updateIssue --issue "ZJIRACLI-3" --components "auto2" --autoComponent --append
+jira --action updateIssue --issue "ZJIRACLI-3" --components "swap1" --autoComponent
+jira --action updateIssue --issue "ZJIRACLI-3" --custom "custom1:zzz"
+jira --action updateIssue --issue "ZJIRACLI-3" --custom: "{\"custom1\":\"zzz\"}"
+jira --action updateIssue --issue "ZJIRACLI-3" --date "" --components "" --affectsVersions ""
+jira --action updateIssue --issue "ZJIRACLI-3" --date "" --components "" --affectsVersions "" --fixVersions ""
+jira --action updateIssue --issue "ZJIRACLI-3" --date "27/Jan/10" --dateFormat "d/MMM/yy"
+jira --action updateIssue --issue "ZJIRACLI-3" --environment "x12345" --originalEstimate "3h" --comment "Added on updateIssue"
+jira --action updateIssue --issue "ZJIRACLI-3" --fixVersions "auto1" --autoVersion
+jira --action updateIssue --issue "ZJIRACLI-5" --custom "custom-versions:," --component ""
+jira --action updateIssue --issue "ZJIRACLI-5" --date ""
+jira --action updateIssue --issue "ZJIRACLI-5" --date "2015*01*02" --dateFormat "yyyy*MM*dd"
+jira --action updateIssue --issue "ZJIRACLI-5" --field "custom1" --values "xxxx"
+jira --action updateIssue --issue "ZJIRACLI-5" --field "custom2" --values ""
+jira --action updateIssue --issue "ZJIRACLI-8" --labels "label2 label3 label2 label3" --description "labels added"
+jira --action updateIssue --issue "ZJIRACLIB-2" --security ""
+jira --action updateIssue --issue "ZJIRACLIB-2" --security "developer-role"
+jira --action updateIssue --issue "ZUSER-1" --reporter "automation"
+jira --action updateIssue --issue "ZUSER-1" --reporter "testuser2" --lookup
+jira --action updateIssue --issue "ZWORK-2" --estimate "2w 1d"
+jira --action updateIssue --issue "ZWORK-2" --estimate "3w 1d" --summary "Updated"
+jira --action updateIssue --issue "ZWORK-2" --originalEstimate "4w 2d"
+jira --action updateProject --project "zjiracli" --issueTypeScheme "10000"
+jira --action updateProject --project "zjiracli" --issueTypeScheme "Default Issue Type Scheme"
+jira --action updateProject --project "zjiracli" --issueTypeScheme "zclone"
+jira --action updateProject --project "zjiracli" --issueTypeScreenScheme "1"
+jira --action updateProject --project "zjiracli" --issueTypeScreenScheme "Copy of default"
+jira --action updateProject --project "zjiracli" --issueTypeScreenScheme "Default Issue Type Screen Scheme"
+jira --action updateProject --project "zjiracli" --workflowScheme "" --issueTypeScheme "" --fieldConfigurationScheme "" --issueTypeScreenScheme ""
+jira --action updateProject --project "zjiracliC" --issueSecurityScheme "test restrs" --notificationScheme "test" --permissionScheme "Restrict create issue"
+jira --action updateProject --project "zjiracliX" --defaultAssignee "project_lead"
+jira --action updateProject --project "zjiracliX" --defaultAssignee "unassigned"
+jira --action updateProject --project "zjiracliX" --description "Updated description again"
+jira --action updateProject --project "zjiracliX" --description "Updated..." --issueSecurityScheme "testrestr" --fieldConfigurationScheme "Desc reqd" --notificationScheme "test" --verbose
+jira --action updateProject --project "ZPROJECT" --category "another"
+jira --action updateProject --project "ZPROJECT" --notificationScheme ""
+jira --action updateProject --project "ZPROJECT" --notificationScheme 10000
+jira --action updateUser --userId "testuser1" --userEmail "former.employee.testuser@x.com"
+jira --action updateUser --userId "testuser1" --userFullName "Former employee" --deactivate
+jira --action updateUser --userId "testuser1" --userFullName "Test User1" --userEmail "testuser1@x.com"
+jira --action updateUserProperty --userId "testuser1" --name "a b" --value " xxxx"
+jira --action updateUserProperty --userId "testuser1" --name "testProperty" --value "test property value"
+jira --action updateVersion --project "zjiracli" --version "auto1" --after "-1"
+jira --action updateVersion --project "zjiracli" --version "auto1" --after "auto2"
+jira --action updateVersion --project "zjiracli" --version "auto2" --date "" --dateFormat "yyyy/MM/dd"
+jira --action updateVersion --project "zjiracli" --version "auto2" --description "updateVersion description" --startDate "2014/09/30" --date "2015/01/02/" --dateFormat "yyyy/MM/dd"
+jira --action updateVersion --project "zjiracli" --version "V1" --description "V1 description"
+jira --action updateVersion --project "zjiracliC" --version "V2" --description "NEW description" --startDate "2015-01-01" --date "2015-02-01" --dateFormat "yyyy-MM-dd"
+jira --action updateWork --issue "ZWORK-1" --id "34402" --comment "Updated work log entry"
+jira --action updateWork --issue "ZWORK-1" --id "34402" --timeSpent "1w" --autoAdjust
+jira --action updateWork --issue "ZWORK-1" --id "34402" --userId "developer"
+
+# performance
+https://confluence.atlassian.com/adminjiraserver/performance-and-scale-testing-965568707.html
+
+# data generator
+https://marketplace.atlassian.com/apps/1210725/data-generator-for-jira/version-history

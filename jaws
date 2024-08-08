@@ -1,0 +1,40 @@
+---
+syntax: bash
+tags: [ jaws, wf ]
+---
+# docs
+https://jaws-docs.readthedocs.io/en/latest/
+
+# install
+
+# init
+sa
+jaws_init
+
+# config
+~/jaws.conf (see /clusterfs/jgi/groups/dsi/homes/svc-jaws/jaws.conf)
+
+// To map over an array:
+const squares = [1, 2, 3, 4].map(x => x * x);
+
+# repos
+https://code.jgi.doe.gov/advanced-analysis
+https://code.jgi.doe.gov/advanced-analysis/jaws-client
+
+# alt
+https://code.jgi.doe.gov/WJHoltz/jaws-client-image
+shifter --entrypoint --image wjhjgi/jaws-client:latest jaws -h
+docker run --image wjhjgi/jaws-client:latest jaws -h
+
+# config
+
+# basic run
+
+#  jaws / jgi-workflows
+https://bitbucket.org/berkeleylab/jgi-workflows/wiki/Home
+
+# jtm
+git clone https://gitlab.com/sulsj/jtm_task_manager.git
+
+# submit test
+ jaws submit --tag t1  /clusterfs/jgi/groups/dsi/homes/svc-jaws/hellowdl/hello.wdl tahoma

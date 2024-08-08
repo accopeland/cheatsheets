@@ -1,0 +1,1778 @@
+# fetch julia
+git fetch origin --prune
+git checkout master
+
+# install
+brew tap staticfloat/julia
+brew rm julia
+brew install --HEAD julia
+brew test -v julia
+
+#  brew install errors
+# if install errors with libgfortran or libquadmath then
+ln -s /usr/local/Cellar/gcc/5.1.0/lib/gcc/5/libquadmath.0.dylib /usr/local/lib
+ln -s /usr/local/Cellar/gcc/5.1.0/lib/gcc/5/libgfortran.3.dylib /usr/local/lib
+brew install --HEAD --64bit julia
+brew test --HEAD -v julia
+
+# for plotting w/Gaston
+brew install gnuplot --wx
+
+# update
+brew rm suite-sparse-julia
+#rm /Library/Caches/Homebrew/suite-sparse-julia-4.2.1.tar.gz
+brew rm openblas-julia
+brew install openblas-julia
+brew install --HEAD julia
+# if you get ../../../../ type errors, then try
+rm -rf $(brew --cache)
+brew cleanup -s
+brew install --HEAD julia
+# 🍺  /usr/local/Cellar/julia/HEAD: 447 files, 55M, built in 3.3 minutes
+# next had to rm and install arpack-julia to fix arpack load error
+# in brew test --HEAD julia
+
+# if install errors with libgfortran or libquadmath then
+ln -s /usr/local/Cellar/gcc/5.1.0/lib/gcc/5/libquadmath.0.dylib /usr/local/lib
+ln -s /usr/local/Cellar/gcc/5.1.0/lib/gcc/5/libgfortran.3.dylib /usr/local/lib
+brew install --HEAD --64bit julia
+brew test --HEAD -v julia
+
+# homebrew : uninstall
+run(`/Users/copeland/.julia/v0.5/Homebrew/deps/usr/bin/brew  uninstall --ignore-dependencies gmp nettle gnutls`)
+
+# upgrade
+get Project.toml path
+] st
+Status `~/.julia/environments/v1.7/Project.toml`
+cp Project.toml to new dir
+restart julia
+] up
+
+# upgrade via juliaup
+curl -fsSL https://install.julialang.org | sh
+juliaup add beta
+
+# all symbols /operators
+operators.jl
+Base.operator_precedence()
+https://github.com/JuliaLang/julia/blob/c200b4cdb9620b6df369ae3c735cf3af30b6a47f/src/julia-parser.scm
+
+#  threading / parallel : https://julialang.org/blog/2019/07/multithreading/
+> export JULIA_NUM_THREADS=8
+> julia
+$ Threads.nthreads()
+
+# stats
+StatsBase has useful stuff like iqr
+
+# Pkg defines a constant for the github repo
+print(Pkg.DEFAULT_META)
+
+# Replace top level module with new one and create new workspace
+workspace()
+
+# show methods
+methods()
+
+# other utilities - 'getting around'
+which
+apropos
+whos
+
+# show function definition
+@less
+edit(func(x))
+@less - @less(names(Core))
+
+# util list :
+https://github.com/svaksha/Julia.jl/blob/master/Utilities.md
+
+# ucontext error  - //github.com/staticfloat/homebrew-julia/issues
+# add to patches function at end using local patch e.g. patch :DATA  where git diff output is in __END__ block
+diff --git a/src/signals-apple.c b/src/signals-apple.c
+index ab3709b..5001166 100644
+--- a/src/signals-apple.c
++++ b/src/signals-apple.c
+@@ -9,7 +9,7 @@
+#include <sys/_types/_ucontext64.h>
+#else
+#define __need_ucontext64_t
+-#include <machine/_structs.h>
++#include <sys/_structs.h>
+#endif
+
+# git
+git fetch origin --prune
+git checkout master
+
+# update julia git
+# cd to git repo dir
+cd julia
+git pull && make
+
+# plot
+"a","b"
+1,2
+3,4
+5,6
+df = readtable("test.csv")
+p = plot(df,x="a", y="b",Geom.point)
+draw(SVG("plot1.svg", 3inch, 3inch), p)
+plot(df, x="a", y="b", Geom.point, Scale.x_continuous, Scale.y_continuous)
+
+# ijulia
+using IJulia
+notebook()
+# or
+ipython qtconsole --profile julia
+ipython notebook --profile julia
+ipython console --profile julia
+
+# git config julia
+git config --global url."https://".insteadOf git://
+git config --global url.https://github.com/.insteadOf git://github.com/
+
+# datasets
+using RDatasets
+iris = data("datasets", "iris")
+neuro = data("boot", "neuro")
+
+# read file
+airline_array = readdlm("/Users/randyzwitch/airline/1987.csv", ',');
+
+# include
+include("script.jl")
+load "..."
+
+# plotting
+using Winston
+plot(sin(1:100))
+
+# install packages -- just git repos
+Pkg.update()
+Pkg.add("foo")
+#`
+cd ~/.julia && git show --stat
+http://docs.julialang.org/en/latest/manual/packages/
+see ~/.julia/REQUIRE
+e.g. Pkg.clone("git://example.com/path/to/Package.jl.git")
+# for tsne
+Pkg.clone("git://github.com/lejon/TSne.jl.git")
+using TSne
+
+# diffeq
+using DifferentialEquations
+tspan = (0,10.0)
+u0 = 1
+f(u,p,t) = exp(-t) - 2u
+problem = ODEProblem(f,u0,tspan)
+soln = solve(problem)
+
+# diffeq translation
+Example: Given the Lorenz equations
+dx/dt =σ(y−x)
+dy/dt =x(ρ−z)−y
+dz/dt =xy−βz
+define f as a vector function with a vector initial condition,  u = [x,y,z]', we have the derivative function:
+function lorenz!(du,u,p,t)
+σ,ρ,β = p
+du[1] = σ*(u[2]-u[1])
+du[2] = u[1]*(ρ-u[3]) - u[2]
+du[3] = u[1]*u[2] - β*u[3]
+end
+
+# optimization
+MTK + GalacticOptimization / NonlinearOptimization / Optim
+basically same setup as for differential equations
+- function
+- u
+- parameters
+- tspan
+
+# diffeq chat
+https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+# juliasim - proprietary
+# circuits
+- JuliaSim
+- ACME
+- Circuits
+or MTK plus you define the elements e.g.
+@parameters t
+
+function Pin(;name)
+@variables v(t) i(t)
+ODESystem(Equation[], t, [v, i], [], name=name, defaults=[v=>1.0, i=>1.0])
+end
+#
+function Capacitor(;name, C = 1.0)
+val = C
+@named p = Pin(); @named n = Pin()
+@variables v(t); @parameters C
+D = Differential(t)
+eqs = [v ~ p.v - n.v
+   0 ~ p.i + n.i
+   D(v) ~ p.i / C]
+ODESystem(eqs, t, [v], [C],
+systems=[p, n],
+defaults=Dict(C => val),
+name=name)
+end
+
+# lower diffeq order
+ode_order_lowering(sys)
+
+# symbolics
+MTK + Symobolics
+D= Differential(t)
+modelingtoolkitize(prob)
+structural_simplify(model)
+equations(model)
+
+# csv
+df = CSV.File("file.csv") |> DataFrame
+df = CSV.read("file.csv", DataFrame; kwargs)
+CSV.read(path, DataFrame; delim="|")
+
+# SymPy summation
+@vars i n k m
+summation(1/(i^2+4), (i, 1, 10))
+summation(1/(i^2+4), (i, 1, oo))
+summation(1/(i^2+4), (i, 1, oo)).evalf()
+summation(1/(i^2+4), (i, 1, oo)).n()
+
+# jacobian
+ f((x,y))=[x^2+y^3-1,x^4 - y^4 + x*y]
+a = [1.0,1.0]
+ForwardDiff.jacobian(f, a)
+# or
+ForwardDiff.jacobian(x ->f(x), a)
+
+# gradient
+using SymPy
+@ vars x y \lambda
+#  via broadcastinig
+diff.(f(x,y),(x,y))
+# or via comprehension
+[diff(f(x,y),var) for var in (x,y)]
+
+# freq table
+using FreqTables
+freqtable(df.a, df.b)
+
+# filter dataframe
+filter by column type and subset Id
+data_df[(data_df.Type .== "a") .& (data_df.Id .in Ref([1,3])), :]  # broken?
+data_df[(data_df.Type .== "a") .& in([1, 3]).(data_df.Id), :]
+in DataFramesMeta this is
+@rsubset df :Type == "a" && :Id in [1, 3]
+
+#  bigint
+factorial(BigInt(30))
+
+#  stdout stderr
+redirect_stdio(p, stdout="stdout.txt", stderr="stderr.txt")
+
+#  dataframe top N (10) wrt column x
+df[partialsortperm(df.x, 1:10, rev=true), :]
+
+#  df to pdf
+using DataFrames, Latexify
+mdtab = replace(string(latexify(df)),'$' => "")
+write("table.md",mdtab)
+run(`pandoc table.md -o table.pdf`)
+
+#  df to table to pptx
+using DataFrames, Latexify
+df = DataFrame(a = [1,2], b = [3,4])
+# '$'s in the table entries mess with pandoc
+mdtab = replace(string(latexify(df)),'$' => "")
+write("table.md",mdtab)
+run(`pandoc table.md -o table.pptx`)
+
+# MKL Fatal Error: Can't load libmkl_intel_thread.1.dylib
+using Conda
+Conda.rm("mkl")
+Conda.add("nomkl")
+# or
+# Relevant issue: https://github.com/ContinuumIO/anaconda-issues/issues/6423
+LD_LIBRARY_PATH=$HOME/.julia/conda/3/lib julia
+
+# SymPy plot
+using Plots
+@syms x y
+plot(x^2 - 2x, 0, 4)
+plot(integrate(f(x)),-30,30)
+plot(diff(f(x)),-30,30)
+
+# SymPy derivatives: diff
+@ vars x y z
+>>> expr = exp(x*y*z)
+>>> diff(expr, x, y, y, z, z, z, z)
+     3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z
+    x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ
+# unevaluated derivatives . . .
+>>> deriv = Derivative(expr, x, y, y, z, 4)
+>>> deriv
+	 7
+	∂     ⎛ x⋅y⋅z⎞
+    ──────────⎝ℯ    ⎠
+	4   2
+      ∂z  ∂y  ∂x
+ >>> deriv.doit()
+
+# methods
+methods
+methodswith(T)
+
+#  memory bandwidth
+> STREAMBenchmark::memory_bandwidth()
+
+# combine
+see https://stackoverflow.com/questions/67875478/julia-summarise-one-column-into-a-new-dataframe-with-multiple-columns
+
+# combine -- parens are required for anonymous function
+combine(gdf, :v => (x -> length(unique(x))) => :len)
+same as
+combine(gdf, :v => length∘unique => :len)
+
+#  optimization - https://julia.quantecon.org/more_julia/optimization_solver_packages.html
+JuMP.jl
+ForwardDiff, Zygote,
+Optim
+Ipopt
+BlackBoxOptim
+Roots
+NLsolve
+LeastSquaresOptim
+
+#  dataframe search
+# is [2,3] in df a ?
+df[in([2,3]).(df.a),:]
+
+#  datetime missing
+q = CSV.read("f.csv",DataFrame; dateformat="y-m-d H:M:S.s")
+q.ymd_out = passmissing(Dates.yearmonthday).(q.date_out)
+# 3039395-element Vector{Union{Missing, Tuple{Int64, Int64, Int64}}}:
+
+#  datetime microseconds -
+https://discourse.julialang.org/t/dates-datetime-parse-string-with-microseconds-decimal-6-places/25653
+with timestamps like 2020-01-01T12:34:56.789123Z get parse errors with
+DateTime("2020-01-01T12:34:56.789123Z", dateformat"Y-m-dTH:M:S.ssssssZ")
+  ERROR: LoadError: InexactError: convert(Dates.Decimal3, 789123).
+# solution
+using TimesDates
+DateTime(TimeDate(timestr[1:end-1]))
+
+#  Dates fill
+ fill(Date("2021-08-01"),50)
+
+#  datetime csv
+ds
+6-element Vector{String}:
+ "2018-02-26 01:03:49.982"
+ "2018-02-25 23:58:55.643"
+ "2018-04-12 00:06:56.508"
+Dates.DateTime.(ds,dateformat"y-m-d H:M:S.s")
+6-element Vector{DateTime}:
+ 2018-02-26T01:03:49.982
+ 2018-02-25T23:58:55.643
+ 2018-04-12T00:06:56.508
+
+#  datetime conversion
+round(DateTime(2016, 8, 6, 20, 15), Dates.Day)
+floor(DateTime(2016, 8, 6, 20, 15), Dates.Day)
+ceil(DateTime(2016, 8, 6, 20, 15), Dates.Day)
+
+#  date / datetime conversion
+# Year -> period vs year -> Int
+using Dates
+#if you have a bunch of strings like 2014 in pubs.Year then
+pubs.Y = DateTime(pubs.Year)
+#if you have a bunch of julia DateTimes then
+pubs.Y  = Year(pubs.Date)
+
+#  debugging module
+using JET
+report_and_watch_file("/Users/copeland/.julia/packages/NamedTuples/PjIPJ/src/NamedTuples.jl")
+
+#  pkg
+using Pkg
+Pkg.Registry.rm("General")
+ENV["JULIA_PKG_SERVER"] = ""
+]registry add General
+]up
+
+# ::RCall - using julia conda install of R, then find R_HOME via R_HOME="/Users/copeland/.julia/conda/3/lib/R"
+ENV["R_HOME"]="/Users/copeland/.julia/conda/3/lib/R"
+or
+ENV["R_HOME"]="*"
+
+#  compile errors libutf8proc.a wrong arch:
+https://github.com/JuliaStrings/utf8proc.git
+
+# set python version
+ENV["PYTHON"] = ""  # use julia version of python to
+ENV["PYTHON"] = "/usr/local/bin/python" # use some other version
+
+#  pyimport:
+importednumpy = pyimport("numpy")
+importednumpy.sum(v)
+
+#  install python libs
+Conda.pip("install", ["somepackage1", "somepackage2"])
+# or
+using PyCall
+@pyimport pip
+pip.main(["install","--user","pyyaml","eml_parser"])
+# or
+> pyimport("pip")["main"](["install","--user","lxml"])
+
+#  scatter plot
+@df r_bps[1:10000,:] StatsPlots.scatter(:bps,:t_sec, group=:cmd, xlabel="bp",ylabel="wall(sec)", markersize=1, alpha=0.2, legend=false)
+
+#  groupby
+dataframe: by(wall, [:sp_name ,:pipeline ], :wall_hrs => mean)
+
+# groupby + combine
+combine(groupby(d, [:pipe, :prod]), :reqsec   => (x -> [round.(Int32, quantile(x,[0.5,0.99]))]) => [:r50,:r99], :wallclock=> (x -> [round.(Int32, quantile(x,[0.5,0.99]))]) => [:w50,:w99])
+
+#  select rows:
+full[full[:mem_kb] .== 80145240), :]
+
+#  create new col based on calculating on existing cols
+t = DataFrame( Num = [1, 2, 6, 8, 26 ])
+t.New = [x < 10 ? 7 : missing for x in t.Num]
+
+#  filter
+df[df.A .> 500, :]
+df[(df.A .> 500) .& (300 .< df.C .< 400), :]
+df[in.(df.A, Ref([1, 5, 601])), :]
+# incredibly, this workks
+filter(i -> !ismissing(i."Raw Hours"), select(t,:"Project",:"Raw Hours")) #returns df  if t is a df
+# or
+filter(x -> x.app2rcv != 0 , td1) |> describe
+# or
+filter(:a => !=(2), df)
+# or subset
+subset(td1, :app2rcv => ByRow(!=(0)), :app2rcv => ByRow(<(100))) |> describe
+#
+df[(df.A .!= "Y") .& (df.B .!= "D"), :]
+
+# split-apply-combine df in oneline
+groupby(select(filter(i -> i.:"lineItem/UnblendedCost">0,d), [:"product/region",:"lineItem/UsageType", :"lineItem/UnblendedCost"]) ,"product/region")
+
+# drop matrix column
+function drop_rc2(x; r=nothing, c=nothing)
+    nr, nc = size(x)
+    if !isnothing(r)
+        return x[setdiff(1:nr, r...), :]
+    elseif !isnothing(c)
+        return x[:, setdiff(1:nc, c...)]
+    else
+        return x
+    end
+end
+
+# drop row if condition - julia filter
+replace!(df.a, "None" => "c")
+df .= ifelse.(df .== "c", "None", df) # replacement on entire data frame
+
+# aggregate and filter
+@chain df begin
+groupby(:grp)
+combine(:amt => sum => :tot)
+push(!(_, (missing, sum(_.tot)), promote=true)
+sort(:tot, rev=true)
+end
+
+# compute number of rows in a group
+nrow or nrow => tgt_cols # latter creates a col with name 'tgt_cols'
+
+# drop column:
+select(df, Not(:b)) # drop column :b from df
+df = df[:,[1:2,4:end]] # remove column 3
+df[~[(x in [:B, :C]) for x in names(df)]]
+df[setdiff(names(df), [:C])]
+x[:, mean.(ismissing, eachcol(x)) .< 0.1] # remove cols where>10% of values are missing
+df[ .!( names(df) .== :n1 ) ]  ## http://julia.cookbook.tips/doku.php?id=dataframecolumnops
+
+# drop columns
+select_not(m,c) = m[:,setdiff(1:size(m,2),c)]
+
+# startup config
+~/.julia/config/startup.jl
+
+#  excel
+using ExcelFiles, DataTables, IndexedTables, TimeSeries, Temporal, Gadfly
+dt = DataTable(load("data.xlsx", "Sheet1"))			# Load into a DataTable
+it = IndexedTable(load("data.xlsx", "Sheet1"))			# Load into an IndexedTable
+ta = TimeArray(load("data.xlsx", "Sheet1"))			# Load into a TimeArray
+ts = TS(load("data.xlsx", "Sheet1"))				# Load into a TS
+plot(load("data.xlsx", "Sheet1"), x=:a, y=:b, Geom.line)	# Plot directly with Gadfly
+
+#  pipe / chain
+@chain df begin
+    select(Not(:id))
+    filter(row -> row.weight < 100, _)
+    groupby((:color, :shape))
+    combine(:weight => sum => :total_weight)
+end
+
+# pivot table / summary
+combine(groupby(jt,:template), :template => length => :n)
+# pivot
+gdf = groupby(df, [:Step, :Lab2], sort=true);
+lev = unique(df.Lab1)
+combine(gdf, :Lab1 .=> [x -> count(==(l), x) for l in lev] .=> lev)
+# pivot over >1 value
+l1 = unique(df.Lab1)
+l2 = unique(df.Lab2)
+combine(gdf, [[:Lab1, :Lab2] =>((x,y) -> count(((x,y),) -> x==v1 && y==v2, zip(x,y))) =>                     Symbol(v1, v2) for v1 in l1 for v2 in l2])
+
+# groupby gdf
+ x=DataFrame([[1,1,2,2,3,3],collect(1:6)],[:a,:b])
+6×2 DataFrame
+│ Row │ a     │ b     │
+│     │ Int64 │ Int64 │
+├─────┼───────┼───────┤
+│ 1   │ 1     │ 1     │
+│ 2   │ 1     │ 2     │
+│ 3   │ 2     │ 3     │
+│ 4   │ 2     │ 4     │
+│ 5   │ 3     │ 5     │
+│ 6   │ 3     │ 6     │
+ g=groupby(x, :a)
+GroupedDataFrame with 3 groups based on key: a
+First Group (2 rows): a = 1
+│ Row │ a     │ b     │
+│     │ Int64 │ Int64 │
+├─────┼───────┼───────┤
+│ 1   │ 1     │ 1     │
+│ 2   │ 1     │ 2     │
+⋮
+Last Group (2 rows): a = 3
+│ Row │ a     │ b     │
+│     │ Int64 │ Int64 │
+├─────┼───────┼───────┤
+│ 1   │ 3     │ 5     │
+│ 2   │ 3     │ 6     │
+ filter(y->y[1,:a]==3,g)
+
+#  cumsum timeseries
+using TimeSeries
+basecall(cl, cumsum)
+# or slower
+upto(sum, cl)
+
+# rolling mean
+function runmean(a,W)
+    A = similar(a)
+    for j in axes(A,2), i in axes(A,1)
+        l = max(1, i-W+1)
+        A[i,j] = mean(a[k,j] for k=l:i)
+    end
+    A
+end
+
+# colmean
+#
+
+#  rollup timeseries
+using Statistics
+collapse(cl, month, last, mean)
+
+#  merging timeseries
+using TimeSeries
+using MarketData
+AppleCat = merge(AAPL,CAT);
+length(AppleCat)
+
+
+#  df -> timeseries
+df′ = DataFrames.rename(df, :timestamp => :A);
+TimeArray(df′, timestamp = :A)
+collapse(ts, month,...)
+findwhen()
+diff()
+percentchange()
+moving()
+upto()
+merge()
+basecall()
+
+#  save timeseries as csv
+using CSV
+CSV.write(filename, ta)
+
+#  data from web transform
+https://jkrumbiegel.com/pages/2021-05-20-reading-data-from-web/
+
+# timeout
+TMOUT In an interactive shell, the value is the number of seconds to wait for input after issuing the primary prompt.		Bash  terminates  after waiting for that number of seconds if a complete line of input does not arrive.
+
+#  save
+using ExcelFiles.jl
+df = load("bar.xlsx","Sheet Name 1")
+df |> save("foo.xlsx")
+#
+using Serialization
+serialize("m1.jls",m1)
+
+#  dates / datetime
+# correctly deals with lots of type issues including datetime which is otherwise a huge tangle
+using Queryverse
+c = load("MGASD.csv")
+
+# missing - Missings.jl
+missing, missings, dropmissing(s) skipmissing(s), coalesce, disallowmissing
+Missings.replace(x,1)
+nonmissingtype(eltype(x))
+
+# remove missing
+nMissings = length(findall(x -> ismissing(x), df.col) # count missings
+sum(completecases(df))
+b  = dropmissing(df)
+@benchmark df[ismissing.(df.a),:a] = 0 # Median time: 38.7 µs
+@benchmark collect(Missings.replace(df[:a], 0)) # 32.6 µs
+@benchmark df.a = coalesce.(df.a, 0) # Median time: 5.4 µs
+@benchmark df.a = replace(df.a,missing => 0) # Median time: 0.2 µs
+@benchmark replace!(df.a,missing => 0) # Median time: 0.08 µs (!)
+using Impute
+Impute.interp(df)
+#
+x[:, mean.(ismissing, eachcol(x)) .< 0.1] # remove cols where>10% of values are missing
+StatsBase::countmap(a[!, "sp_actual_product"])
+#  missing
+ismissing
+fc = dropmissing(flights, :DepDelay)
+#
+nonmissingtype(eltype(x))
+filter(i -> !ismissing(i."Raw Hours"), select(t,:"Project",:"Raw Hours"))
+x[:, mean.(ismissing, eachcol(x)) .< 0.1] # remove cols where>10% of values are missing
+#
+x = collect(skipmissing(dd.al2seq))
+
+#  count distinct items
+using StatsBase
+countmap(a[!, "sp_actual_product"])
+  missing                     => 608
+  "Metagenome Minimal Draft"  => 156
+  "Metagenome Standard Draft" => 9954
+# sorted
+using DataStructures
+d = sort(countmap(a), byvalue=true)
+sort(countmap(d.:"lineItem/UsageType"),byvalue=true,rev=true)
+
+#  equiv for R::strings
+[eltype(col) for col = eachcol(df)] returns an array of column types
+
+#  save dataframe
+using Serialization
+open(file -> serialize(file, df), "my_data", "w")
+deserialize(open("my_data"))
+
+#  csv dates
+df = CSV.read(IOBuffer(data), DataFrame;
+dateformats=Dict(
+"d1"=>"yyyy-mm-dd",
+"d2"=>"dd/mm/yy",
+"time"=>DateFormat("yyyyuuuddTHH:MM:SS")
+)
+)
+
+#  SemanticModels
+docker run -it --rm -p 88889:8888 jpfa/semanticmodels:stretch
+Navigate to the link it returns: localhost:8888/?token=...
+
+# AC_MSG_ERROR => install pkg-config"
+
+# ::sympy sin^2(x)
+expand(sin(x)^2)
+   2
+sin (x)
+
+# debugging
+VSCode
+Debugger
+Rebugger
+Infiltrator
+Chthulhu
+
+# docs
+https://en.wikibooks.org/wiki/Introducing_Julia/Working_with_text_files
+
+# Revise https://timholy.github.io/Revise.jl/stable/cookbook/
+using Revise
+# includet
+includet("/tmp/mygreet.jl")  # after creating /tmp/mygreet.jl
+# Pkg
+using Pkg
+cd(Pkg.devdir())
+]
+pkg> generate MyPkg
+pkg> dev MyPkg
+using MyPkg
+edit(pathof(MyPkg))
+# PkgTemplate
+using PkgTemplates
+t = Template()
+generate("MyPkg",t)
+using Revise
+using MyPkg
+MyPkg.fun()
+edit(pathof(MyPkg))
+
+#  Queryverse vega Voyager (DataVoyager)
+using Queryverse
+df |> Voyager() # DataExplorer
+
+# sanddance -- good up to about 1M rows
+Pkg.add https://github.com/queryverse/SandDance.jl
+dataset("cars") |> SandDanceWindow
+five[1:2000000,:] |> SandDanceWindow
+
+# window / moving average
+using OnlineStats
+Partition
+MovingTimeWindow
+MovingWindow
+
+# visualization
+add https://github.com/queryverse/SandDance.jl
+using VegaDatasets, SandDance
+dataset("cars") |> SandDanceWindow
+
+# R::ggplot2 - scale_x_date
+#key is to specify date_breaks; 'start' is a POSIXct
+a05 %>% mutate(dt=as.Date(start),d=day(start),m=month(start)) %>% na.omit %>% filter(now()-start<51) %>% ggplot(aes(x=dt,y=wclk)) + geom_jitter(size=0.6) + theme(legend.position="bottom") + scale_y_log10() + scale_x_date(date_breaks="2 day") + theme(axis.text.x = element_text(angle = 90))
+
+#  history
+edit(REPL.find_hist_file())
+~/.julia/logs/repl_history.jl
+
+#  conda bin :  ~/.julia/conda/3/bin/
+
+# mutate / @mutate (https://www.juliabloggers.com/author/david-anthoff/)
+
+#  CSV.File
+td1 = CSV.File("TimesDatesAll20151201to20210723_2021-6-23_1337.csv",limit=100) |> DataFrame
+
+#  rename
+when d is an obj created by CSV.File then
+d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> DataFrame
+
+#  random date range
+# N.B. have to force rd = rand(20000,1) to be a vector
+# N.B. range works for Date but need to specify step = Day()
+df = DataFrame(Date = sort(rand(Date(2020,1,1,):Day(1):Date(2020,11,11),20000)), RawHrs =rd[:,1])
+# Also
+ [Date("2021-01-01"):Day(1):Date("2021-12-30")] vs. 	[Date("2021-01-01"):Day(1):Date("2021-12-30")...]
+1-element Vector{StepRange{Date, Day}}:
+
+#  rename dataframe column:
+rename!(xdf, :Count => :count)
+
+#  xl xlsx (https://github.com/felipenoris/XLSX.jl/blob/master/docs/src/tutorial.md)
+Queryverse::ExcelFiles  -> load()
+XLSX
+ x= XLSX.readxlsx("cscratch.xlsx")
+XLSXFile("cscratch.xlsx") containing 5 Worksheets
+    sheetname size          range
+-------------------------------------------------
+      read qc 2171x17       B1:R2171
+         asm2 4137x21       B1:V4137
+        notes 40x1          A1:A40
+     Aligment 1603x14       B1:O1603
+       Sheet1 91x4          B1:E91
+rdqc = XLSX.readdata("20190320.cscratch.xlsx","read qc","B1:K2171") |> DataFrame
+
+#  binary compile : julia ~/.julia/v0.6/PackageCompiler/juliac.jl -vaej  --cpu-target=x86-64 examples/hello.jl
+https://discourse.julialang.org/t/how-to-compile-a-portable-binary-at-least-across-macs-with-juliac-jl/9438
+
+#  finance: https://flare9xblog.com/category/julia/
+
+#  no way to remove / undefine a var or function
+f(x) = x^2
+f = Nothing
+
+#  add specific branch:
+]
+pkg> add Gaston#master
+
+#  pkg add repo
+registry add https://github.com/BioJulia/BioJuliaRegistry.git
+
+#  log plot
+dat=readdlm("pe_contigs.len", Int64)
+plot(dat, yscale=:log10, xscale=:log10)
+
+#  dataframe - add new col based on value of existing col
+x[:read] = 0
+NOPE  ##  x[[ismatch(r"500K",s) for s in x[:Assembly]],:reads] .= 500000
+ td1[ [occursin(r"iTag",x) for x in td1[!,:sp_ap]], :sp_ap ]
+
+#  plot csv
+using Queryverse, DataFrames
+m = load("2020-misc.csv",header_exists=true) |> DataFrame
+scatter(m.Date[1:4000], log.(m.RawHrs[1:4000]), markersize=2, label="2019", alpha=0.2, xrotation=-90, size=(2800,450), background_color = :ivory, leg=false, title="2019")
+
+#  plot
+Using Plots
+# set backend: # gr()
+plot(Plots.fakedata(50,5))
+# using Gadfly  , Plotly,
+
+#  Plots
+https://github.com/JuliaPlots/ExamplePlots.jl/blob/master/docs/examples/pyplot.md
+using DataFrames, StatPlot, CSV
+@df d plot(:Assembly , cols(2:7), xrotation=45, tickfont=5, legendfont=5)
+yaxis!("a name", :log10)
+savefig("somename.png")
+
+#  search array for string match
+f =  Bool[ contains("JSON",i) for i in x ]
+x[f]
+
+#  util list :
+https://github.com/svaksha/Julia.jl/blob/master/Utilities.md
+
+#  show source
+@less - @less(names(Core))
+
+# update julia git
+# cd to git repo dir
+cd julia
+git pull && make
+
+#  plot
+df = readtable("test.csv")
+p = plot(df,x="a", y="b",Geom.point)
+draw(SVG("plot1.svg", 3inch, 3inch), p)
+plot(df, x="a", y="b", Geom.point, Scale.x_continuous, Scale.y_continuous)
+# using StatPlots
+@df df plot(...)
+
+#  git repo
+git config --global url."https://".insteadOf git://
+git config --global url.https://github.com/.insteadOf git://github.com/
+
+#  datasets
+RDatasets.datasets()
+using RDatasets
+iris = data("datasets", "iris")
+neuro = data("boot", "neuro")
+
+#  IO - read file
+airline_array = readdlm("/Users/randyzwitch/airline/1987.csv", ',');
+using CSV
+CSV.read("file"...)
+
+#  plotting
+using Gadfly
+myplot=plot(sin(1:100))
+draw(pdf("myplot.pdf", 4inch, 3inch), myplot)
+
+#  package mgmt - ion
+
+# install julia packages -- just git repos
+Pkg.update()
+Pkg.add("foo")
+#
+cd ~/.julia && git show --stat
+http://docs.julialang.org/en/latest/manual/packages/
+see ~/.julia/REQUIRE
+e.g. Pkg.clone("git://example.com/path/to/Package.jl.git")
+# for tsne
+Pkg.clone("git://github.com/lejon/TSne.jl.git")
+using TSne
+
+#  sampling w/o replacement -
+https://media.readthedocs.org/pdf/statsbasejl/latest/statsbasejl.pdf
+
+#  iterators
+http://slendermeans.org/julia-iterators.html
+
+#   search array for string
+p=Pkg.available()
+filter(r"Home", p)
+
+# filter regexp
+filter(!contains(r"dt|Y_acct|program") ,names(df))
+
+#  upgrade : see https://pierreh.eu/upgrading-julia-and-ijulia-on-linux/
+cp .julia/environments/v1.3/Project.toml .julia/environments/v1.4/
+> julia
+> ]
+> update
+
+#  RCall
+run(`Rscript -e "R.home()"`)
+$ -> REPL mode
+# move var between julia and r
+@rput var
+@rget var
+# direct r calls
+R"ggplot($r_bps,aes(x=gbp,y=t_sec)) + geom_point() + facet_wrap(~cmd)"
+
+#  Conda
+>using Conda
+>Conda.runconda(`env list`)
+
+#  queryverse missing
+# CSV
+pt1 = CSV.read("file.tsv", missingstrings=["NA", "na", "n/a", "missing"])
+# Queryverse
+dd = load("20190903-RQCpipeline.csv",header_exists=true, nastrings=["None"]) |> DataFrame
+# TableReader
+using TableReader
+prc = readcsv("oregon-prices.csv")
+
+#  plot terminal
+export GKS_WSTYPE=gksqt
+# types:
+
+# rc : .juliarc.jl now is  ~/.julia/config/startup.jl
+
+
+#  ComposedFunction compose   \circ
+map(uppercase∘first, ["apple", "banana", "carrot"])
+
+# CountMap (OnlineStats)
+using OnlineStats
+tbl = Arrow.Table("/Users/copeland/Projects/2024/20240311-_nsx/All.arrow") ;
+groups = tbl[4]
+N=size(groups,1); o = fit!(CountMap(Int), groups[1:N]) ; sort(value(o))
+
+
+#  - quick tabulated bar chart
+df = dataset("ggplot2", "diamonds")
+o = CountMap(String)  # OnlineStats
+fit!(o, string.(df.Cut)) # ???
+plot(o, title="Neat!")
+
+#  csv iterator ~ onlinestats
+rows = CSV.Rows("2021.csv",reusebuffer=true)
+itr = (row.v =>parse(Float64, row.sepal_length) for row in rows)
+o = GroupBy(String, Hist(4:0.25:8))
+fit!(o, itr)
+plot(o, layout=(3,1))
+
+#  rlibrary ggplot
+@rlibrary ggplot2
+ggplot(j,aes(:date,:spid),color=:template) + geom_point() # works !!!
+# some R stuff needs special handling:
+geom_point(var"na.rm" = true)
+ggplot(d, aes(x=:x,y=:y)) + geom_point() + facet_wrap(R"~z")
+# OK - can use functional / pipes
+ggplot(d, aes(x=:x)) +  geom_ribbon(aes(ymin=:u_min, ymax=:u_max), fill="blue", alpha=0.5) +  geom_line(aes(y=:u), color="blue") +
+  lims(x=[0,5], y=[0,10]) +  geom_line(aes(y=:solution), color="red") |>  p -> ggsave("p1.pdf", p)
+
+#  duplicate rows
+df[findall(==('c'), df.id), :]  OR   df[df.id .== 'c', :]
+
+#  split-apply-combine -	https://towardsdatascience.com/index-sort-and-aggregate-your-dataframes-in-julia-38646daf6214
+combine( groupby(males, ["NR"]), df -> sort(df, ["Year"]).Wage |> wage -> DataFrame( first=first(wage),
+	  max=maximum(wage), last=last(wage), is_lower=maximum(wage) > last(wage)
+	)
+)
+sort(combine(groupby(j, [:jatkey]), df -> sort(df, :date) |> sorted_df -> DataFrame(j=sorted_df.jatkey, d=sorted_df.date, f=first(sorted_df.date), l=last(sorted_df.date), delta=last(sorted_df.date)-first(sorted_df.date))), [:d, :delta], rev=true)
+
+#  combine
+#  split-apply-combine (https://dataframes.juliadata.org/stable/man/split_apply_combine/#The-Split-Apply-Combine-Strategy)
+combine(gdf, 1:2 => cor, nrow)
+combine(gdf, :PetalLength => (x -> [extrema(x)]) => [:min, :max])
+for (key, subdf) in pairs(groupby(iris, :Species))  # use 'pairs' to get values of grouping cols along with each group
+   println("Number of data points for $(key.Species): $(nrow(subdf))")
+end
+# valuecols :=   Return a vector of Symbol column names in parent(gd) not used for grouping.
+gd = groupby(iris, :Species)
+combine(gd, valuecols(gd) .=> mean)	# apply function to each non-grouping col of a GroupedDataFrame
+
+#  select cols
+jat[1:15,Cols(7,Between(13,26))]
+
+#  indexing
+jat[1:2,:][:,2:3][1,:]  # works !
+
+#  cairomakie
+using CairoMakie
+fig = Figure(resolution = (800, 600))
+save("normal.pdf", fig) # size = 600 x 450 pt
+save("larger.pdf", fig, pt_per_unit = 2) # size = 1600 x 1200 pt
+save("smaller.pdf", fig, pt_per_unit = 0.5) # size = 400 x 300 pt
+save("normal.png", fig) # size = 800 x 600 px
+save("larger.png", fig, px_per_unit = 2) # size = 1600 x 1200 px
+save("smaller.png", fig, px_per_unit = 0.5) # size = 400 x 300 px
+
+#  clear makie plot
+scatter!(ax1, randn(20000000), 1:20000000; markersize = 2, color = :blue) ;
+empty!(ax1)
+
+#  rotation makie
+Axis(f[1,1], xticks = (1:31, df.date_created), xticklabelrotation=45.0)
+
+#  plotting AOG
+using AlgebraOfGraphics, CairoMakie
+#set_aog_theme!()
+axis = (width = 225, height = 225)
+penguin_frequency = data(penguins) * frequency() * mapping(:species)	# mapping(color = :island)
+fig = draw(penguin_frequency; axis)
+save("figure.png", fig, px_per_unit = 3) # save high-resolution png
+#
+penguin_bill = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm)
+plt = penguin_bill * (linear() + mapping()) * mapping(color = :species)
+layers = linear() + mapping(marker = :sex)
+plt = penguin_bill * layers * mapping(color = :species)
+layers = density() * visual(Contour) + linear() + visual(alpha = 0.5)
+plt = penguin_bill * layers * mapping(color = :species)
+
+#  aog visual (see https://makie.juliaplots.org/dev/examples/plotting_functions/)
+Heatmap
+Lines
+Contour
+Arrows
+Band
+Barplot
+Boxplot
+Crossbar
+Density
+Ecdfplot
+Errorbars
+Hist
+Mesh
+Rangebars
+Scatter / Scatterlines
+Series
+Stairs
+Stem
+Streamplot
+Surface
+Violin
+Volume
+
+# Makie plot types
+hist
+scatter
+density
+lines
+ecdfplot
+contour
+mesh
+heatmap
+qqnorm
+violin
+hlines
+stem
+streamplot
+surface
+timeseries
+
+#Makie basic plot
+f = Figure()
+Axis(f[1,1], title="a title", yticks = ((1:12)/4))
+density!(x,color=:y, colormap=[:blue, :grey])
+lines!(f[ , ], dat, axis=(xlabel="s", ylabel="t"),...)
+
+# heatmap - large
+using GLMakie, DataFrames
+mat = CSV.read("a.dat"; delim=" ", header=true)
+for xslice in Iterators.partition(axes(mat, 1), 10000)
+    for yslice in Iterators.partition(axes(mat, 2), 10000)
+        heatmap!(ax, xslice, yslice, mat[xslice, yslice])
+    end
+end
+
+# heatmap -large
+using InteractiveViz
+julia> using InteractiveViz.Demo
+julia> iheatmap(mandelbrot, -2, 0.66, -1, 1)
+julia> iscatter(randn(10_000_000), randn(10_000_000); markersize=3)
+
+# colormap
+https://docs.makie.org/stable/explanations/colors/
+:darktest
+:rainbow
+:viridis
+:tab10
+:berlin10
+reverse(:hawaii10)
+reverse(:roma10)
+:coolwarm
+:jet1
+:Oranges
+:Paired_9
+reverse(:RdYlBu_11)
+reverse(:RdYlGn_11)
+:Spectral9
+:YlOrRd
+:gnuplot
+:rainbow1
+:linear_bmy_10_95_c78_n256
+:rainbow_bgyr_35_85_c73_n256
+
+
+#  Makie::Axis properties
+https://makie.juliaplots.org/stable/makielayout/reference.html#Makie.MakieLayout.Axis
+
+# R / julia : /Users/copeland/.julia/packages/Conda/hsaaN/deps/usr/bin/R
+
+# makie vector calculus
+https://docs.juliahub.com/CalculusWithJulia/AZHbv/0.0.2/differentiable_vector_calculus/makie-plotting.html
+
+# operating on column subsets of df via map and using vars for col names
+n = filter(contains(r"2"), names(df))
+ map(x -> replace(df[!, eval(x)], missing => NaN), n)
+
+# split-apply-combine
+With groupby()
++ standard column selectors (Int, Symbols, Strings, Vector{Int}, Vectors{Symbol}, Vectors{String}, All, Cols, :, Between, Not and regex)
++ cols => function
+call function(cols) [return single value], new_cols automatically generated; name created by concatenating source col and function
++ cols => function => new_cols
+explicitly specify target column(s), which must be a single name (as a Symbol or a string), a vector of names or AsTable. Additionally it can be a Function which takes a string or a vector of strings as an argument containing names of columns selected by cols, and returns the target columns names (all accepted types except AsTable are allowed).
++ col => new_cols
+renames the column col to new_cols, which must be single name (as a Symbol or a string), a vector of names or AsTable.
++ nrow or nrow => new_cols
+efficiently computes the number of rows in a group; without new_cols the new column is called :nrow, otherwise it must be single name (as a Symbol or a string).
++ vectors or matrices containing transformations specified by the Pair syntax described in points 2 to 5
++  function
+called with a SubDataFrame corresponding to each group if a GroupedDataFrame is processed, or with the data frame itself if an AbstractDataFrame is processed; this form should be avoided due to its poor performance unless the number of groups is small or a very large number of columns are processed (in which case SubDataFrame avoids excessive compilation)
+
+
+# transform using variable (colnames) of col names
+transform!(df, [:a, colnames...] => ByRow((a, c) -> (c/a...)) => c)
+
+# get code for method
+Base.uncompressed_ast(methods(f).ms[1]).code
+
+# profile
+using OrdinaryDiffEq, SnoopCompile
+function lorenz(du,u,p,t)
+du[1] = 10.0(u[2]-u[1])
+du[2] = u[1]*(28.0-u[3]) - u[2]
+du[3] = u[1]*u[2] - (8/3)*u[3]
+end
+u0 = [1.0;0.0;0.0]
+tspan = (0.0,100.0)
+prob = ODEProblem(lorenz,u0,tspan)
+alg = Rodas5()
+tinf = @snoopi_deep solve(prob,alg)
+@show tinf
+using ProfileView
+ProfileView.view(flamegraph(tinf))
+
+# voyager
+v = load("/Users/copeland/Work/svg-pilot/all.csv") |> DataFrame
+v |> Voyager()
+vv = v |> @filter(:f_lib=="GGGYC") |> DataFrame
+v |> @filter(:f_lib=="GGGYC")
+v |> @filter(:f_lib=="GGGYA")
+mean(skipmissing(v.f_out_b ./ v.f_in_b))
+v = load("/Users/copeland/Work/svg-pilot/t.csv",header=true) |> DataFrame
+v = load("/Users/copeland/Work/svg-pilot/t.csv") |> DataFrame
+v |> @filter(:trim_ctg_bp < 1) |> count()
+tally()
+vv |> @filter(_.lib=="GGTSX") |> Voyager()
+
+# json
+using JSON
+gggyc  = open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json") |> JSON.parse |> DataFrame
+gggyc["stats"]
+using LazyJSON
+l = LazyJSON(open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json"))
+open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json") |> LazyJSON
+using map
+j = String(Mmap.mmap(open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json"))) ;
+LazyJSON.value(j)
+LazyJSON.value(j)["stats"]
+LazyJSON.value(j)["stats"] |> DataFrame
+LazyJSON.value(j)["stats"] |> jparse()
+gggyc  = open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json") |> JSON.parse(j)["stats"] |> DataFrame
+gggyc  = open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json") |> JSON.parse()["stats"] |> DataFrame
+j |> JSON.parse()["stats"] |> DataFrame
+JSON.parse(j)["stats"] |> DataFrame |> Voyager()
+gggyc  = JSON.parse(String(Mmap.mmap(open("/Users/copeland/mnt/myproj/2019/20190227-bUDZh/_json/GGGYC.json"))))["stats"] |> DataFrame
+TableView.showtable(gggyc)
+showtable(gggyc)
+add TableWidgets
+g3  = JSON.parse(String(Mmap.mmap(open("/Users/copeland/Work/svg-pilot/G3.json"))))["stats"] |> DataFrame
+gggya   = JSON.parse(String(Mmap.mmap(open("/Users/copeland/Work/svg-pilot/GGGYA.json"))))["stats"] |> DataFrame
+gggyb   = JSON.parse(String(Mmap.mmap(open("/Users/copeland/Work/svg-pilot/GGGYB.json"))))["stats"] |> DataFrame
+vcat(gggya,gggyb,gggyc)
+names(gggya)["filter_filter2_perc_bases"]
+names(gggya)["read_qc_targeted_kapa"]
+gggya["read_qc_targeted_kapa"]
+gggya[:read_qc_targeted_kapa]
+gggya[:filter_filter2_pct_b]
+gggya   = JSON.parse(String(Mmap.mmap(open("/Users/copeland/Work/svg-pilot/GGGYA.json"))))["stats"] |> DataFrame
+g3  = JSON.parse(String(Mmap.mmap(open("/Users/copeland/Work/svg-pilot/G3.json"))))["stats"] |> DataFrame
+
+# JSON <-> auto create types (JSON3)
+using JSON3
+json = JSON3.read(menu) # JSON.Object
+
+# build a type for the JSON
+raw_json_type = JSON3.generate_type(json)
+@test raw_json_type <: NamedTuple
+
+# turn the type into struct expressions, including replacing sub types with references to a struct
+json_exprs = JSON3.generate_exprs(raw_json_type; root_name = :MyStruct)
+@test length(json_exprs) == 3
+
+# write the types to a file, then can be edited/included as needed
+path = mktempdir()
+file = joinpath(path, "test_type.jl")
+JSON3.write_exprs(json_exprs, file)
+
+# XLSX
+using XLSX
+x= XLSX.readxlsx("cscratch.xlsx")
+x["Sheet1"]
+x["Sheet1!B1:C91"]
+x["Sheet1!B1:C91"] |> DataFrame |> Voyager()
+x["Sheet1!B1:C91"] |> DataFrame |> @vlplot(x=:Date, y=:Count,:bar)
+x["Sheet1!B1:C91"] |> DataFrame |> @vlplot(x=:Date, y=:Count, :point)
+summary(xdf)
+using Dates
+Day(xdf[:Date])
+XLSX.eachrow(x["Sheet1"])[1]
+r=XLSX.eachrow(x["Sheet1"])
+x["Sheet1"](B1:C10)
+@vlplot(data=xdf, :bar, x=:Date, y=:Count)
+xdf |> mutate(_.run_date = Date(strip(_.run_date))) |> DataFrame
+xdf |> @mutate(run_date = strip!(_.run_date)) |> DataFrame
+xdf |> @mutate(bla=Dates::Date(_.run_date)) |> DataFrame
+xdf |> @mutate(bla=Dates.Date(_.run_date)) |> DataFrame
+xdf |> @mutate(_.run_date[2:11] ) |> DataFrame
+
+# tables
+#	add Tables
+using Tables
+function todate(str)
+return DateTime(str, dateformat"mm/dd/yy")
+end
+d = CSV.File("ct.rundt.csv",delim=",",)
+d |> Tables.transform(run_date=todate) |> DateFrame
+d = CSV.File("ct.rundt.csv")
+dfmt=dateformat" yy/mm/dd "
+d = CSV.File("ct.rundt.csv",dateformat=dfmt)
+d |> @mutate(Date(.run_date,dfmt)) |> DataFrame
+d |> @rename(:Date => :run_date, :Count= :ct) |> DataFrame
+d |> @rename(:Date => :run_date, :Count => :ct) |> DataFrame
+df = d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> DataFrame
+d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> DataFrame
+d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> @mutate(rdt=Date(_.run_date,f))
+d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> @mutate(rdt=Dates.Date(_.run_date,f))
+df |> Tables.print()
+
+# datetime
+z = CSV.File("z.csv",dateformat="m/d/yy h:m") |>DataFrame
+z = CSV.File("z.csv", types=[DateTime,String,Int64,String,Int64,String,Int64,Float64,Float64], allowmissing=:none, header=1)
+describe(z)
+using Test
+test CSV
+df = readtable("z.csv",header=true, eltypes=[String,String,Int64,String,Int64,String,Int64,Float64,Float64])
+df |> transform(:cdatetime => Date(:cdatetime))
+f="m/d/yy"
+Date.(df[:cdatetime],f)
+Date.(df[:cdatetime],"y/m/dd")
+Date.(df[:cdatetime],"y/m/dd H:M") + Year(2000)
+Date.(x[:Date],"y/m/dd") + Year(2000)
+f = "y/m/dd"
+Date(xd[:Date],f) + Year(2000)
+xd |> @mutate(d = Date(_.Date,f) + Year(2000))
+xd |> @mutate(d = Base.Date(_.Date,f) + Year(2000))
+xd |> @mutate(d = Dates.Date(_.Date,f) + Year(2000))
+df[:run_date] = Date.(df[:Date],"mm/dd/yy") + Year(2000)
+df[:dt] = Date.(df[:Date],"mm/dd/yy") + Year(2000)
+d = CSV.File("ct.rundt.csv",types=[Int64,Date])
+
+# ?
+using XLSX, Queryverse , DataFrames, Dates
+x = XLSX.readxlsx("cscratch.xlsx")
+x.relationships
+x["read qc!B1:K21"]
+rdqc = x["read qc!B1:K2171"] |> DataFrame
+rdqc = XLSX.readdata("20190320.cscratch.xlsx","read qc","B1:K2171") |> DataFrame
+rdqc |> @rename(:x1=>:su_name,:x2=>:lib,:x3=>queue_id,:x4=>rd_ct,:x5=>:wallclock,:x6=>:month,:x7=>:dat,:x8=>:hour,:x9=>:1m,:x10=>:rate_perM)
+rdqc |> @rename!(:x1=>:su_name,:x2=>:lib,:x3=>queue_id,:x4=>rd_ct,:x5=>:wallclock,:x6=>:month,:x7=>:dat,:x8=>:hour,:x9=>:1m,:x10=>:rate_perM)
+rename!(rdqc, :x1=>:su_name, :x2=>:lib, :x3=>:queue_id, :x4=>:rd_ct, :x5=>:wallclock, :x6=>:month, :x7=>:dat, :x8=>:hour, :x9=>:1m, :x10=>:rate_perM)
+aln = XLSX.readdata("20190329.csratch.xlsx","Aligment","B1:L1603")
+aln = XLSX.readdata("20190329.csratch.xlsx","Aligment","B:L"; first_row=1603, header=true)
+daln = DataFrame(XLSX.readdata("20190329.csratch.xlsx","Aligment","B:L"))
+n = ["su_name","lib","queue_id","read_ct","wallclock","NA","mon","day","hour","M","rate_perM"]
+names!(daln, ["su_name","lib","queue_id","read_ct","wallclock","NA","mon","day","hour","M","rate_perM"])
+names!(daln, [:su_name,:lib,:queue_id,:read_ct,:wallclock,:NA,:mon,:day,:hour,:M,:rate_perM])
+
+# conda
+Conda.add("r-lubridate")
+
+# filter by column
+filter(x -> any(==(value),x), df)  # filter by any column match:
+filter(x -> x.col .== value, df)   # filter by an individual column match
+id = findfirst(x -> x.C066 != "TLE filtered", eachrow(df)) # then deleteat!(df, 1:id)
+
+#  selection in  dataframe -filter by column type and subset Id
+df[(df.Type .== "a") .& (df.Id .in Ref([1,3])), :]  # broken?
+df[(df.Type .== "a") .& in([1, 3]).(df.Id), :]
+@rsubset df :Type == "a" && :Id in [1, 3]  # in DataFramesMeta
+
+#  dataframe search
+# is [2,3] in df a ?
+df[in([2,3]).(df.a),:]
+
+#  datetime missing
+q = CSV.read("f.csv",DataFrame; dateformat="y-m-d H:M:S.s")
+q.ymd_out = passmissing(Dates.yearmonthday).(q.date_out)
+# 3039395-element Vector{Union{Missing, Tuple{Int64, Int64, Int64}}}:
+
+#  pkg
+using Pkg
+Pkg.Registry.rm("General")
+ENV["JULIA_PKG_SERVER"] = ""
+]registry add General
+]up
+
+#  countdistinct items
+ using StatsBase
+ countmap(a[!, "sp_actual_product"])
+missing                     => 608
+"Metagenome Minimal Draft"  => 156
+"Metagenome Standard Draft" => 9954
+# sorted
+ using DataStructures
+ d = sort(countmap(a), byvalue=true)
+
+#  Queryverse::Voyager (DataVoyager)
+using Queryverse
+df |> Voyager() # DataExplorer
+
+#  sanddance
+julia- add https://github.com/queryverse/SandDance.jl
+ dataset("cars") |> SandDanceWindow
+
+#  window / moving average
+using OnlineStats
+Partition
+MovingTimeWindow
+MovingWindow
+
+#  CSV.File
+ td1 = CSV.File("TimesDatesAll20151201to20210723_2021-6-23_1337.csv",limit=100) |> DataFrame
+
+#  rename
+when d is an obj created by CSV.File then
+d |> DataFrame |> @rename(:Date => :run_date, :Count => :ct) |> DataFrame
+
+#  jupyter -  kernels (https://github.com/JuliaLang/IJulia.jl)
+jupyter-kernelspec list
+jupyter-kernelspec remove <krnl>
+# update
+$ Pkg.build("IJulia")
+$ using IJulia
+$ notebook(detached=true)
+
+# ijulia
+using IJulia
+notebook()
+# or
+ipython qtconsole --profile julia
+ipython notebook --profile julia
+ipython console --profile julia
+
+#  dataframe - add new col based on value of existing col
+x[:read] = 0
+NOPE  ##  x[[ismatch(r"500K",s) for s in x[:Assembly]],:reads] .= 500000
+td1[ [occursin(r"iTag",x) for x in td1[!,:sp_ap]], :sp_ap ]
+
+#  plot csv
+using Queryverse, DataFrames
+m = load("2020-misc.csv",header_exists=true) |> DataFrame
+scatter(m.Date[1:4000], log.(m.RawHrs[1:4000]), markersize=2, label="2019", alpha=0.2, xrotation=-90, size=(2800,450), background_color = :ivory, leg=false, title="2019")
+
+#  plot
+using Plots
+# set backend: # gr()
+plot(Plots.fakedata(50,5))
+# using Gadfly  , Plotly,
+
+#  Plots
+https://github.com/JuliaPlots/ExamplePlots.jl/blob/master/docs/examples/pyplot.md
+using DataFrames, StatPlot, CSV
+@df d plot(:Assembly , cols(2:7), xrotation=45, tickfont=5, legendfont=5)
+yaxis!("a name", :log10)
+savefig("somename.png")
+
+#  show source
+@less - @less(names(Core))
+
+# update julia git
+# cd to git repo dir
+cd julia
+git pull && make
+
+#  plot
+df = readtable("test.csv")
+p = plot(df,x="a", y="b",Geom.point)
+draw(SVG("plot1.svg", 3inch, 3inch), p)
+plot(df, x="a", y="b", Geom.point, Scale.x_continuous, Scale.y_continuous)
+# using StatPlots
+@df df plot(...)
+
+# install julia packages -- just git repos
+Pkg.update()
+Pkg.add("foo")
+#`
+cd ~/.julia && git show --stat
+http://docs.julialang.org/en/latest/manual/packages/
+see ~/.julia/REQUIRE
+e.g. Pkg.clone("git://example.com/path/to/Package.jl.git")
+# for tsne
+Pkg.clone("git://github.com/lejon/TSne.jl.git")
+using TSne
+
+#  upgrade : see https://pierreh.eu/upgrading-julia-and-ijulia-on-linux/
+cp .julia/environments/v1.3/Project.toml .julia/environments/v1.4/
+> julia
+> ]
+> update
+
+#  Conda
+>using Conda
+> Conda.runconda(`env list`)
+
+#  queryverse missing
+# CSV
+pt1 = CSV.read("file.tsv", missingstrings=["NA", "na", "n/a", "missing"])
+# Queryverse
+ dd = load("20190903-RQCpipeline.csv",header_exists=true, nastrings=["None"]) |> DataFrame
+# TableReader
+ using TableReader
+ prc = readcsv("oregon-prices.csv")
+
+#  plot terminal
+export GKS_WSTYPE=gksqt
+# types:
+
+# rc : .juliarc.jl now is  ~/.julia/config/startup.jl
+
+#  missing
+ismissing
+fc = dropmissing(flights, :DepDelay)
+
+#  ComposedFunction compose   \circ
+map(uppercase∘first, ["apple", "banana", "carrot"])
+
+# combine
+combine(groupby(iris, :Species), [n => (x -> (quantile(x, [0.25, 0.75]))') => [n*"_q25", n*"_q75"] for n in ["SepalLength",  "SepalWidth", "PetalLength", "PetalWidth"]])
+
+#  split-apply-combine (https://dataframes.juliadata.org/stable/man/split_apply_combine/#The-Split-Apply-Combine-Strategy)
+ combine(gdf, 1:2 => cor, nrow)
+ combine(gdf, :PetalLength => (x -> [extrema(x)]) => [:min, :max])
+ for (key, subdf) in pairs(groupby(iris, :Species))  # use 'pairs' to get values of grouping cols along with each group
+println("Number of data points for $(key.Species): $(nrow(subdf))")
+end
+
+# R / julia :
+/Users/copeland/.julia/packages/Conda/hsaaN/deps/usr/bin/R
+
+# gfortran linking -- see https://github.com/flang-compiler/flang/issues/504
+gfortran -Ofast -march=native -shared -fPIC mul8mod.f90 -o libmul8x8gfortran.so
+flang -Ofast -march=native -shared -fPIC mul8mod.f90 -o libmul8x8flang.so
+ifort -fast -xHost -shared -fPIC mul8mod.f90 -o libmul8x8ifort.so
+--
+ using Compat, BenchmarkTools
+ A = randn(8,8);
+ B = randn(8,8);
+ C = similar(A);
+ const gfortran_path = joinpath(pwd(), "libmul8x8gfortran.so")
+"/home/chris/Documents/progwork/fortran/libmul8x8gfortran.so"
+ const flang_path = joinpath(pwd(), "libmul8x8flang.so")
+"/home/chris/Documents/progwork/fortran/libmul8x8flang.so"
+ function gfortran!(C, A, B)
+   ccall((:__mul8mod_MOD_mul8x8, gfortran_path), Cvoid, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), A, B, C)
+   C
+end
+gfortran! (generic function with 1 method)
+
+ function flang!(C, A, B)
+   ccall((:mul8mod_mul8x8_, flang_path), Cvoid, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), A, B, C)
+   C
+end
+flang! (generic function with 1 method)
+ @benchmark flang!($C, $A, $B)
+BenchmarkTools.Trial:
+memory estimate:  0 bytes
+allocs estimate:  0
+--------------
+minimum time:     50.064 ns (0.00% GC)
+median time:      51.536 ns (0.00% GC)
+mean time:        53.237 ns (0.00% GC)
+maximum time:     146.304 ns (0.00% GC)
+--------------
+samples:          10000
+evals/sample:     987
+ @benchmark gfortran!($C, $A, $B)
+BenchmarkTools.Trial:
+memory estimate:  0 bytes
+allocs estimate:  0
+--------------
+minimum time:     81.001 ns (0.00% GC)
+median time:      83.449 ns (0.00% GC)
+mean time:        85.937 ns (0.00% GC)
+maximum time:     181.615 ns (0.00% GC)
+--------------
+samples:          10000
+evals/sample:     966
+
+# classify diffeq -- SymPy
+ using SymPy
+ @syms t, m, k, alpha=>"α", v()
+(t, m, k, α, v)
+ ex = Eq( (m/k)*v'(t), alpha^2 - v(t)^2 )
+ulia> @syms t, m, k, alpha=>"α", v()
+(t, m, k, α, v)
+ ex = Eq( (m/k)*v'(t), alpha^2 - v(t)^2 )
+ dsolve(ex, v(t)) |> string
+"Eq(v(t), -α/tanh(log(exp(k*α*(C1 - 2*t)))/(2*m)))"
+
+# Sympy diff eq
+ @syms y(), x
+(y, x)
+ eqn = y''(x) + 5y'(x) + 6y(x);  string(eqn)
+"6*y(x) + 5*Derivative(y(x), x) + Derivative(y(x), (x, 2))"
+##To solve with y(0)=1 and y'(0)=1
+ out = dsolve(eqn, x, ics=((y, 0, 1), (y', 0, 1))); string(out)
+"Eq(y(x), (4 - 3*exp(-x))*exp(-2*x))"
+
+# view type/struct
+Eyeball.eye()
+
+# kwargs
+if you need kwargs , you *must* supply all unnamed params also
+
+# artifacts -- non julia code, packages, etc.
+Artifacts.toml
+
+# sample
+using StatsBase:sample
+using DataFrames
+sample_rows = sample(1:nrow(df), 100, replace=false)
+df_sample = df[sample_rows, :]
+test_rows = setdiff(1:nrow(df), sample_rows)
+df_test = df[test_rows, :]
+
+# bootstrap sample
+using DependentBootstrap
+dbootdata(mydataframe, numresample=1000, bootmethod=:iid)
+
+# sample
+samples = [df[shuffle(1:nrow(df))[1:10], :] for _ in 1:1_000]
+
+# downsample non-uniform
+function downsample(x, y, tol)
+    idx = [1]
+    last_idx = 1
+    last_angle = 0
+    for i in 2:length(y) #don't use OffsetArray ;)
+        δy = y[i] - y[i-1]
+        δx = x[i] - x[i-1]
+        angle = atan(δy, δx)
+        if  abs(last_angle - angle) > tol
+            push!(idx, i)
+            last_idx = i
+            last_angle = angle
+        end
+    end
+    idx
+end
+tol = 0.1
+x = LinRange(0,2π, 10_000)
+y = @. sin(x) + cos(2x)^4
+idx = downsample(x, y, tol)
+
+# adaptive downsample
+function downsample2(x, y, tol)
+    idx = [1]
+    last_idx = 1
+    last_derivative = 0
+    for i in 2:length(y) #don't use OffsetArray ;)
+        δy = y[i] - y[i-1]
+        δx = x[i] - x[i-1]
+        δx==0 ? deriv = Inf : deriv = δy/δx
+        if  abs(last_derivative - deriv) > tol
+            push!(idx, i)
+            last_idx = i
+            last_derivative = deriv
+        end
+    end
+    idx
+end
+
+# adaptive sampling
+using GMT
+x = LinRange(0,2π, 10_000);
+y = @. 2x * sin(x)^2 + 4x * cos(2x)^4;
+xy = gmtsimplify([x y], tol=0.005);
+imshow(xy, marker=:point, lw=0.5, figsize=(12,12), title="Douglas-Peucker ($(size(xy,1)) points)")
+
+# dataframe to parquet
+using CSV, Parquet
+df = CSV.read("/home/onur/julia-assignment/temp.csv", DataFrame)
+file = "foo.parquet"
+Parquet2.writefile(file, df)
+Parquet2.writefile(file, Iterators.partition(df, 10^8)) # if file > 4G
+
+# arrow -> DataFrame
+df = DataFrame(Arrow.Table(file)) # Build DataFrame using arrow vectors; allows utilizing DataFrames.jl functionality directly on arrow data; grouping, joining, selecting, etc.
+df = copy(DataFrame(Arrow.Table(file))) # Build DataFrame, where the cols are in-memory vectors (specifically, Base.Vectors and/or PooledVectors). requires you have memory to load the entire DataFrame
+
+# arrow tables
+Tables.datavaluerows(Arrow.Table(file)) |> @map(...) |> @filter(...) |> DataFrame # use Query.jl's row-processing utilities to map, group, filter, mutate, etc. directly over arrow data.
+Arrow.Table(file) |> SQLite.load!(db, "arrow_table") #  load arrow data into an sqlite db/table, where sql queries can be executed on the data
+Arrow.Table(file) |> CSV.write("arrow.csv") # write arrow data out to a csv file
+
+# write arrow
+using Arrow, DataFrames
+Arrow.write(file, df)
+
+# arrow table
+tbl = Arrow.Table(file)
+tbl[1]: retrieve the first column via indexing; the number of columns can be queried via length(tbl)
+tbl[:col1] or tbl.col1: retrieve the column named col1, either via indexing with the column name given as a Symbol, or via "dot-access"
+for col in tbl: iterate through columns in the table
+AbstractDict methods like haskey(tbl, :col1), get(tbl, :col1, nothing), keys(tbl), or values(tbl)
+
+# parquet
+consider using Arrow
+
+# parquet DataFrames
+using DataFrames
+using Parquet2: Dataset  # Dataset is an abstraction to provide an interface for loading data
+ds = Dataset("/path/to/file") # need full path
+c = Parquet2.load(ds, "col1")  # equivalent to the above
+df = DataFrame(ds)
+df = DataFrame(ds; copycols=false)  # load the entire table as a DataFrame; suggest `copycols=false` unless you intend to write to the DataFrame
+ds = Dataset("/path/to/file"; parallel_column_loading=false)  # columns are loaded in parallel by default, but this can be disabled
+df1 = DataFrame(ds[1])  # load the first RowGroup as a DataFrame
+
+# parquet metadata
+meta = Parquet2.metadata(ds)  # auxiliary metadata can be accessed thusly
+colmeta = Parquet2.metadata(ds[1]["col1"])  # auxiliary metadata by column
+
+# parquet Tables
+using Tables, Parquet2
+ds = Dataset("/path/to/file") # need full path
+sch = Tables.schema(ds)  # get the Tables.jl Schema object
+c = Tables.getcolumn(ds, :col1)  # load *only* col1; others are not touched
+
+# image
+image(colorview(RGB, rand(UInt8, 3, 50, 50)/255))
+
+# image
+image(convert.(RGB{Float32},reshape(tbl[4][1:64000000],8000,8000)))
+
+
+# there are two different modes of Makie plotting
+1. some plot type might have a title attribute, and to set that and axis title
+some_plot(...; title = "Plot title", axis = (; title = "Axis title"....
+fig, ax, p = scatter(...)
+2. Mutation. then the plotting function loses its ability to pass Figure and Axis information on, because those have already been created beforehand:
+f = Figure(resolution = ...)
+ax = Axis(f[1, 1], title = ...)
+heatmap!(ax, ...; # no figure or axis keyword allowed here, those already exist
+
+# resize makie plot
+1. get figure handle, f
+2. resize!(f.scene,2500,1500)
+
+# basic image
+using CairoMakie
+CairoMakie.activate!()
+f = Figure(resolution=(500,500))
+ax = Axis(f[1,1])
+lines!(ax, 1:5, 1:5)
+save("mwe.png", f)
+
+# print numeric precision in repl
+Printf.@printf("%d\n",size(all,1)/8)
+
+# Makie.Sampler
+using GLMakie
+using GLMakie.ShaderAbstractions: Sampler
+# Missing overload to have Sampler work
+AbstractPlotting.el32convert(x::AbstractArray{Float32}) = x
+imag = rand(Float32, (2000,2000))
+data = Sampler(imag, minfilter=:nearest) # or linear for interpolation
+n = 25
+f = Figure(resolution = size(imag));
+ax = Makie.Axis(f[1, 1], aspect = DataAspect());
+hidedecorations!(ax)
+tightlimits!(ax)
+heatmap!(ax, data)
+display(f)
+
+@time for i in 1:n
+    data[1:400, 1:400] = fill(0f0, 400, 400)
+    yield()
+end
+
+# categorical colorbar
+f, ax, pl = barplot(1:3, color=1:3, colormap=Categorical(:viridis))
+Colorbar(f[1, 2], pl)
+f
+
+# boxcar
+function boxcar3(A::AbstractArray)
+  out = similar(A)
+    R = CartesianIndices(A)
+    IFirst, Ilast = first(R), last(R)
+    I1 = oneunit(Ifirst)
+    for I in R
+      n, s = zero(eltype(out))
+      for J in max(Ifirst,I-I1):min(Ilast,I+I1)
+        s += A[J]
+        n += 1
+      end
+  out[I] = s/n
+    end
+    out
+end
+
+# findall
+julia> l = randn(10000) ;
+julia> @btime findall(.>(0.5), l) ;
+  8.974 μs (5 allocations: 29.34 KiB)
+julia> @btime keys(l)[l .>(0.5)] ;
+  11.041 μs (8 allocations: 29.42 KiB)
+julia> @btime (1:length(l))[l .> 0.5] ;
+  10.631 μs (9 allocations: 29.45 KiB)
+
+# show code
+julia> using CodeTracking, Revise
+julia> print(@code_string sum(1:5))
+
+# generator
+t = ( (findall(tbl[4] .== i)) for i in 16:18)
+
+# points
+points = Point2.(Vector{Int32}(all[!,:x]), Vector{Int32}(all[!,:y]),) ;
+points = Point2(arquet2.load(ds, [:x, :y])) ;
+points = Point2.(tbl[2], tbl[3])
+points = Point2.(Vector{Int32}(all[!,:x]), Vector{Int32}(all[!,:y]),) ;
+
+# Makie example
+# 'a' from Table.arrow
+f,ax,pl = scatter(a.x[findall(==(1112),a.tile)], a.y[findall(==(1112),a.tile)], color=a.hdist[findall(==(1112), a.tile)], colormap=:tab10, markersize=0.9); hidedecorations!(ax); Colorbar(f[1,2], pl) ; resize!(f.scene,2500,1500) ;
+
+# autocor
+# 'a' Matrix{Float32} 24000000x3
+plot!(autocor(a.hdist[findall(==(15756.0),a.y[findall(==(1112), a.tile)])]))
+
+# bits
+julia> UInt8(14) & UInt8(11) & UInt8(3) |> bitstring
+"00000010"
+
+

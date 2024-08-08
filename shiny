@@ -1,0 +1,52 @@
+* basic R shiny skeleton
+	#
+ui <- fluidPage(
+  titlePanel("Shiny with tidyverse"),
+  sidebarLayout(
+    sidebarPanel(
+       selectInput(inputId = "x_attribute",label = "select attribute for x axis",choices = iris_categories),
+       selectInput(inputId = "y_attribute", label = "select attribute for y axis",choices = iris_categories, selected = iris_categories[2]),
+       textInput(inputId ="plot_name",label="Enter plot name"),radioButtons(inputId="radio_colour", label="select point colour",choices=c("blue", "red", "black")),
+       actionButton("browser", "browser")
+    ),
+    mainPanel(
+      tabsetPanel(
+        tabPanel("base R",plotOutput(outputId = "base_R_iris_plot", width = "400px") ),
+        tabPanel("ggplot",plotOutput(outputId = "ggplot_iris", width = "400px") ),
+        tabPanel("ggplot fixed",plotOutput(outputId = "ggplot_iris_fixed_axes", width = "400px")  ),
+        tabPanel("message",br(),p(code(".data[[input$var]]")))
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  output$base_R_iris_plot <- renderPlot({
+    plot(x = iris[,input$x_attribute],
+         y = iris[,input$y_attribute],
+         main = input$plot_name,
+         col  = input$radio_colour,
+         xlab = input$x_attribute,
+         ylab = input$y_attribute)
+  })
+
+  output$ggplot_iris <- renderPlot({
+      iris %>%
+        ggplot(aes(x = .data[[input$x_attribute]],y = .data[[input$y_attribute]])) i
+	+geom_point(colour = input$radio_colour)
+	+ggtitle(input$plot_name)
+  })
+
+  output$ggplot_iris_fixed_axes <- renderPlot({
+    iris %>%
+      ggplot(aes(x = Sepal.Length,y = Sepal.Width))
+	 + geom_point(colour = input$radio_colour)
+	 + ggtitle(input$plot_name)
+  })
+
+  observeEvent(input$browser, {
+    browser()
+  })
+}
+
+shinyApp(ui, server)

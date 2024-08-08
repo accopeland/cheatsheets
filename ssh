@@ -2,46 +2,53 @@
 tags: [ ssh ]
 ---
 # To ssh via pem file (which normally needs 0600 permissions):
-ssh -i <pemfile> <user>@<host>
-
-# To connect on a non-standard port:
-ssh -p <port> <user>@<host>
+$ ssh-i <pemfile> <user>@<host>
 
 # To connect and forward the authentication agent:
-ssh -A <user>@<host>
+$ ssh-A <user>@<host>
 
 # To execute a command on a remote server:
-ssh -t <user>@<host> 'the-remote-command'
+$ ssh-t <user>@<host> 'the-remote-command'
 
 # To connect to a host with a specific key exchange algorithm:
 # Full list of available algorithms : man ssh_config
-ssh -oKeXAlgorithms=+diffie-hellman-group-exchange-sha1 <user>@<server>
+$ ssh-oKeXAlgorithms=+diffie-hellman-group-exchange-sha1 <user>@<server>
 
 # To tunnel an x session over SSH:
-ssh -X <user>@<host>
+$ ssh-X <user>@<host>
+
+# To create and check pub key exchange for gitlab , github, etc.
+$ ssh-keygen -t rsa -b 4096 -f ~/.ssh/gitlab_4096
+- copy/paste ~/.ssh/gitlab_4096.pub to https://gitlab.com/profile/keys
+- confirm no overrides in ~/.ssh/config
+$ ssh -Tv git@gitlab.com
+
+# To connect on an non-standard port:
+$ ssh-p 2222 user@example.com
 
 # Redirect traffic with a tunnel between local host (port 8080) and a remote
 # host (remote.example.com:5000) through a proxy (personal.server.com):
-ssh -f -L 8080:remote.example.com:5000 user@personal.server.com -N
+$ ssh-f -L 8080:remote.example.com:5000 user@personal.server.com -N
 
 # To launch a specific x application over SSH:
-ssh -X -t <user>@<host> 'chromium-browser'
+$ ssh-X -t <user>@<host> 'chromium-browser'
 
 # To create a SOCKS proxy on localhost and <port>:
-ssh -qND <port> <user>@<host>
+$ ssh-qND <port> <user>@<host>
 
 # To tunnel an ssh session over the SOCKS proxy on localhost and port 9999:
-ssh -o "ProxyCommand nc -x 127.0.0.1:9999 -X 4 %h %p" <user>@<host>
+$ ssh-o "ProxyCommand nc -x 127.0.0.1:9999 -X 4 %h %p" <user>@<host>
 
 # -X use an xsession, -C compress data, "-c blowfish" use the encryption blowfish:
-ssh <user>@<host> -C -c blowfish -X
+$ ssh<user>@<host> -C -c blowfish -X
+$ ssh-X -t user@example.com 'chromium-browser'
 
-# For more information, see:
-# http://unix.stackexchange.com/q/12755/44856
+# To create a SOCKS proxy on localhost and port 9999
+$ ssh-D 9999 user@example.com # http://unix.stackexchange.com/q/12755/44856
 
 # To copy files and folders through ssh from remote host to pwd with tar.gz
 # compression when there is no rsync command available:
-ssh <user>@<host> "cd /var/www/Shared/; tar zcf - asset1 asset2" | tar zxf -
+$ ssh<user>@<host> "cd /var/www/Shared/; tar zcf - asset1 asset2" | tar zxf -
 
 # To mount folder/filesystem through SSH
 # Install SSHFS from https://github.com/libfuse/sshfs
@@ -51,3 +58,205 @@ sshfs <user>@<host>:/path/to/folder /path/to/mount/point
 # Emacs can read file through SSH
 # Doc: http://www.gnu.org/software/emacs/manual/html_node/emacs/Remote-Files.html
 emacs /ssh:<user>@<host>:<file>
+
+# public key from key pair  (pem)
+ssh-keygen -y -f key.pem
+
+# ssh keepalive:
+sysctl net.ipv4.tcp_keepalive_time
+
+# ssh tunnel 3 hop
+$ ssh-A -t myhomegateway -l user1 -p 11111 ssh -A -t localhost -l user2 -p 22222 ssh -A servername -l user3 -p 33333
+http://sshmenu.sourceforge.net/articles/transparent-mulithop.html
+
+# make key
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/gitlab_4096
+
+# bastion postgres port-forward
+# see https://aws.amazon.com/premiumsupport/knowledge-center/rds-connect-using-bastion-host-linux/
+# works
+# dw-prddb01.jgi.doe.gov
+$ ssh-i ~/.ssh/nersc -fN -l copeland -L 5432:128.3.122.41:5432 cori.nersc.gov -v
+Then in DBeaver (etc) , connect to localhost:5432
+
+# tunnel kill
+find ssh pid
+pgrep -lL -x ssh
+kill
+
+# tunnel : https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Tunnels
+https://erev0s.com/blog/ssh-local-remote-and-dynamic-port-forwarding-explain-it-i-am-five/
+https://www.baeldung.com/linux/ssh-tunneling-and-proxying
+
+# timeouts: https://anderstrier.dk/2021/01/11/my-isp-is-killing-my-idle-ssh-sessions-yours-might-be-too/
+https://github.com/AndersTrier/NAT-TCP-test.git
+
+# TCPKeepAlive
+TCPKeepAlive operates on the TCP layer. It sends an empty TCP ACK packet. Firewalls can be configured to ignore these packets,
+  so if you go through a firewall that drops idle connections, these may not keep the connection alive.
+ServerAliveInterval operates on the ssh layer. It will actually send data through ssh, so the TCP packet has encrypted data in
+  and a firewall can't tell if its a keepalive, or a legitimate packet, so these work better.
+
+# keepalive - kernel params
+grep -T . /proc/sys/net/ipv4/tcp_keepalive*
+
+# tunnel 3 hop
+$ ssh-A -t myhomegateway -l user1 -p 11111 ssh -A -t localhost -l user2 -p 22222 ssh -A servername -l user3 -p 33333
+http://sshmenu.sourceforge.net/articles/transparent-mulithop.html
+# cori
+$ ssh-A -t cori ssh -A -t cmom05 ssh -A -t nid00025
+
+#  xauth
+xauth add $DISPLAY -  `mcookie`
+
+# escapes
+~?  # see man ssh
+~. Disconnect.
+~^Z Background ssh.
+~# List forwarded connections.
+~R Request rekeying of the connection (only useful for SSH protocol version 2 and if the peer supports it).
+~& Background ssh at logout when waiting for forwarded connection / X11 sessions to terminate.
+~? Display a list of escape characters.
+~B Send a BREAK to the remote system (only useful for SSH protocol version 2 and if the peer supports it).
+~C Open command line. Currently this allows the addition of port
+forwardings using the -L and -R options (see below). It also al-
+lows the cancellation of existing remote port-forwardings using
+-KR hostport. Basic help is available, using the -h option.
+
+# ssh dropped connections
+https://github.com/openssl/openssl/issues/9984
+
+# ssh multi node
+via ssh/.config
+
+# for dropped connections
+-o reconnect,ServerAliveInterval=15,ServerAliveCountMax=3
+
+# for speed -- aes faster if cpu supports see /proc/cpuinfo ?
+-o auto_cache,reconnect,defer_permissions,noappledouble,nolocalcaches,no_readahead,follow_symlinks -o Compression=no -o Ciphers=aes128-ctr,IdentityFile=~/.ssh/nersc
+
+# ciphers
+$ ssh-Q cipher
+Host hostA
+...
+
+# hostA configuration
+Host hostB
+HostName hostB.domain.com
+
+# available on SSH >= 7.3
+ProxyJump hostA
+# for older versions
+ProxyCommand ssh -W %h:%p hostA
+
+# ssh passwordless login
+known_hosts - created and maintained by ssh (authenticate server)
+authorized_keys - created and maintained by user (authenticates user)
+1. make sure perms are ok:
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+chmod 644 ~/.ssh/*.pub
+2. copy public key from source to destination
+<<<<<<< HEAD
+a. ssh-copy-id USER@DEST # or
+b. copy/paste src public key into dest ~/.ssh/authorized_keys
+=======
+a. ssh-copy-id USER@DEST
+# or
+b. copy/paste src public key into dest ~/.ssh/authorized_keys
+
+# proxycommand
+$ scp -o "ProxyJump user@10.23.100.70" dataFile.txt  user@192.168.10.100:/tmp
+user@10.23.100.70's password:
+user@192.168.10.100's password:
+dataFile.txt
+
+or
+
+$ scp -o "ProxyCommand ssh user@10.23.100.70 nc %h %p" dataFile.txt  root@192.168.10.100:/tmp
+
+or
+
+$ ssh-o "ProxyCommand nc --proxy 10.23.100.70:3128 --proxy-type http %h %p" root@192.168.10.100
+
+or
+
+Host <nickname>
+HostName <hostname_of_server>
+User <user_on_server>
+ProxyCommand ssh <user_on_server>@<proxy_server> nc %h %p
+
+# multihop ssh -- https://unix.stackexchange.com/questions/317491/proxycommand-use-for-multiple-hops-and-prompt-authentication
+requires >= v7.3
+$ ssh-q -J user1@jumphost1,user2@jumphost2,user3@jumphost3 user@server
+
+# to get
+$ ssh -l username1 -t jumphost1
+	ssh -l username2 -t jumphost2 \
+		ssh -l username3 -t jumphost3 \
+			ssh -l username4    server
+
+edit ~/.ssh/config
+
+Host jumphost1
+  User username1
+Host jumphost2
+  User username2
+  ProxyCommand ssh -W %h:%p jumphost1
+Host jumphost3
+  User username3
+  ProxyCommand ssh -W %h:%p jumphost2
+Host server
+  User username4
+  ProxyCommand ssh -W %h:%p jumphost3
+
+or
+
+$ ssh-oProxyCommand='ssh -oProxyCommand=\'ssh -o ProxyCommand=\\\'ssh username@hostd nc %h %p 2>/dev/null\\\' username@hostc nc %h %p 2> /dev/null' username@hostb nc %h %p 2> /dev/null' username@hostd
+# log of successful connectoin w forwarding
+...
+debug1: Authentications that can continue: publickey,password,keyboard-interactive,hostbased
+debug1: Next authentication method: publickey
+debug1: Offering public key: /clusterfs/jgi/groups/gentech/homes/accopeland/.ssh/nersc RSA SHA256:JY68aU/oTGtR3Kf7fGzPoEVVIEXLVIeFxqQxHg/zvFw exp
+licit
+debug2: we sent a publickey packet, wait for reply
+debug1: Server accepts key: /clusterfs/jgi/groups/gentech/homes/accopeland/.ssh/nersc RSA SHA256:JY68aU/oTGtR3Kf7fGzPoEVVIEXLVIeFxqQxHg/zvFw expl
+icit
+debug1: Authentication succeeded (publickey).
+Authenticated to dtn03.nersc.gov ([128.55.205.20]:22).
+debug1: Local connections to 127.0.0.1:5000 forwarded to remote address 127.0.0.1:5555
+...
+
+# add
+$ ssh-add -L
+  # add key if missing
+$ ssh-add ~/.ssh/bitbucket_4096
+
+# ssh-agent
+
+# socks
+$ ssh -i ~/.ssh/nersc -fN -l copeland -D 8444 cori.nersc.gov
+$ curl --socks5 localhost:8443 ifconfig.io # No
+$ curl --socks5 localhost:8444 ifconfig.io # Yes
+
+# CIDR
+all hosts matching 10.2.?.* (i.e. 10.2.0.0–10.2.9.255)
+all hosts matching 10.2.??.* (i.e. 10.2.10.0–10.2.99.255)
+all hosts matching 10.2.10?.* (i.e. 10.2.100.0–10.2.109.255)
+all hosts matching 10.2.11?.* (i.e. 10.2.110.0–10.2.119.255)
+all hosts matching 10.2.12?.* EXCEPT the ones matching 10.2.128.* and 10.12.129.* (and remember that the exclusion must come first!)
+Example ~/.ssh/config
+#
+Host "10.2.?.*","10.2.??.*", "10.2.10?.*","10.2.11?.*","!10.2.128.*","!10.2.129.*","10.2.12?.*"
+  User root
+  IdentityFile ~/.ssh/id_rsa
+
+# Error: not a tty
+# Fix:
+
+# Error: Bad packet length
+# Fix:
+
+# Error: ssh_dispatch_run_fatal
+# Fix:\
+

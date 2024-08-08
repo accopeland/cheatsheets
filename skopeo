@@ -1,0 +1,33 @@
+# description
+
+# install
+spack install skopeo
+
+# build
+go build "-buildmode=pie" -ldflags '-X main.gitCommit= ' -gcflags "" -tags "btrfs_noversion exclude_graphdriver_btrfs libdm_no_deferred_remove " -o bin/skopeo ./cmd/skopeo
+
+# docs
+https://www.redhat.com/sysadmin/how-run-skopeo-container
+
+# config
+containers-policy.json
+containers-registries.d
+containers-storage.conf
+
+# inspect -- without downloading image
+podman run --rm quay.io/skopeo/stable inspect --creds $USER:$PASSWORD docker://$IMAGE
+
+# copy
+Skopeo and sibling projects all share same local container-image storage.
+If Skopeo copies an image to the local storage, Podman, Buildah, and CRI-O can all use it.
+
+# copy
+podman run --privileged --rm -v $HOME/.local/share/containers/storage:/var/lib/containers/storage quay.io/skopeo/stable copy docker://quay.io/buildah/stable containers-storage:quay.io/buildah/stable
+
+# copy
+podman save --format oci-archive -o oci.tar $IMAGE
+podman run --rm -v oci.tar:/oci.tar quay.io/skopeo/stable copy oci-archive:/oci.tar $DESTINATION
+
+# xfer
+
+# convert

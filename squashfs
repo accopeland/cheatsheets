@@ -1,0 +1,25 @@
+# description
+Linux compressed read-only fs
+
+# install
+brew install squashfs
+
+# tools
+https://github.com/plougher/squashfs-tools
+
+# doc
+https://docs.kernel.org/filesystems/squashfs.html
+
+# create
+mksquashfs src1 src2 ... dest ; #FILE|DIR  myimg
+
+# use --  mount /some/dir directory the dir.sqsh image file using loopback:
+> mksquashfs /some/dir dir.sqsh  # squash and print inodes,size, and avg compression.
+> mkdir /mnt/dir
+> mount dir.sqsh /mnt/dir -t squashfs -o loop
+
+# extract
+unsquashfs tgt file_to_extract
+
+# udisktools
+udisksctl loop-setup --read-only --file mountable-archive.squashfs

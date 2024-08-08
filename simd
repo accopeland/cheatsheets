@@ -1,0 +1,397 @@
+# SIMDe
+graviton/ arm64 / aarch64
+https://gitter.im/simd-everywhere/community
+https://github.com/simd-everywhere/simde
+see https://wiki.debian.org/SIMDEverywhere
+
+# SIMDe
+https://wiki.debian.org/SIMDEverywhere
+* add simde via local copy or git submodule
+* [add simde check to deps in CMakeLists.txt, autoconf, etc. ]
+* modify CFFLAGS+= -I. -O3
+* edit code
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse.h>
+* remove or comment out includes for *intrin.h
+
+# graviton / simd
+ https://github.com/aws/aws-graviton-getting-started/blob/main/SIMD_and_vectorization.md
+
+# Taking advantage of Arm Advanced SIMD instructions
+
+## Background
+Arm-v8 architecture include Advanced-SIMD instructions (NEON) helping boost performance for many applications that can take advantage of the wide registers.
+
+A lot of the applications and libraries already taking advantage of Arm's Advanced-SIMD, yet this guide is written for developers writing new code or libraries. We'll guide on various ways to take advantage of these instructions, whether through compiler auto-vectorization or writing intrinsics.
+
+Later we'll explain how to build portable code, that would detect at runtime which instructions are available at the specific cores, so developers can build one binary that supports cores with different capabilities. For example, to support one binary that would run on Graviton1, Graviton2, and arbitrary set of Android devices with Arm v8.x support.
+
+## Compiler-driven auto-vectorization
+Compilers keep improving to take advantage of the SIMD instructions without developers explicit guidance or specific coding style.
+
+In general, GCC 9 has good support for auto-vectorization, while GCC 10 has shown impressive improvement over GCC 9 in most cases.
+
+Compiling with *-fopt-info-vec-missed* is good practice to check which loops were not vectorized.
+
+### How minor code changes improve auto-vectorization
+The following example was run on Graviton2, with Ubuntu 20.04 and gcc 9.3.   Different combinations of server and compiler version may show different results
+
+Starting code looked like:
+```
+  1 // test.c
+...
+  5 float   a[1024*1024];
+  6 float   b[1024*1024];
+  7 float   c[1024*1024];
+.....
+ 37 for (j=0; j<128;j++) { // outer loop, not expected to be vectorized
+ 38   for (i=0; i<n ; i+=1){ // inner loop, ideal for vectorization
+ 39         c[i]=a[i]*b[i]+j;
+ 40   }
+ 41 }
+```
+compiling:
+```
+$ gcc test.c -fopt-info-vec-missed -O3
+test.c:37:1: missed: couldn't vectorize loop
+test.c:39:8: missed: not vectorized: complicated access pattern.
+test.c:38:1: missed: couldn't vectorize loop
+test.c:39:6: missed: not vectorized: complicated access pattern.
+```
+
+Line 37 is the outer loop and that's not expected to be vectorized
+but the inner loop is prime candidate for vectorization, yet it was not done in this case
+
+A small change to the code, to guarantee that the inner loop would always be aligned to 128-bit SIMD will be enough for gcc 9 to auto-vectorize it
+
+```
+  1 // test.c
+...
+  5 float   a[1024*1024];
+  6 float   b[1024*1024];
+  7 float   c[1024*1024];
+...
+ 19 #if(__aarch64__)
+ 20 #define ARM_NEON_WIDTH  128
+ 21 #define VF32    ARM_NEON_WIDTH/32
+ 22 #else
+ 23 #define VF32    1
+ 33 #endif
+...
+ 37 for (j=0; j<128;j++) { // outer loop, not expected to be vectorized
+ 38   for (i=0; i<( n - n%VF32 ); i+=1){ // forcing inner loop to multiples of 4 iterations
+ 39         c[i]=a[i]*b[i]+j;
+ 40   }
+ 41   // epilog loop
+ 42   if (n%VF32)
+ 43         for ( ; i < n; i++)
+ 44                 c[i] = a[i] * b[i]+j;
+ 45 }
+```
+The code above is forcing the inner loop to iterate multiples of 4 (128-bit SIMD / 32-bit per float). Results:
+```
+$ gcc test.c -fopt-info-vec-missed -O3
+test.c:37:1: missed: couldn't vectorize loop
+test.c:37:1: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+```
+And the outer loop is still not vectorized as expected, but the inner loop is vectorized (and 3-4X faster).
+
+Again, as compiler capabilities improve over time, the need for such techniques
+may no longer be needed. However, as long as target applications being built
+with gcc9 or older, this continues to be a good practice to follow.
+
+## Using intrinsics
+One way to build portable code is to use the intrinsic instructions defined by
+Arm and implemented by GCC and Clang.
+
+The instructions are defined in *arm_neon.h*.
+
+## Compile time detection
+A portable code that would detect (at compile-time) an Arm CPU and compiler would look like:
+```
+#if (defined(__clang__) || (defined(__GCC__)) && (defined(__ARM_NEON__) || defined(__aarch64__))
+/* compatible compiler, targeting arm neon */
+#include <arm_neon.h>
+#include <arm_acle.h>
+#endif
+```
+
+## Runtime detection of supported SIMD instructions
+While Arm architecture version mandates specific instructions support, certain
+instructions are optional for a specific version of the architecture.
+
+For example, a cpu core compliant with Arm-v8.4 architecture must support
+dot-product, but dot-products are optional in Arm-v8.2 and Arm-v8.3.  Graviton2
+is Arm-v8.2 compliant, but supports both CRC and dot-product instructions.
+
+A developer wanting to build an application or library that can detect the
+supported instructions in runtime, can follow this example:
+
+```
+#include<sys/auxv.h>
+......
+  uint64_t hwcaps = getauxval(AT_HWCAP);
+  has_crc_feature = hwcaps & HWCAP_CRC32 ? true : false;
+  has_lse_feature = hwcaps & HWCAP_ATOMICS ? true : false;
+  has_fp16_feature = hwcaps & HWCAP_FPHP ? true : false;
+  has_dotprod_feature = hwcaps & HWCAP_ASIMDDP ? true : false;
+  has_sve_feature = hwcaps & HWCAP_SVE ? true : false;
+```
+
+The full list of arm64 hardware capabilities is defined in
+[glibc header file](https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h)
+and in the [Linux kernel](https://github.com/torvalds/linux/blob/master/arch/arm64/include/asm/hwcap.h).
+
+# Porting codes with SSE/AVX intrinsics to NEON
+### Detecting arm64 systems
+Projects may fail to build on arm64 with `error: unrecognized command-line
+option '-msse2'`, or `-mavx`, `-mssse3`, etc.  These compiler flags enable x86
+vector instructions.  The presence of this error means that the build system may
+be missing the detection of the target system, and continues to use the x86
+target features compiler flags when compiling for arm64.
+
+To detect an arm64 system, the build system can use:
+```
+# (test $(uname -m) = "aarch64" && echo "arm64 system") || echo "other system"
+```
+
+Another way to detect an arm64 system is to compile, run, and check the return
+value of a C program:
+```
+# cat << EOF > check-arm64.c
+int main () {
+#ifdef __aarch64__
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+# gcc check-arm64.c -o check-arm64
+# (./check-arm64 && echo "arm64 system") || echo "other system"
+```
+
+### Translating x86 intrinsics to NEON
+When programs contain code with x64 intrinsics, the following procedure can help
+to quickly obtain a working program on Arm, assess the performance of the
+program running on Graviton processors, profile hot paths, and improve the
+quality of code on the hot paths.
+
+To quickly get a prototype running on Arm, one can use
+https://github.com/DLTcollab/sse2neon a translator of x64 intrinsics to NEON.
+sse2neon provides a quick starting point in porting performance critical codes
+to Arm.  It shortens the time needed to get an Arm working program that then
+can be used to extract profiles and to identify hot paths in the code.  A header
+file `sse2neon.h` contains several of the functions provided by standard x64
+include files like `xmmintrin.h`, only implemented with NEON instructions to
+produce the exact semantics of the x64 intrinsic.  Once a profile is
+established, the hot paths can be rewritten directly with NEON intrinsics to
+avoid the overhead of the generic sse2neon translation.
+
+## Additional resources
+ * [Neon Intrinsics](https://developer.arm.com/architectures/instruction-sets/intrinsics/)
+ * [Coding for Neon](https://developer.arm.com/documentation/102159/latest/)
+ * [Neon Programmer's Guide for Armv8-A](https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/neon-programmers-guide-for-armv8-a)
+
+
+# SIMDE https://github.com/simd-everywhere/simde
+You do not need two separate versions (one using SIMDe, the other native). If
+the native functions are available SIMDe will use them, and compilers easily
+optimize away any overhead from SIMDe; all they have to do is some basic
+inlining. -O2 should be enough, but we strongly recommend -O3 (or whatever flag
+instructs your compiler to aggressizely optimize) since many of the portable
+fallbacks are substantially faster with aggressive auto-vectorization that
+isn't enabled at lower optimization levels.
+
+Each instruction set has a separate file; x86/mmx.h for MMX, x86/sse.h for SSE,
+x86/sse2.h for SSE2, and so on. Just include the header for whichever
+instruction set(s) you want instead of the native version (if you include the
+native version after SIMDe it will result in compile-time errors if native
+aliases are enabled). SIMDe will provide the fastest implementation it can
+given which extensions you've enabled in your compiler (i.e., if you want to
+use NEON to implement SSE, you may need to pass something like -mfpu=neon or
+-march=armv8-a+simd. See GCC ARM-Options for more information).
+
+If you define SIMDE_ENABLE_NATIVE_ALIASES before including SIMDe you can use
+the same names as the native functions. Unfortunately, this is somewhat
+error-prone due to portability issues in the APIs, so it's recommended to only
+do this for testing. When SIMDE_ENABLE_NATIVE_ALIASES is undefined only the
+versions prefixed with simde_ will be available; for example, the MMX
+_mm_add_pi8 intrinsic becomes simde_mm_add_pi8, and __m64 becomes simde__m64.
+
+Since SIMDe is meant to be portable, many functions which assume types are of a
+specific size have been altered to use fixed-width types instead. For example,
+Intel's APIs use char for signed 8-bit integers, but char on ARM is generally
+unsigned. SIMDe uses int8_t to make the API portable, but that means your code
+may require some minor changes (such as using int8_t instead of char) to work
+on other platforms.
+
+That said, the changes are usually quite minor. It's often enough to just use
+search and replace, manual changes are required pretty infrequently.
+
+#OpenMP 4 SIMD
+SIMDe makes extensive use of annotations to help the compiler vectorize code.
+By far the best annotations use the SIMD support built in to OpenMP 4, so if
+your compiler supports these annotations we strongly recommend you enable them.
+
+If you are already using OpenMP, SIMDe will automatically detect it using the
+_OPENMP macro and no further action is required.
+
+Some compilers allow you to enable OpenMP SIMD without enabling the full
+OpenMP. In such cases there is no runtime dependency on OpenMP and no runtime
+overhead; SIMDe will just be faster. Unfortunately, SIMDe has no way to detect
+such situations (the _OPENMP macro is not defined), so after enabling it in
+your compiler you'll need to define SIMDE_ENABLE_OPENMP (e.g., by passing
+-DSIMDE_ENABLE_OPENMP) to get SIMDe to output the relevant pragmas.
+
+#Enabling OpenMP SIMD support varies by compiler:
+GCC 4.9+ and clang 6+ support a -fopenmp-simd command line flag.
+ICC supports a -qopenmp-simd command line flag.
+
+MCST's LCC enables OpenMP SIMD by default, so no flags are needed (technically
+you don't even need to pass -DSIMDE_ENABLE_OPENMP).  We are not currently aware
+of any other compilers which allow you to enable OpenMP SIMD support without
+enabling full OpenMP (if you are please file an issue to let us know). You
+should determine whether you wish to enable full OpenMP support on a
+case-by-case basis, but it is likely that the overhead of linking to (but not
+using) the OpenMP runtime library will be dwarfed by the performance
+improvements from using the OpenMP SIMD annotations in SIMDe.
+
+If you choose not to use OpenMP SIMD, SIMDe also supports using Cilk Plus, GCC
+loop-specific pragmas, or clang pragma loop hint directives, though these are
+not nearly as effective as OpenMP SIMD and depending on them will likely result
+in less efficient code. All of these are detected automatically by SIMDe, so if
+they are enabled in your compiler nothing more is required.
+
+If for some reason you do not wish to enable OpenMP 4 SIMD support even though
+SIMDe detects it, you should define SIMDE_DISABLE_OPENMP prior to including
+SIMDe.
+
+#Portability
+Compilers
+
+SIMDe does depend on some C99 features, though the subset supported by MSVC
+also works. While we do our best to make sure we provide optimized
+implementations where they are supported, SIMDe does contain portable fallbacks
+which are designed to work on any C99 compiler.
+
+Every commit is tested in CI on multiple compilers, platforms, and
+configurations, and our test coverage is extremely extensive. Currently tested
+compilers include:
+
+GCC versions back to 4.8
+Clang versions back to 3.8
+Microsoft Visual Studio back to 12 (2013)
+IBM XL C/C++
+Intel C/C++ Compiler (ICC)
+
+I'm generally willing to accept patches to add support for other compilers, as
+long as they're not too disruptive, especially if we can get CI support going.
+If using one of our existing CI providers isn't an option then other CI
+platforms can be added.
+
+#Hardware
+The following architectures are tested in CI for every commit:
+- x86_64
+- x86
+- AArch64
+- ARMv8
+- ARMv7
+- PPC64
+- MIPS Loongson
+We would love to add more, so patches are extremely welcome!
+
+#Related Projects
+The "builtins" module in portable-snippets does much the same thing, but for
+compiler-specific intrinsics (think __builtin_clz and _BitScanForward), not
+SIMD intrinsics.
+
+Intel offers an emulator, the Intel® Software Development
+Emulator which can be used to develop software which uses Intel intrinsics
+without having to own hardware which supports them, though it doesn't help for
+deployment.
+
+Iris is the only other project I'm aware of which is attempting to
+create portable implementations like SIMDe. SIMDe is much further along on the
+Intel side, but Iris looks to be in better shape on ARM. C++-only, Apache 2.0
+license. AFAICT there are no accelerated fallbacks, nor is there a good way to
+add them since it relies extensively on templates.
+
+There are a few projects trying to implement one set with another:
+* ARM_NEON_2_x86_SSE  implementing NEON using SSE. Quite extensive, Apache 2.0 license.
+* sse2neon — implementing SSE using NEON. This code has already been merged into SIMDe.
+* veclib —implementing SSE2 using AltiVec/VMX, using a non-free IBM library called
+powerveclib
+* SSE-to-NEON — implementing SSE with NEON. Non-free, C++.
+* arm-neon-tests contains tests to verify NEON implementations.  If you know of
+any other related projects, please let us know!
+* openvec  - 7y old
+* google/highway - extensive rewriting needed; runtime
+
+#Caveats
+Sometime features can't be emulated. If SIMDe is operating in native mode the
+functions will work as expected, but if there is no native support some caveats
+apply:
+
+Many functions require <math.h> and/or <fenv.h>. SIMDe will still work without those headers, but the results of those functions are undefined.
+x86 / x86_64
+SSE
+SIMDE_MM_SET_ROUNDING_MODE() will use fesetround(), altering the global rounding mode.
+simde_mm_getcsr and simde_mm_setcsr only implement bits 13 and 14 (rounding mode).
+AVX
+simde_mm256_test* do not set the CF/ZF registers as there is no portable way to implement that functionality.
+simde_mm256_zeroall and simde_mm256_zeroupper are not implemented as there is no portable way to implement that functionality.
+Additionally, there are some known limitations which apply when using native aliases (SIMDE_ENABLE_NATIVE_ALIASES):
+
+On Windows x86 (but not x86_64), some MMX functions and SSE/SSE2 functions which use MMX types (__m64) other than for pointers may return incorrect results.
+Also, as mentioned earlier, while some APIs make assumptions about basic types (e.g., int is 32 bits), SIMDe does not, so many types have been altered to use portable fixed-width versions such as int32_t.
+
+If you find any other differences, please file an issue so we can either fix it or add it to the list above.
+
+# intrinsics
+Including one of these pulls in all previous ones (except AMD-only SSE4A: immintrin.h doesn't pull that in)
+If you just want portable SIMD, use #include <immintrin.h>
+<mmintrin.h>  MMX
+<xmmintrin.h> SSE
+<emmintrin.h> SSE2
+<pmmintrin.h> SSE3
+<tmmintrin.h> SSSE3
+<smmintrin.h> SSE4.1
+<nmmintrin.h> SSE4.2
+<ammintrin.h> SSE4A
+<wmmintrin.h> AES
+<immintrin.h> AVX, AVX2, FMA
+Some compilers also have <zmmintrin.h> for AVX512.
+On GCC/clang, if you use just
+include <x86intrin.h> # will include all SSE/AVX headers enabled according to compiler switches like -march=haswell or just -march=native.
+Additionally some x86 specific instructions like bswap or ror become available as intrinsics.
+
+The header name depends on your compiler and target architecture.
+For Microsoft C++ (targeting x86, x86-64 or ARM) and Intel C/C++ Compiler for Windows use intrin.h
+For gcc/clang/icc targeting x86/x86-64 use x86intrin.h
+For gcc/clang/armcc targeting ARM with NEON use arm_neon.h
+For gcc/clang/armcc targeting ARM with WMMX use mmintrin.h
+For gcc/clang/xlcc targeting PowerPC with VMX (aka Altivec) and/or VSX use altivec.h
+For gcc/clang targeting PowerPC with SPE use spe.h
+You can handle all these cases with conditional preprocessing directives:
+
+#if defined(_MSC_VER)
+     /* Microsoft C/C++-compatible compiler */
+     #include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+     /* GCC-compatible compiler, targeting x86/x86-64 */
+     #include <x86intrin.h>
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+     /* GCC-compatible compiler, targeting ARM with NEON */
+     #include <arm_neon.h>
+#elif defined(__GNUC__) && defined(__IWMMXT__)
+     /* GCC-compatible compiler, targeting ARM with WMMX */
+     #include <mmintrin.h>
+#elif (defined(__GNUC__) || defined(__xlC__)) && (defined(__VEC__) || defined(__ALTIVEC__))
+     /* XLC or GCC-compatible compiler, targeting PowerPC with VMX/VSX */
+     #include <altivec.h>
+#elif defined(__GNUC__) && defined(__SPE__)
+     /* GCC-compatible compiler, targeting PowerPC with SPE */
+     #include <spe.h>
+#endif

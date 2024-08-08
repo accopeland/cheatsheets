@@ -1,0 +1,14 @@
+# description: samtools and more recent replacements for working with
+fq and sam/bam.
+
+# samtools
+
+# sambambba (D)
+
+# bamtocov (nim) -- https://github.com/telatin/bamtocov
+
+# mosdepth - https://github.com/brentp/mosdepth
+
+# https://github.com/ChristopherWilks/megadepth
+
+#

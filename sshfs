@@ -1,0 +1,16 @@
+
+# description
+user space ssh filesystem
+
+# install --  unfortunately sshfs no longer in homebrew
+brew install gromgit/fuse/sshfs-mac
+
+# config
+
+# macfuse
+# macFUSE kernel extension not loaded automatically, but is dynamically loaded when a macFUSE-based application runs
+/Library/Filesystems/macfuse.fs/Contents/Resources/load_macfuse; echo $?  #	0 => loaded
+
+# running ?
+kextstat | grep -i fuse
+  0 0xffffff7f84434000 0x17000 0x17000 io.macfuse.filesystems.macfuse (2081.16) 989E08D2-D561-35FD-BE0B-8FF79E10D3B0 <8 6 5 3 1>

@@ -1,0 +1,66 @@
+# description
+Tools for creating sqlite from csv
+
+# install
+
+# docs
+
+# see also
+datasette.io
+csvkit::in2csv
+xsv (rust)
+
+# create
+sqlite-utils insert NERSC.db outages NERSC-outages-all.csv --csv -d
+
+# schema
+sqlite-utils schema my.db
+
+# view
+sqlite-utils tables my.db --counts -t
+
+# query
+sqlite-utils my.db "select * from tbl limit 2"
+
+# datasette
+datasette my.db
+
+# transform
+sqlite-utils transform my.db atable --rename LAT latitude --rename FOO bar --drop last_edit_time -pk mypk_id
+
+sqlite-utils convert my.db mytbl myDATECOL anotherDatecol 'r.parsedatetime(value)'
+
+# extract
+sqlite-utils extract my.db mytbl col1 col2 --rename col2 foobar --table myNewtbl
+
+# transform
+transform command can be used to apply a transformation function to the values in one or more columns.
+
+# date --  use convert to parse and convert miscellaneous date and time formats ;use built-in r.parsedatetime() to convert and save them back to the same column.
+sqlite-utils convert manatees.db locations rdate created_date last_edited_date 'r.parsedatetime(value)'
+
+# stuff
+$ sqlite-utils memory dogs.csv "select * from t"
+[{"id": 1, "age": 4, "name": "Cleo"},
+ {"id": 2, "age": 2, "name": "Pancakes"}]
+
+$ sqlite-utils insert dogs.db dogs dogs.csv --csv
+[####################################]  100%
+
+$ sqlite-utils tables dogs.db --counts
+[{"table": "dogs", "count": 2}]
+
+$ sqlite-utils dogs.db "select id, name from dogs"
+[{"id": 1, "name": "Cleo"},
+ {"id": 2, "name": "Pancakes"}]
+
+$ sqlite-utils dogs.db "select * from dogs" --csv
+id,age,name
+1,4,Cleo
+2,2,Pancakes
+
+$ sqlite-utils dogs.db "select * from dogs" --table
+  id    age  name
+----  -----  --------
+   1      4  Cleo
+   2      2  Pancakes

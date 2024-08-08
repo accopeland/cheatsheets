@@ -1,0 +1,22 @@
+
+# R
+	ggsankey
+	ggrepel
+	https://davidhodge931.github.io/ggblanket/
+
+# sankey plots
+	https://rpubs.com/techanswers88/sankey-with-own-data-in-ggplot
+	#install.packages("remotes")
+	remotes::install_github("davidsjoberg/ggsankey")
+
+# sankey
+  plant16 = read.csv("dw_plant_noncovid_20160101.csv", coltyhpes="fffffff")
+	tl = plant16 %>% make_long(sam_dna_isolation_method, sow_fm,sp_actual_product)
+	t = plant16 %>% make_long(sam_dna_isolation_method, sow_fm,sp_actual_product) %>% group_by(node) %>% tally()
+	merge(tl, t, by.x = 'node', by.y = 'node', all.x = TRUE)
+	pl <- ggplot(x, aes(x=x, next_x=next_x, node=node, next_node=next_node, fill=factor(node), label=paste0(node," n=", n)))
+	 + geom_sankey(flow.alpha=0.5, color="gray40",show.legend = TRUE)
+	 + geom_sankey_label(size=3, color="white", fill="gray40", hjust = -0.2)
+	ggsave("plant_method_sowfm_sankey.pdf", height=8000,width=12000,units="px")
+
+# example

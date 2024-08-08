@@ -1,0 +1,19 @@
+# description
+spotlight disk indexing service for mdfind , mdls, etc.
+
+# usage
+
+# troubleshooting
+
+# Error: corespotlightd consistently high CPU
+Fix:
+mdutil -a -i off /  				# Turn off indexing
+killall -KILL Spotlight spotlightd mds   	# kill processes
+rm -rf ~/Library/Metadata/CoreSpotlight/  	# Trash spotlight data
+sudo rm -rf /System/Volums/Data/.Spotlight-V100
+mdutil -a -i on /  				# indexing back on
+# or w sudo
+sudo mdutil -a -i off /
+sudo killall -KILL Spotlight spotlightd mds
+sudo rm -rf ~/Library/Metadata/CoreSpotlight/
+sudo rm -Rf /System/Volums/Data/.Spotlight-V100

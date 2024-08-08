@@ -1,0 +1,34 @@
+# description
+
+# doc
+https://apple.stackexchange.com/questions/226544/how-to-set-proxy-on-os-x-terminal-permanently
+
+# usage (mac)
+dori3() { ~/.2fa/decrypt-key.sh t-JGI;   pbclear 3; }
+nersc3() { ~/.2fa/decrypt-key.sh t-NERSC; pbclear 3; }
+dori_9050() { dori3 ;  ssh -v -fN -D 9050 -l accopeland dori ; }
+dtn_9050() {  nersc3 ; ssh -v -fN -D 9050 -l  copeland dtn03 ; }
+proxy_init() { local D=${1:-"dori"} ;  # set up in launchctl or crontab ?
+        #ssh -D 8080 accopeland@jgi-interactive00.jgi.lbl.gov
+        #  set proxy in mac->prefs->network->proxy :8080
+        networksetup -setsocksfirewallproxy Wi-Fi localhost 9050
+        networksetup -setsocksfirewallproxystate Wi-Fi on
+        case $D in
+                nersc|dtn|dtn3) dtn_9050 ;;
+                dori|jgi|lbl) dori_9050 ;;
+                *) echo "error";;
+        esac
+}
+proxy_check() {
+        nc -z localhost 9050  && lsof -i :9050
+        #networksetup -listnetworkserviceorder ;
+        networksetup -getsocksfirewallproxy  Wi-Fi ;
+        }
+proxy_clean() {
+        # find ssh process and kill
+        # unset network prefs
+        # Set system-wide SOCKS5 proxy
+        # To disable the socks proxy use:
+        networksetup -setsocksfirewallproxystate wi-fi off
+        echo "write me."
+}

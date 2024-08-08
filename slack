@@ -1,0 +1,281 @@
+# description
+Slack basics
+
+# usage
+⌘ N	Compose a new message
+⌘ Shift Y	Set your status
+⌘ ,	Open your preferences**
+
+#Show or hide the left sidebar
+⌘ Shift D
+
+#Show or hide the right sidebar
+⌘ .
+
+#Upload a file
+⌘ U
+
+#View all downloaded files
+⌘ Shift J
+
+#Create a new snippet
+⌘ Shift Enter
+
+#Add an emoji reaction to a message*
+⌘Shift\
+
+#Open the directory
+⌘ Shift E
+
+#Start a search
+⌘ G
+
+#Search in the current conversation
+⌘ F
+
+#Toggle full screen view
+Ctrl ⌘ F
+
+#Toggle mute on a Slack call
+M
+
+#Toggle video on a call
+V
+
+#Invite people to a call
++ or A
+
+#Use an emoji reaction on a call
+E and 1-9
+
+#Start, join, leave, or end a huddle
+⌘ Shift H
+
+#Toggle mute on a huddle
+⌘ Shift Space
+
+#Open Help
+F1
+
+
+#Navigate conversations and messages
+
+#Jump to a conversation
+⌘K
+⌘T**
+
+#Jump to the most recent unread message in a conversation
+⌘J
+
+#Jump to previous unread channel or direct message (DM)
+OptionShift↑
+
+#Jump to next unread channel or DM
+OptionShift↓
+
+#Go back in history
+⌘[
+
+#Go forward in history
+⌘]
+
+#Open the Threads view**
+⌘ShiftT
+
+#Browse DMs
+⌘ShiftK
+
+#View Mentions & reactions**
+⌘ShiftM
+
+#View Saved items
+⌘ShiftS
+
+#Browse channels
+⌘ShiftL
+
+#Open conversation details
+⌘ShiftI
+
+#Move focus to the next section
+F6
+
+#Move focus to the previous section
+ShiftF6
+
+#Expand or collapse sidebar section
+OptionClick
+
+
+#Mark messages read or unread
+
+#Mark all messages in current conversation as read
+Esc
+
+#Mark all messages as read
+Shift Esc
+
+#Mark a message as unread
+Option Click
+
+
+# Navigate unread messages
+To catch up on what you missed in Slack, you can navigate your All unreads view using these shortucts:
+
+#Open the All unreads view
+⌘ Shift A
+
+#Move between messages
+↑ or ↓
+
+#Mark a message as unread
+Option Click
+
+#Mark a group of messages as unread
+Esc
+
+#Open or collapse a group of messages
+← or →
+
+
+# Switch workspaces
+If you're signed in to more than one workspace, you can switch between them.
+
+
+# Switch to previous workspace
+⌘Shift[
+
+# Switch to next workspace
+⌘Shift]
+
+# Switch to a specific workspace (hover over a workspace icon in the left sidebar of the Slack desktop app to see its assigned number)
+⌘[number]
+
+
+# Take actions on messages
+When focused on a message, you can use these one-key keyboard shortcuts to quickly take actions:
+
+# Edit a message you sent
+E
+
+# Delete a message you sent
+Delete
+
+# Open or reply to a thread
+T or →
+
+# Share a message
+S
+
+# Pin or unpin a message
+P
+
+# Save a message (or remove a message from Saved items)
+A
+
+# Mark all messages above the message in focus as unread
+U
+
+# Create a reminder about a message
+M
+
+# Add an emoji reaction to a message
+R
+
+# Format messages
+Make sure your cursor is in the message field to perform these shortcuts.
+
+# Select text to beginning of current line
+Shift↑
+
+# Select text to end of current line
+Shift↓
+
+# Create a new line
+ShiftEnter
+
+# Bold selected text
+⌘B
+
+# Italicize selected text
+⌘I
+
+# Strikethrough selected text
+⌘ShiftX
+
+# Hyperlink selected text
+⌘ShiftU
+
+# Quote selected text
+⌘Shift9
+
+# Code selected text
+⌘ShiftC
+
+# Codeblock selected text
+⌘AltShiftC
+
+# Format selected text as a bulleted list
+⌘Shift8
+
+# Format selected text as a numbered list
+⌘Shift7
+
+# Undo formatting
+⌘Z
+
+# Send Notifications to Slack
+create a script that utilizes the Slack API to post messages to a channel:
+replace SLACK_WEBHOOK_URL with a valid URL created under our Slack account; more information about creating a webhook URL in Slack API Documentation.
+
+$ sudo cat - <<EOF > /usr/local/bin/slackNotify.sh
+#!/bin/bash
+# Bash script to send systemd notifications to Slack
+# Edit the following variables to match your requirements
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
+SLACK_CHANNEL="#general"
+SLACK_USERNAME="Notification Bot"
+SLACK_ICON=":zap:"
+SLACK_COLOR="danger"
+SLACK_TITLE="Service $SERVICE_NAME failed on $(hostname)"
+SLACK_PRETEXT="Service $SERVICE_NAME failed"
+SLACK_TEXT="$(systemctl status $SERVICE_NAME)"
+SLACK_FOOTER="Notification Bot at $(hostname) on $(date)"
+# End of variables
+###
+function usage {
+    programName=$0
+    echo "description: use this script to post systemd service failure message to Slack channel"
+    echo "usage: $programName -s \"service name\""
+    echo "	-s    the systemd service name e.g. nginx"
+    exit 1
+}
+# Get service name from options
+while getopts ":s:" opt; do
+  case $opt in
+    s)
+      SERVICE_NAME=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+###
+if [[ ! "${SERVICE_NAME}" ]]; then
+    echo "Service name is required"
+    usage
+fi
+###
+SLACK_ATTACHMENT='[{"fallback": "'"$SLACK_MESSAGE"'", "color": "'"$SLACK_COLOR"'", "title": "'"$SLACK_TITLE"'", "title_link": "'"$SLACK_TITLE_LINK"'", "pretext": "'"$SLACK_PRETEXT"'", "text": "'"$SLACK_TEXT"'", "footer": "'"$SLACK_FOOTER"'", "footer_icon": "'"$SLACK_FOOTER_ICON"'"}]'
+# Send notification to Slack
+curl -X POST --data-urlencode 'payload={"channel": "'"$SLACK_CHANNEL"'", "username": "'"$SLACK_USERNAME"'", "icon_emoji": "'"$SLACK_ICON"'", "attachments": '"$SLACK_ATTACHMENT"'}' $SLACK_WEBHOOK_URL
+
+# Exit with success code
+exit 0
+EOF

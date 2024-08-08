@@ -1,0 +1,13 @@
+# description
+Variant of python for bioinformatics. SUperceded by codon? Seq now a codon plugin
+
+# plugin for codon
+curl -L https://github.com/exaloop/seq/releases/download/v0.11.3/seq-$(uname -s | awk '{print tolower($0)}')-$(uname -m).tar.gz | tar zxvf - -C .codon/lib/codon/plugins
+
+# docs
+https://biojulia.net/post/seq-lang/
+https://dl.acm.org/doi/10.1145/3360551
+https://github.com/seq-lang/seq
+
+# install
+/bin/bash -c "$(curl -fsSL https://seq-lang.org/install.sh)"

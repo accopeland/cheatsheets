@@ -1,0 +1,10 @@
+# toggle full screen
+cmd-power
+
+# file activity
+C-opt-A
+
+# new term @ folder
+cmd-T
+
+#

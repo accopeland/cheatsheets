@@ -1,0 +1,242 @@
+# description
+Now Apptainer
+
+#  docs
+
+# install
+spack spec singularity-ce # or build from source
+
+#  see also
+podman
+buildah
+docker
+
+# inspect
+skopeo
+Whaler
+dive
+atomic
+
+# search
+# ...?
+
+# unnistall
+brew uninstall --cask singularity
+
+# install:
+brew install --cask singularity
+spack install singularityce # 4.0.2 broken... manual --without-seccomp --without-conmon --without-fuse
+## or in src/ ... 4.0.2 broken
+./mconfig
+
+# cleanup
+singularity cache clean
+
+# config / cache
+$HOME/.apptainer/cache by default. The location of the cache can be changed by setting the APPTAINER_CACHEDIR
+
+# macos: SingularityCE is available via Vagrant (installable with Homebrew or manually)
+# brew install --cask virtualbox vagrant vagrant-manager
+mkdir vm-singularity-ce && cd vm-singularity-ce
+(maybe) vagrant destroy && rm Vagrantfile
+export VM=sylabs/singularity-ce-3.8-ubuntu-bionic64 && vagrant init $VM && vagrant up && vagrant ssh
+vagrant@vagrant:~$ singularity version
+
+
+# token:
+https://cloud.sylabs.io/auth
+
+# pull docker
+singularity pull docker://godlovedc/lolcow
+./lolcow_latest.sif
+
+# token:
+https://cloud.sylabs.io/auth
+
+# --remote
+create account @ sylabs.io (xingularity)
+sign in
+create token: https://cloud.sylabs.io/auth/tokens
+cp <token>  $HOME/.singularity/sylabs-token
+singularity build --remote eb.sif  docker://godlovedc/easybuild
+
+# def file -
+Bootstrap: yum
+From: debian
+%files
+%post
+%runscript
+
+# run docker container:
+singularity run docker://godlovedc/lolcow
+
+
+# build from docker tarball - containers can be built at the command line from Docker images stored locally as tar files.
+	# https://sylabs.io/guides/3.7/user-guide.pdf
+	docker images
+	docker save <id> -o <id>.tar
+	# nope
+	singularity build <name>.sif docker-archive://<id>.tar
+	# --remote does not work either ; need a .sif file
+
+# build - Singularity containers can be built at the command line from images cached locally by Docker
+docker pull docker://godlovedc/lolcow:latest
+# docker images
+sudo singularity build lolcow_from_docker_cache.sif docker-daemon://godlovedc/lolcow:latest
+FATAL:   Only remote builds are supported on this platform
+
+# build from oci (tar) file
+singularity pull https://s3.amazonaws.com/singularity-ci-public/alpine-oci-archive.tar
+singularity build --remote alpine_oci_archive.sif oci-archive://alpine-oci-archive.tar
+
+# wdl : https://gatkforums.broadinstitute.org/wdl/discussion/11897/support-for-singularity
+
+# jamo
+singularity pull docker://doejgi/jamo:latest
+
+# token: https://cloud.sylabs.io/auth
+
+# spack and containers
+	# need a spack.yaml
+	spack containerize > Dockerfile
+	# can also containerize environments
+	# singularity instead of docker (https://spack.readthedocs.io/en/latest/containers.html)
+	container:
+  format: singularity	# modify format: in environment yaml file
+
+# build error: auth
+# auth error (https://sylabs.io/guides/3.4/user-guide/singularity_and_docker.html?highlight=authentication%20token%20found)
+singularity pull docker://ilumb/mylolcow
+INFO:    Starting build...
+FATAL:   Unable to pull docker://ilumb/mylolcow: conveyor failed to get: Error reading manifest latest in docker.io/ilumb/mylolcow: errors:
+denied: requested access to the resource is denied unauthorized: authentication required
+# FIX
+singularity pull --docker-login docker://ilumb/mylolcow
+
+# build error: WARNING: Authentication token file not found : Only pulls of public images will succeed
+touch ${HOME}/.singularity/sylabs-token
+https://cloud.sylabs.io/auth/ via google
+
+# dori build
+apptainer --debug pull --force --disable-cache docker://bryce911/bbtools
+
+# singularity-ce / dori
+spack install singularityce ~suid
+singularity-ce pull library://lolcow
+singularity-ce shell lolcow_latest.sif
+Singularity> cowsay moo
+Singularity> ^D
+singularity exec lolcow_latest.sif cowsay moo
+singularity-ce run lolcow_latest.sif
+./lolcow_latest.sif
+singularity run library://lolcow
+
+# sandbox --  container in a directory
+singularity build --sandbox ubuntu/ library://ubuntu
+singularity exec --writable ubuntu touch /foo
+singularity exec ubuntu/ ls /foo
+
+# convert (via build)
+singularity-ce build new.sif sandbox
+
+# build from def file
+sudo singularity build lolcow.sif lolcow.def
+cat lolcow.def
+BootStrap: library
+From: ubuntu:22.04
+%post
+   apt-get -y update
+   apt-get -y install cowsay lolcat
+%environment
+   export LC_ALL=C
+   export PATH=/usr/games:$PATH
+%runscript
+   date | cowsay | lolcat
+%labels
+   Author Sylabs
+
+# spython: build from Dockerfile
+pipx install spython
+spython recipe Dockerfile > Singularity.def  # save in the *.def file
+singularity-ce build Singularity.sif Singularity.def # build sif
+
+# setuid -- default; options below exepected to decrease performance
+# see singularity.conf
+allow setuid = no  # user namespaces instead of setuid
+sif fuse   # experimental support for squashfuse to avoid sif file extraction to disk with a cost to performance
+
+# fakeroot
+singularity build --fakeroot uses Linux kernel features to enable an emulated, ‘fake’ root user inside the container
+
+# use containers as modules
+singularity-hpc
+
+# build & convert
+podman build -t simple -f simple.dockerfile .  # -t container_name  -f Dockerfile
+# list images (ls) ; localhost/simple should be among them. Any container created wout explicit registry url will have localhost prefix.
+podman image ls
+REPOSITORY             TAG      IMAGE ID      CREATED      SIZE
+localhost/simple       latest   e47dbfde3e99  3 hours ago  687 MB
+quay.io/centos/centos  stream8  ad6f8b5e7f64  8 days ago   497 MB
+# Convert this Podman container image into a tar file with
+podman save -o simple.tar localhost/simple.
+singularity-ce build --disable-cache simple.sif docker-archive://simple.tar #Convert the tar file into a Singularity sif file with
+
+# using docker repos
+https://docs.sylabs.io/guides/3.11/user-guide/singularity_and_docker.html
+
+# build proot
+If you aren’t able or do not wish to use sudo when building a container, SingularityCE offers several other options: --remote builds, a --fakeroot mode, and limited unprivileged builds using proot.
+
+# build --remote
+create account @ sylabs.io (xingularity)
+sign in
+create token: https://cloud.sylabs.io/auth/tokens
+cp <token>  $HOME/.singularity/sylabs-token
+singularity build --remote eb.sif  docker://godlovedc/easybuild
+
+# dori build
+apptainer build --fakeroot "site-${JAWS_SITE_VERSION}.sif" "./test/integration/site.def"
+apptainer remote login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "oras://$CI_REGISTRY"
+apptainer push "site-${JAWS_SITE_VERSION}.sif" "oras://$CI_REGISTRY/advanced-analysis/jaws-site:${JAWS_SITE_VERSION}"
+
+# def file -
+Bootstrap: yum
+From: debian
+%files
+%post
+%runscript
+
+# build from docker tarball - containers can be built at the command line from Docker images stored locally as tar files.
+	# https://sylabs.io/guides/3.7/user-guide.pdf
+	docker images
+	docker save <id> -o <id>.tar
+	# nope
+	singularity build <name>.sif docker-archive://<id>.tar
+	# --remote does not work either ; need a .sif file
+
+# build - Singularity containers can be built at the command line from images cached locally by Docker
+docker pull docker://godlovedc/lolcow:latest
+#
+# docker images
+sudo singularity build lolcow_from_docker_cache.sif docker-daemon://godlovedc/lolcow:latest
+FATAL:   Only remote builds are supported on this platform
+
+# build from oci (tar) file
+singularity pull https://s3.amazonaws.com/singularity-ci-public/alpine-oci-archive.tar
+singularity build --remote alpine_oci_archive.sif oci-archive://alpine-oci-archive.tar
+
+# Error: ProcessError: Command exited with status 2:
+'./mconfig' '--prefix=/clusterfs/jgi/groups/gentech/genome_analysis/spack-ga/spack/opt/spack/linux-rocky8-zen2/gcc-12.2.0/singularityce-3.11.3-m2i2z5caefxeexhwn44w2xtej42ifojg'
+# Fix:
+
+# build error:
+# ERROR  : No setuid installation found, for unprivileged installation use: ./mconfig --without-suid
+# Fix:  disable setuid flow by setting option 'allow setuid = no' in etc/singularity/singularity.conf in installation dir
+/clusterfs/jgi/groups/gentech/homes/accopeland/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12.2.0/singularityce-3.11.3-k6ctk7ntqtenwqdql7eskdujeqplltdb/etc/singularity/singularity.conf
+
+# debugging build
+singularity-ce --debug build Singularity.sif Singularity.def
+singularity-ce shell ./Singularity.sif
+
+#

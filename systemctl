@@ -1,3 +1,7 @@
+# description
+systemd control / view
+(linux) systemctl - Control the systemd system and service manager
+
 # To see running processes:
 systemctl
 
@@ -55,7 +59,7 @@ journalctl -b -u foo.service
 # To list the dependencies of a service:
 # when no service name is specified, lists the dependencies of default.target
 # add -all to expand dependencies recursively
-systemctl list-dependencies foo.service 
+systemctl list-dependencies foo.service
 
 # To see low level details of a service settings on the system:
 systemctl show foo.service

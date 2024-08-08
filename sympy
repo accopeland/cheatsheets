@@ -1,0 +1,57 @@
+# description
+Symobolics for python; also julia pkg
+
+# install
+python3 -m pip install sympy
+
+# usage
+python3
+>>> import sympy
+
+# Laplace
+omega = sympy.Symbol('omega', real=True)
+exp = sympy.exp
+sin = sympy.sin
+cos = sympy.cos
+functions = [1,
+         t,
+         exp(-a*t),
+         t*exp(-a*t),
+         t**2*exp(-a*t),
+         sin(omega*t),
+         cos(omega*t),
+         1 - exp(-a*t),
+         exp(-a*t)*sin(omega*t),
+         exp(-a*t)*cos(omega*t),
+         ]
+functions
+
+# dynamics and control -- https://dynamics-and-control.readthedocs.io/en/latest/1_Dynamics/3_Linear_systems/Laplace%20transforms.html
+
+# Laplace
+M, s = sympy.symbols('M, s')
+def L(f):
+    return sympy.laplace_transform(f, t, s, noconds=True)
+def invL(F):
+    return sympy.inverse_laplace_transform(F, s, t)
+L(M*S(t))
+u = 1/s**2
+rampresponse = invL(G*u)
+evalfimpulse = sympy.lambdify((K, tau, t), impulseresponse, 'numpy')
+evalfstep = sympy.lambdify((K, tau, t), stepresponse, 'numpy')
+evalframp = sympy.lambdify((K, tau, t), rampresponse, 'numpy')
+
+# repl
+live.sympy.org
+
+# jupyterlite
+#
+
+# sums
+from sympy import *
+x,y,z,t = symbols('x y z t ' )
+i,j,k,n = symbols('i j k n', integer=True)
+f,g,h = symbols('f g h', cls=Function)
+sn = Sum(1/k**2, (k,1,n))
+sn.doit()
+limit(sn.doit(), n, oo)

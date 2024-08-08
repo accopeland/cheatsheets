@@ -1,0 +1,58 @@
+https://groups.google.com/forum/#!msg/snakemake/l4gD4zfY64c/3qC6ku77YVIJ
+
+Must have a 'rule all:' which has as it's inputs a list (or func or lambda returning list) of all final output files
+
+snakemake will satisfy dependency of first rule and build graph by examining other dependencies from rest of the graph to satisfy initial dependency. By touching test2.txt you've satisfied the dependency for the first rule, so nothing more needs to be done. Even with -R A nothing else needs to be run to satisfy the dependency of rule A - the files already exist.
+
+
+Examine graph dependencies
+ $ snakemake -F --rulegraph
+
+snakemake dependency rules:
+https://stackoverflow.com/questions/47215594/how-can-snakemake-be-made-to-update-files-in-a-hierarchical-rule-based-manner-wh
+
+Force rerun for edited rule:
+-  snakemake -R somerule
+
+Enable syntax highlighting
+ - copy https://bitbucket.org/snakemake/snakemake/raw/master/misc/vim/syntax/snakemake.vim to .vim/synatx
+ - add to .vimrc:
+	au BufNewFile,BufRead Snakefile set syntax=snakemake
+	au BufNewFile,BufRead *.smk set syntax=snakemake
+
+Create FAIL for empty output files;
+	rule:
+	    input:  ...
+	    output: "my/output/file.txt"
+	    shell:  "somecommand {input} {output} && [[ -s {output} ]]"
+
+Trigger new run for changed input files
+$ snakemake -n -R `snakemake --list-input-changes`
+
+Trigger new run for param changes
+$ snakemake -n -R `snakemake --list-params-changes`
+
+Trigger new run for code changes
+$ snakemake -n -R `snakemake --list-code-changes`
+
+Summarize all snakemake output
+$ snakemake --summary
+
+snakemake debugging
+ - messages:
+ - print()
+ - $ snakemake -p -n --quiet
+
+function for gathering fq files:
+def get_samples():
+    """Get all fastq files."""
+    samples = {}
+    for dirpath, _, files in os.walk(data):
+        for fl in files:
+            if fl.endswith('fastq') or fl.endswith('fastq.gz') or fl.endswith('fq') or fl.endswith('fq.gz'):
+                dirname = os.path.basename(dirpath)
+                if dirname not in samples:
+                    samples[dirname] = []
+                samples[dirname].append(os.path.join(dirpath, fl))
+    return samples
+samples = get_samples()

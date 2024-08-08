@@ -1,0 +1,65 @@
+see aws
+# description
+various tools for dealing w s3
+
+# s3parcp -- https://medium.com/czi-technology/s3parcp-handling-huge-objects-in-s3-6906189e2413
+Usage:
+  s3parcp [OPTIONS] [Source] [Destination]
+Application Options:
+  -p, --part-size=                  Part size in bytes of parts to be downloaded
+  -c, --concurrency=                Download concurrency
+  -b, --buffer-size=                Size of download buffer in bytes
+      --checksum                    Compare checksum if downloading or place checksum in metadata if uploading
+  -r, --recursive                   Copy directories or folders recursively
+      --version                     Print the current version
+      --s3_url=                     A custom s3 API url (also env var 'S3PARCP_S3_URL', the flag takes precedence)
+      --max-retries=                Max per chunk retries (default: 3)
+      --disable-ssl                 Disable SSL
+      --disable-cached-credentials  Disable caching AWS credentials
+  -v, --verbose                     verbose logging
+Help Options:
+  -h, --help                        Show this help message
+Arguments:
+  Source:                           Source to copy from
+  Destination:                      Destination to copy to (Optional, defaults to source's base
+
+### Examples
+
+#### Uploading
+s3parcp my/local/file s3://my-bucket/my-object
+
+
+### Examples
+
+#### Uploading
+s3parcp my/local/file s3://my-bucket/my-object
+
+#### Downloading
+s3parcp s3://my-bucket/my-object my/local/file
+
+#### Tuning Chunk Parameters
+**Note**: These example parameters don't necessarily represent good parameters for your system. s3parcp uses sane defaults so it is recommended to use the default parameters unless you have reason to believe your values will work better.
+PART_SIZE=1048576 # 1 MB
+BUFFER_SIZE=10485760 # 10 MB
+CONCURRENCY=8
+s3parcp \
+  --part-size $PART_SIZE \
+  --concurrency $CONCURRENCY \
+  --buffer-size $BUFFER_SIZE \
+  my/local/file s3://my-bucket/my-object
+
+#### Using CRC32C Checksum
+You must upload your file to s3 with s3parcp and the --checksum flag to use this feature for downloads.
+Upload your file:
+# checksum
+The checksum should be stored in the s3 object's metadata with the key `x-amz-meta-crc32c-checksum`.
+s3parcp --checksum my/local/file s3://my-bucket/my-object
+# checksum
+s3parcp --checksum s3://my-bucket/my-object my/new/local/file
+### checksum
+comes with a parallelized crc32c checksum validator. The AWS SDK does not support checksums for multipart downloads. If you include the `--checksum` flag when uploading a checksum of your file will be computed and stored in the object's metadata in s3 with the key `x-amz-meta-crc32c-checksum`. When downloading, the `--checksum` flag will compute an independent crc32c checksum of the downloaded file and compare it of the checksum in the object's metadata.
+
+# see also
+s3parcp
+s5cmd
+s3p

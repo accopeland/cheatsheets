@@ -1,0 +1,115 @@
+---
+tags: [ database ]
+---
+# install
+brew install sqlite3
+
+# docs
+
+# config --  query format (added to .sqliterc)
+	.mode column
+	.headers on
+	.separator ROW "\n"
+	.nullvalue NULL
+
+# usage
+sqlite-utils analyze-tables something.db tags
+
+# To create database and launch interactive shell:
+sqlite3 <database>
+
+# To create table:
+sqlite3 <database> "create table os(id integer primary key, name text, year integer);"
+
+# To insert data:
+sqlite3 <database> "insert into 'os' values(1,'linux',1991);"
+
+# To list tables:
+sqlite3 <database> ".tables"
+
+# To describe table:
+sqlite3 <database> ".schema 'os'"
+
+# To view records in table:
+sqlite3 <database> "select * from 'os';"
+
+# To view records in table conditionally:
+sqlite3 <database> "select * from 'os' where year='1991';"
+
+# To view records with fuzzy matching:
+sqlite3 <database> "select * from 'os' where year like '19%';"
+
+# To create a table named `cities` and import a csv into it:
+sqlite3 <database> ".import /path/to/city.csv cities"
+
+# mode -- MODE is one of:
+     ascii     Columns/rows delimited by 0x1F and 0x1E
+     box       Tables using unicode box-drawing characters
+     csv       Comma-separated values
+     column    Output in columns.  (See .width)
+     html      HTML <table> code
+     insert    SQL insert statements for TABLE
+     json      Results in a JSON array
+     line      One value per line
+     list      Values delimited by "|"
+     markdown  Markdown table format
+     quote     Escape answers as for SQL
+     table     ASCII-art table
+     tabs      Tab-separated values
+     tcl       TCL list elements
+
+#  sqlite query over input file ids
+# put input file into id,data format ; csv is convenient
+sqlite3 SRAmetadb.sqlite
+sqlite> create temporary table ids (id integer primary key, rid varchar);
+sqlite> .import 't' ids
+sqlite> .mode csv
+sqlite> .import 't' ids
+# join on id
+sqlite> select * from ids limit 5 ;
+id,rid
+1,ERR4691828
+2,ERR4691826
+3,ERR4691827
+sqlite> select sum(bases) from sra s inner join ids i on s.run_accession=i.rid ;
+
+#  sqlite query format (added to .sqliterc)
+.mode column
+.headers on
+.separator ROW "\n"
+.nullvalue NULL
+
+#  sra (2021-11-25)
+https://trace.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=announcement
+# most bases are not open
+sqlite3 SRAmetadb.sqlite
+sqlite> select sum(bases) from sra;
+5.64e+15
+sqlite> select count(*) from sra;
+4098077
+
+#  srametadb
+# dead http://gbnci.abcc.ncifcrf.gov/backup/SRAmetadb.sqlite.gz
+# dead http://watson.nci.nih.gov/~zhujack/SRAmetadb.sqlite.gz
+# dead http://dl.dropbox.com/u/51653511/SRAmetadb.sqlite.gz
+https://starbuck1.s3.amazonaws.com/sradb/SRAmetadb.sqlite.gz
+
+#  sradb (from getSRAdbFile.R)
+# https://www.ncbi.nlm.nih.gov/books/NBK47528/
+url_sra_4='https://starbuck1.s3.amazonaws.com/sradb/SRAmetadb.sqlite.gz'
+rs <- dbGetQuery(sra_con, c("SELECT study_type AS StudyType count(*) AS Number FROM `study` GROUP BY study_type order by Number DESC")
+dbGetQuery(sra_con, c("SELECT instrument_model AS 'Model', count(*) AS Expts FROM `experiment` GROUP BY instrument_model order by Experiments DESC")
+dbGetQuery(sra_con, c("SELECT library_strategy AS 'LibStrat', count(*) AS Runs FROM `experiment` GROUP BY library_strategy order by Runs DESC")
+sraConvert( c('SRP001007','SRP000931'), sra_con = sra_con )
+
+#  convert csv file to schema e.g. for sqlite3
+> csvsql -e iso-8859-1 asp.csv  # from csvkit
+
+# datetime
+sqlite> select datetime(1676502000) ;
+NULL
+sqlite> select datetime(1676502000,'unixepoch');
+"2023-02-15 23:00:00"
+
+# convert csv file to schema e.g. for sqlite3
+csvsql -e iso-8859-1 asp.csv  # from csvkit

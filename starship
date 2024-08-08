@@ -1,0 +1,23 @@
+# description
+rust configurable prompt
+
+# install
+brew install starship
+cargo install starship
+
+# config
+starship config # view
+
+# presets -- https://starship.rs/presets/#bracketed-segments
+starship preset gruvbox-rainbow -o ~/.config/starship.toml
+starship preset bracketed-segments -o ~/.config/starship.toml
+
+# dori
+[possible values: bracketed-segments, nerd-font-symbols, no-empty-icons, no-nerd-font, no-runtime-versions, pastel-powerline, plain-text-symbols, pure-preset, tokyo-night]
+starship preset tokyo-night -o ~/.config/starship.toml
+
+# use
+starship_init
+
+# quit / exit
+starship_clean

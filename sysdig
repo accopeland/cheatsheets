@@ -1,0 +1,22 @@
+---
+syntax: bash
+tags: [ dev monitor ]
+---
+
+# description - sysdig.com
+Sysdig Agent uses an eBPF probe to capture in-depth system call activity to more effectively triage issues in your container and Kubernetes environment. Then, Sysdig enriches these metrics with host, cloud, and Kubernetes context to help you make sense of all that data. Sysdig helps you find the needle in the haystack even if containers are killed
+
+# install
+brew install sysdig
+
+# usage
+
+
+# chisel
+tasks
+
+# list chisels
+sysdig -cl
+
+# trace
+sysdig

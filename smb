@@ -1,0 +1,17 @@
+* samba: SMBCLIENT -L machine -U user
+    is very useful for checking out NetBios machine services
+    and samba configuration. THe -U option is necessary if remote
+    machine is protected by account.
+
+* samba: to access win shares containing spaces, try
+        # trailing space is required
+        smb:> cd "Microbial Finishing\"
+        # or
+        SMBCLIENT '\\mb020\C$' -U mduser -N -c 'cd "Program Files"; cd "Molecular Dynamics"; cd MegaBACE; cd Service ;ls'
+
+* samba printing:
+        /home/copeland/local/samba/bin/SMBCLIENT //gopher/130-HP4200 -U copeland -s /home/copeland/local/samba/lib/smb.conf
+        smb> printmode graphics
+        smb> print foo.ps
+        smb> printmode text
+        smb> print foo.txt

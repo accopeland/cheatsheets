@@ -1,0 +1,57 @@
+# description
+Notes on fastq compressor slimfastq
+
+# build
+git clone https://github.com/Infinidat/slimfastq
+cd slimfastq/
+change all sprintf(buf,...) to snprintf(buf,sizeof(buf),...)
+make
+cp slimfastq  ~/local/bin
+
+# pipe + gzip
+gzip -dc /some/path/507811_1327144.sub.001.fastq.gz | slimfastq -f /some/path/507811_1327144.sub.001.fastq.gz.sfq
+-rwxr-xr-x  1 copeland  staff  14471041 Feb 20 20:01 /Users/copeland/Repos/JGI/USA/reseq/reseq_wdl_test/507811_1327144.sub.001.fastq.gz
+-rw-r--r--  1 copeland  staff   8527872 Apr 10 21:17 /Users/copeland/Repos/JGI/USA/reseq/reseq_wdl_test/507811_1327144.sub.001.fastq.gz.sfq
+
+# usage
+ ./slimfastq
+Usage:
+-u  usr-filename : (default: stdin)
+-f comp-filename : required - compressed
+-d               : decode (instead of encoding)
+-O               : silently overwrite existing files
+-l level         : compression level 1 to 4 (default is 3 )
+-1, -2, -3, -4   : alias for -l 1, -l 2, etc
+ Where levels are:
+ 1: Uses less than 4M memory (!), yields the worse compression (still much better than gzip)
+ 2: Uses about 30M memory, resonable compression
+ 3: Uses about 80M memory, best compression <default level>
+ 4: Compress a little more, but very costly (competition mode?)
+
+-v               : version : internal version
+-h               : help : this message
+-s               : stat : information about a compressed file
+-q               : suppress extra stats info that could have been seen by -s
+
+DWIM (Do what I mean) - Intuitive use of 'slimfastq A B' :
+If A appears to be a fastq file, and:
+    B does not exists, or -O option is used: compress A to B
+If A appears to be a slimfastq file, and:
+    B does not exist, or -O option is used: decompress A to B
+    B is omitted: decompress A to stdout
+
+# Examples:
+% slimfastq <file.fastq> <new-file.sfq>   : compress <file.fastq> to <new-file.sfq>
+% slimfastq -1 <file.fastq> <new-file.sfq*: compress <file.fastq> to <new-file.sfq>, using level 1
+% slimfastq <file.sfq>                    : decompress <file.sfq> to stdout
+% slimfastq <file.sfq> <file.fastq        : decompress <file.sfq> to <file.fastq*
+% gzip -dc <file.fastq.gz> | slimfastq -f <file.sfq> : convert from gzip to sfq format
+
+# Verification :
+% md5sum <file.fastq>                      : remember checksum
+% slimfastq <file.fastq> <new-file.sfq>    : compress
+% slimfastq <new-file.sfq> | md5sum -      : decompress pipe to md5sum, compare checksums
+
+# parallel
+For efficiently compressing multiple files in parallel use tools/slimfastq.multi -h
+(or make install; slimfastq.multi -h)

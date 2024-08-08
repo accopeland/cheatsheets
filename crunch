@@ -1,0 +1,212 @@
+# description
+TOol to generate wordlists with possible exhaustive permutations/combinations from fixed or user supplied charsets
+
+# install
+brew install crunch
+apt install crunch
+
+# docs
+
+#For example, here 1 character to 3 characters per word is being generated in smallcase and stored in file dict.txt
+crunch 1 3 -o dict.txt
+
+# Defined Alphanumeric Characters
+A user can also define the selected characters to be used while generating a wordlist. Here, min size 5 and max size 7 characters per words is being generated while using the characters “p, a, s, s, 1, 2, and 3” as input. Hence the dictionary starts with “ppppp, ppppa ….” And ends with “3333333” and contains combinations like pass213, pass1 etc.
+ex:
+crunch 5 7 pass123 -o dict.txt
+
+# Space character wordlist
+One neat trick is to include space in the wordlist. Often times we need spaces in scenarios for passwords and many generic wordlists or tools don’t have this feature. In crunch, we can define space as a character by putting space after the characterset to be used. For 1 to 3 characters per word including space we can do this:
+ex:
+crunch 1 3 "raj " -o space.txt
+
+# View character sets available
+In the /usr/share/crunch directory, one may find a list file (charset.lst) mentioning all the different character sets supported by crunch. This is highly useful as a ready reference. One may manually specify character sets or can even use the codenames written on the left. It is quite simple to understand though. Description of each charset is given below:
+
+# To view the charset file:
+cat /usr/share/crunch/charset.lst
+
+# Using codename character sets
+These codenames can be used while creating dictionary files. For example, to create a wordlist of 4 characters per word using a mixture of alphabets, numeric and special characters, one can specify the charset.lst file using the “-f” option and then specify code word “mixalpha-numeric-all”
+ex:
+crunch 4 4 -f charset.lst mixalpha-numeric-all -o wordlist.txt
+
+# Startblock in wordlists
+A startblock can be defined using the “-s” filter. By using this, we can define from where a wordlist should start generating. This is helpful in discarding unwanted combinations. For example, to start a wordlist from abc1, and having 4 characters per word including alphanumeric and special characters can be created like below. This way, the dictionary starts with “abc1, abc2,..abd1, abd2…” and ends at “////”
+ex:
+crunch 4 4 -f charset.lst mixalpha-numeric-all -o wordlist.txt -s abc1
+
+# Creating Dictionary with various patterns
+Please note that the following symbols when defined as input in character sets mean the following:
+@ will insert lower case characters
+, will insert upper case characters
+% will insert numbers
+^ will insert symbols
+
+# word with 3 chars ; char1 lowercase, char2 number , char3 symbol
+ex:
+crunch -t @%^ -o dict.txt
+
+# placeholder +
+With “-t” as the flag to provide the symbols. If you aren’t going to use a particular character set you use a plus sign as a placeholder.
++ operator positioning: The + operator can be used where no specific character sets are used and any value can be replaced for the same. But this is in the following order:
+
+# Lowercase alphabets, uppercase alphabets, numbers, symbols
+For example,
+crunch 3 3 + + 123 +
+This would take in the following input:
+Lowercase: abcdefghijklmnopqrstuvwxyz
+Uppercase: ABCDEFGHIJKLMNOPQRSTUVWXYZ
+Numbers: 123
+Symbols: !@#$%^&*()-_+=~`[]{}|\:;”‘<>,.?/
+
+# Case 1: Fixed word + 3 numbers
+Lets say if we want to fix first 3 letters as “raj” and insert random combinations of digits at the last 3 places in a 6 character per word wordlist, it can be done by specifying the pattern without the use of commas like above in “-t” filter.
+ex:
+crunch 6 6 -t raj%%% -o num.txt
+
+
+Case 2: Fixed word + 3 uppercase alphabets
+
+Let’s say if we want to fix first 3 letters as “raj” and insert random combinations of uppercase alphabets at the last 3 places in a 6 character per word wordlist, it can be done by
+
+crunch 6 6 -t raj,,, -o upper.txt
+
+
+Case 3: Fixed word + 3 lowercase alphabets
+
+Let’s say if we want to fix first 3 letters as “raj” and insert random combinations of smallcase alphabets at the last 3 places in a 6 character per word wordlist, it can be done by
+
+crunch 6 6 -t raj@@@ -o lower.txt
+
+
+Case 4: Fixed word + 3 symbols
+
+Let’s say if we want to fix first 3 letters as “raj” and insert random combinations of special characters at the last 3 places in a 6 character per word wordlist, it can be done by
+
+crunch 6 6 -t raj^^^ -o symbol.txt
+
+
+Case 5: Placeholder fixed pattern
+
+Let’s say in place of the lowercase placeholder we input abc12 and with “-t” we supply in @ then the pattern shall also contain 1 and 2 even though we just gave “@” indicator. See the following example:
+
+crunch 5 5 abc12 -t @@@@@ -o dict.txt
+
+
+Case 6: Lowercase alphabet (a,b or c) + number (1,2 or 3) + symbol (ANY)
+
+Now, a user can also provide character set from which a pattern is to be created. In the following example, abc and 123 have been used. A “+” operator is also used indicating that the pattern indicator for which charset is not supplied, shall be treated as “ANY” value.
+
+So, if a user wants to create a dictionary with first character lowercase, number as second character and symbol as third but only “a,b or c” as characters, “1,2 or 3” as numbers and any random symbol on last position respectively, he can do the following:
+
+crunch 3 3 abc + 123 -t @%^ -o pattern.txt
+
+
+Case 7: Two number (1,2 or 3) + lowercase alphabet (ANY) + symbol (ANY)
+
+Similarly, to create a 4 character per word pattern of 2 digits (containing only 1,2, or 3)+lowercase alpha+symbol we can do this:
+
+crunch 4 4  + + 123 + -t %%@^ -O pattern2.txt
+
+
+Case 8: Treating symbols as literals
+
+When “-l” is used in accordance with the “-t” filter, it tells crunch which symbols should be treated as literals. For example, we know that @ is used to denote a lowercase letter. So, if we want to generate a 7 character per word wordlist using the word “p@ss” fixed, it will consider @ as a pattern indicator of a lowercase alphabets. Thereafter, -l filter can be used to define which character is to be treated as literal and not converted as pattern. This can be done like:
+
+crunch 7 7 -t p@ss,%^ > dict.txt
+crunch 7 7 -t p@ss,%^ -l a@aaaaa > 1.txt
+
+
+Inverting Wordlist
+A generated wordlist fixes, by default, first characters and creates combinations on the last character. For example, a wordlist containing “a,b and c” has
+
+aaa
+aab
+aac
+aba
+abb
+abc
+aca
+…
+
+But this can be inverted using the “-i” option. Crunch would fix the last letter first and make combinations out of first letters. For example, a dictionary of 5 characters per word having 3 alphabets,2digits and inverted looks like following:
+
+crunch 5 5 abc12 -t @@@%% -o dict.txt
+crunch 5 5 abc12 -t @@@%% -i -o invert.txt
+
+
+Limit duplicate patterns
+A user can place a limit on the number of characters that can occur together. For example, to create a wordlist of 5 characters per word using 3 lowercase alphabets,1 number and 1 symbol can be done like the first command. But if a user wants to limit the occurrence of duplicate characters together to only 2 places he can use the “-d” operator. Note how in the first command 3 “a” occurred but in the second command duplicates are limited to only 2 and so only 2 “a”s have occurred.
+
+crunch 5 5 abc + 123 -t @@@%^ -o 1.txt
+crunch 5 5 abc + 123 -t @@@%^ -o 2.txt -d 2@
+
+
+Putting early stops on wordlists
+As per user requirements, there may also be a possibility when a user wants to cut short a list to certain combination. For example, if a user wants to create 3 characters per word wordlist using “a,b and c” as characters but wants to cut it as soon as wordlist generates combination ”acc” it can be done like so:
+
+crunch 3 3 abc -o 1.txt
+crunch 3 3 abc -e acc -o 2.txt
+
+
+Word permutations
+In mathematics, permutations stand for non-repeating combinations of certain events. So, to generate non-repeating wordlists by permutations we can use the “-p” filter. Here, we supply 3 words as input none of which shall repeat even if the maximum size of the wordlist is 6.
+
+crunch 3 6 -p raj chandel hackingarticles
+
+
+Wordlist Permutations
+Just like words can be permuted, wordlists can be permuted. Using the “-q” option, crunch can take input from a wordlist and do permutations on what is read in the file. For example, if the file list is:
+
+A
+
+B
+
+C
+
+Then, crunch -q list.txt would output:
+
+ABC
+
+ACB
+
+BAC
+
+BCA
+
+CAB
+
+CBA
+
+Similarly, we can do permutations on 3 char per word wordlist like so:
+
+crunch 3 3 abc -e acc -o 2.txt
+crunch 3 3 abc -q 2.txt -o 3.txt
+
+
+Splitting wordlist based on word count
+A wordlist can be cut short using the “-c” option. Here, a file with 94 words has been generated. Now, to split that into multiple files each containing 60 words maximum can be done like so. Note, that this only works with “-o START” which will autoname the files in the format:
+
+Starting character – Ending character.txt
+
+Here, start and ending are a,7 and for next file, 8 and /(space)
+
+crunch 1  1 -f charset.lst mixalpha-numeric-all-space -o file.txt
+crunch 1  1 -f charset.lst mixalpha-numeric-all-space -o START -c 60
+
+
+Splitting wordlist based on size
+To cut short a file based on the size, we can use “-b” filter. For example, to split a wordlist into multiple files each of a maximum 1 MB we can do:
+
+crunch 4 7  Pass123 -b 1mb -o START
+Remember, -o START is compulsory as it will automatically split the file in the format:
+
+Starting character – Ending character.txt
+
+
+Compressing wordlist
+Oftentimes, wordlists are too large in size while in text format and gzip can be used to compress them to over 60-70%. For example, to compress a file of max 7 mixalpha-numeric charset and autoname using START we can do this:
+
+crunch 4 7  Pass123 -z gzip -o START
+gunzip PPPP-3333333.txt.gz

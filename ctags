@@ -1,0 +1,24 @@
+# description
+Ctags finds the definition of a symbol or a function.
+Cscope can find all the places calling a function. using both of them makes navigation in large source trees very easy.
+
+# install
+brew install ctags
+
+# docs
+
+# usage /vim
+cd src
+ctags
+C-]   # find tag under cursor
+g C-]
+C-T   # ret to prev location
+:ta <tag>
+:tags  # list tag stack
+:tselect  # nav around tag stack
+
+# create / update db
+fd -e c -e cpp -e h > cscope.files
+ctags -L cscope.files
+ctags -e -L cscope.files
+cscope -ub -i cscope.files

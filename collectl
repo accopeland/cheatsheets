@@ -1,0 +1,51 @@
+# description
+General linux sys monitor and reporting
+
+# docs
+https://collectl.sourceforge.net/Tutorial.html
+
+# basic
+collectl --all --verbose --home
+
+# create large file using 'dt' and monitor with collectl
+dt of=/tmp/test limit=1g bs=1m disable=compare,verify dispose=keep
+ collectl
+
+# iosize
+collectl --iosize
+
+# show cpu and disk loads every quarter second and includes the date and time in msecs:
+collectl -scd -i.25 -oDm
+
+# show how load is distributed. uppercase subsystem type, like cpu, disk or network tells collectl to show instance level details:
+collectl -sC
+
+# memory -- add memory subsystem to the default selections
+collectl -s+m
+
+# memory no network
+collectl -scmd:
+
+# nfs / network -- all I/O goes through the network
+collectl -scfn
+
+# -verbose
+
+# ...
+collectl -sc --verbose
+
+# ...
+collectl -sm --verbose
+
+# ...
+collectl -sn --verbose
+
+# ...
+collectl -scmn --verbose
+
+#  --home
+move the cursor to the home (upper left-hand corner) position of the screen. Think of this as something like the linux top command
+
+# --top
+for displaying slab/process data) since each sample is displayed at the top of the screen.
+That command would then look like collectl -smcn --verbose --home

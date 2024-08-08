@@ -1,0 +1,211 @@
+# description
+
+# installl
+brew install crystal
+
+# source install deps
+crystal
+llvm
+llvm
+boehmgc: git clone https://github.com/ivmai/bdwgc.git
+git clone https://github.com/crystal-lang/crystal
+make std_spec compiler_spec # to ensure all specs pass, and you’ve installed everything correctly.
+
+# docs
+
+# File IO
+f = File.new("/path/to/file")
+content = f.gets_to_end
+f.close
+# or
+content = File.read("path/to/file")
+
+# concurrency
+A Crystal program by default executes in a single operating system thread,
+except for the garbage collector (currently Boehm GC). Parallelism is
+supported, but it is currently considered experimental. Check out this Crystal
+Blog post about parallelism for more information.
+
+# run
+crystal run <f.cr>
+
+# build
+crystal build f.cr
+$ crystal build hello_world.cr --release
+$ crystal build hello_world.cr --release --static
+
+# init
+$ crystal init app myapp
+    create  myapp/.gitignore
+    create  myapp/.editorconfig
+    create  myapp/LICENSE
+    create  myapp/README.md
+    create  myapp/shard.yml
+    create  myapp/src/myapp.cr
+    create  myapp/spec/spec_helper.cr
+    create  myapp/spec/myapp_spec.cr
+Initialized empty Git repository in /home/crystal/myapp/.git/
+
+# format
+crystal tool format [--check] [<path>...]
+
+# tools
+crystal tool¶
+crystal tool context: Show context for given location
+crystal tool expand: Show macro expansion for given location
+crystal tool format: Format Crystal files
+crystal tool hierarchy: Show type hierarchy
+crystal tool implementations: Show implementations for given call in location
+crystal tool types: Show types of main variables
+
+# compiler
+Compiler commands¶
+crystal init: generate a new project
+crystal build: build an executable
+crystal docs: generate documentation
+crystal env: print Crystal environment information
+crystal eval: eval code from args or standard input
+crystal play: starts crystal playground server
+crystal run: build and run program
+crystal spec: build and run specs
+crystal tool: run a compiler tool
+crystal help: show help about commands and options
+crystal version: show version
+
+# learn -- exercism
+	exercism configure
+	exercism prepare
+  	# website select track (https://exercism.org/tracks/crystal/exercises/hello-world)
+	exercism download --exercise=hello-world --track=crystal
+	exercism spec
+	exercism submit src/hello_world.cr
+
+# javascript
+	crystal -> js (220)
+	typescript (30k)
+	coffeescript (2k)
+	elm (515)
+	nim -> js (46)
+	purescript (37)
+
+# shards
+shards build: Builds an executable
+shards check: Verifies dependencies are installed
+shards init: Generates a new shard.yml
+shards install: Resolves and installs dependencies
+shards list: Lists installed dependencies
+shards prune: Removes unused dependencies
+shards update: Resolves and updates dependencies
+shards version: Shows version of a shard
+
+# cross-compile
+crystal build your_program.cr --cross-compile --target "x86_64-unknown-linux-gnu"
+cc your_program.o -o your_program -lpcre -lrt -lm -lgc -lunwind
+
+# C binding
+C.srand(1_u32)
+lib C
+  # In C: double cos(double x)
+  fun cos(value : Float64) : Float64
+end
+C.cos(1.5) # => 0.0707372
+lib X
+  fun variadic(value : Int32, ...) : Int32
+end
+X.variadic(1, 2, 3, 4)
+lib C
+  fun srand(seed : UInt32)
+end
+
+# threadlocal -- A variable can be marked as thread local with an annotation:
+lib C
+  @[ThreadLocal]
+  $errno : Int32
+end
+
+# benchmark
+require "benchmark"
+class PointClass
+  getter x
+  getter y
+
+  def initialize(@x : Int32, @y : Int32)
+  end
+end
+struct PointStruct
+  getter x
+  getter y
+
+  def initialize(@x : Int32, @y : Int32)
+  end
+end
+Benchmark.ips do |x|
+  x.report("class") { PointClass.new(1, 2) }
+  x.report("struct") { PointStruct.new(1, 2) }
+end
+> crystal run --release --progress class_v_str.cr
+
+# fibers -- https://crystal-lang.org/reference/1.5/guides/concurrency.html
+spawn do
+  # ...
+  socket.gets
+  # ...
+end
+
+spawn do
+  # ...
+  sleep 5.seconds
+  #  ...
+end
+spawn do
+  loop do
+    puts "Hello!"
+  end
+end
+Fiber.yield
+
+# testing -- spec
+require "spec"
+describe Array do
+  describe "#size" do
+    it "correctly reports the number of elements in the Array" do
+      [1, 2, 3].size.should eq 3
+    end
+  end
+  describe "#empty?" do
+    it "is true when no elements are in the array" do
+      ([] of Int32).empty?.should be_true
+    end
+
+    it "is false if there are elements in the array" do
+      [1].empty?.should be_false
+    end
+  end
+end
+
+# static linking via docker -- Docker can be used to build a statically linked Hello World program:
+echo 'puts "Hello World!"' > hello-world.cr
+docker run --rm -it -v $(pwd):/workspace -w /workspace crystallang/crystal:latest-alpine \
+    crystal build hello-world.cr --static
+./hello-world
+Hello World!
+ldd hello-world
+        statically linked
+
+# lib paths
+CRYSTAL_LIBRARY_PATH
+
+# error: with readline and --static you might encounter errors like these:
+(.text+0x678): undefined reference to `PC'
+(.text+0x687): undefined reference to `BC'
+(.text+0x68e): undefined reference to `UP'
+(.text+0x728): undefined reference to `tgetent'
+(.text+0x76f): undefined reference to `tgetstr'
+(.text+0x799): undefined reference to `PC'
+(.text+0x7af): undefined reference to `BC'
+(.text+0x7bd): undefined reference to `UP'
+(.text+0x7cf): undefined reference to `tgetflag'
+(.text+0x81e): undefined reference to `tgetflag'
+(.text+0x938): undefined reference to `tgetflag'
+Fix: explicitly link to libtermcap using --link-flags
+$ crystal build --static --link-flags "-rdynamic -static -lreadline -ltermcap" main.cr

@@ -1,3 +1,6 @@
+# show config location
+cheat --conf
+
 # To see example usage of a program:
 cheat <command>
 
@@ -12,3 +15,45 @@ cheat -s <command>
 
 # To get the current `cheat' version
 cheat -v
+
+# file locattion
+~/.config/cheat/cheatsheets/dev/
+
+# error
+failed to load config: config error: cheatpath path is not unique: ~/.config/cheat/cheatsheets/dev
+- look for spaces in path or other errors in conf.yml
+- had to remove 'person' from conf.yml ???
+
+# config
+conf.yml
+
+# cheatpaths
+# conf.yml:
+# ...
+cheatpaths:
+  - name: community                   # a name for the cheatpath
+    path: ~/documents/cheat/community # the path's location on the filesystem
+    tags: [ community ]               # these tags will be applied to all sheets on the path
+    readonly: true                    # if true, `cheat` will not create new cheatsheets here
+
+  - name: personal
+    path: ~/documents/cheat/personal  # this is a separate directory and repository than above
+    tags: [ personal ]
+    readonly: false                   # new sheets may be written here
+ ...
+
+
+# header
+---
+syntax: javascript
+tags: [ array, map ]
+---
+// To map over an array:
+const squares = [1, 2, 3, 4].map(x => x * x);
+
+
+# push to public repo
+ ...
+
+# update cheat sheets
+...

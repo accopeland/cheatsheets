@@ -1,0 +1,63 @@
+# description
+Simple containers on mac
+Docker client is required for Docker runtime. Installable with brew brew install docker.
+
+# see also
+qemu
+lima
+limactl
+
+# customizing -- default colima VM has 2 CPUs, 2GiB memory and 60GiB storage.
+customize by
+- passing flags to colima start. e.g. --cpu, --memory, --disk, --runtime.
+- Or by editing the config file with colima start --edit.
+see also For other profiles, $HOME/.colima/<profile-name>/colima.yaml
+$ colima template
+
+# install
+brew install docker
+brew install colima
+
+# usage
+docker ps -a # FAIL
+colima start --runtime=docker --cpu 1 --disk 2 --memory 2  --network-address
+docker ps -a # SUCEESS
+colima stop
+
+# docker -- Docker socket is located at $HOME/.colima/default/docker.sock
+docker context list
+export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+
+# dockerfile
+colima start --runtime containerd
+FROM public.ecr.aws/lambda/python:3.9
+CMD ["echo", "test"]
+$ colima nerdctl build .
+colima stop
+
+# containerd - nerdctl
+You can use colima nerdctl to interact with Containerd using nerdctl.
+nerdctl build --namespace k8s.io --platform linux/amd64 -t test/test:local -f ./Dockerfile .
+$ colima nerdctl build -- -t ghcr.io/mrsauravsahu/docker-samples/docs-site:0.1.0-alpha.1 -f ../common/svelte-kit.dockerfile .
+$ colima nerdctl run -- -d -p 8080:80 ghcr.io/mrsauravsahu/docker-samples/docs-site:0.1.0-alpha.1
+
+# containerd
+colima start --runtime containerd # starts and setup Containerd.
+
+# kubernetes
+colima start --kubernetes
+
+# Error: docker pull fail
+Fix: colima start --dns 1.1.1.1
+
+# disk resize
+colima start --disk <newsize>
+
+# disk resize
+qemu-img resize ~/.lima/colima/diffdisk +10G # change needs vm restart
+# reduce disk size
+# -drive file=/Users/chris/.lima/fedora/diffdisk,if=virtio,discard=on ???
+
+# podman
+
+# singularity

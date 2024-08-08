@@ -1,0 +1,14 @@
+# CLARITY api : # Get artifact lims id for library based on name
+ http https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/artifacts?type=Analyte&name=BHWHW&process-type=LC%20Library%20Creation
+# or
+http  https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/artifacts type=='Analyte' name=='BHWHW' process-type=='LC Library Creation'
+
+# clarity API : get sequencing process that used the library as input via artifact lims id:
+http  https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/processes?inputartifactlimsid=2-1630207&type=SQ%20Sequencing
+
+# clarity API: Parse and get the resultfile artifacts associated with the process, for example:
+http https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/artifacts/92-1637803
+http https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/processes/24-166430
+
+# clarity API :  Get file associated with an artifact:
+http https://rqcapi:rqcapi@clarity-prd01.jgi-psf.org/api/v2/files/40-10791

@@ -1,0 +1,33 @@
+# description
+
+# install
+brew install cromwell
+
+# docs
+
+# test / validate
+womtool
+
+# config
+config.file=/home/ec2-user/jgi-fungal-asm/config/cromwell.aws.config
+
+# AWS  -- https://docs.google.com/document/d/1BnxcRJiPWQVkNHgr4jjTn19Yi5zzVqeL95aiPIUlhO8/edit
+#if running meg you need a security group that has access to the internet to get some of the wdls
+Launch ec2 r5 instance (AMI amzn2-ami-kernel-5.10-hvm-2.0.20220912.1-x86_64-gp2)  # with sg-0c53215a6df7253e5 (jgi_access).
+Ssh to node
+sudo amazon-linux-extras install -y docker #install software dependencies    (docker, java, git cromwell)
+sudo service docker start
+sudo chmod -R 777 /var/run/docker.sock
+wget https://github.com/broadinstitute/cromwell/releases/download/84/cromwell-84.jar
+sudo amazon-linux-extras install -y java-openjdk11
+java -jar cromwell-84.jar
+sudo yum install git -y
+git clone -b master https://code.jgi.doe.gov/BFoster/jgi_meta_wdl # testing MG improved draft
+git clone -b dev https://<user>:<TOKEN>@code.jgi.doe.gov/gaa/jgi-fungal-asm.git  # testing MEG
+scp -i <pemfile> -r /global/dna/shared/data/_Testing_Cases+Data/Functional_Tests/Assembly/Fungi/eukcc/eukcc2_db_ver_1.2 ec2-user@ec2-35-84-200-251.us-west-2.compute.amazonaws.com:/home/ec2-user
+scp ...  #scp input data, update input.json and options.json paths
+#run MEG workflow - config reqd to make db viewable to cromwell; assumes db stored in /home/ec2-user or /scratch
+java -Dconfig.file=/home/ec2-user/jgi-fungal-asm/config/cromwell.aws.config -jar ../cromwell-84.jar  run -i inputs.json -o options.json ../jgi-fungal-asm/wdl/meg.wdl
+
+
+# GCP

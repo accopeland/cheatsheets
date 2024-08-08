@@ -1,0 +1,238 @@
+# install
+brew install comby
+
+# doc
+https://comby.dev/docs/get-started
+https://comby.dev/docs/advanced-usage
+
+
+# gitter
+https://gitter.im/comby-tools/community
+
+# test
+comby 'swap(:[1], :[2])' 'swap(:[2], :[1])' -stdin .js <<< 'swap(x, y)'
+
+# rewrite . Comby runs in current directory by default. The '-stdin' option rewrites input on stdin.
+comby [MATCH_TEMPLATE REWRITE_TEMPLATE [FULL_FILE_PATHS_OR_FILE_SUFFIXES ...]]
+
+# list languages
+comby -list
+
+# syntax -- https://docs.sourcegraph.com/code_search/reference/structural
+# https://comby.dev/docs/syntax-reference
+Syntax		Alias		Description
+--------   	----------	----------------
+...		:[hole]|:[_]	lazily match >=0 chars. When :[hole] in delims{:[h1], :[h2]} or (:[h]), holes match w/in
+				that group or code block, including newlines.
+:[~regexp]	:[hole~regexp]	match arb regexp. identifier hole optional. Avoid regex matching syntax like ) or .*, otherwise           			   pattern may fail to match balanced blocks.
+:[[_]]		:[~\w+]
+:[[hole]]	:[hole~\w+]	match one or more alphanumeric characters and underscore.
+
+:[hole\n]	:[~.*\n]
+		:[hole~.*\n]	match zero or more characters up to a newline, including the newline.
+
+:[ ]		:[~[ \t]+]
+:[ hole]	:[hole~[ \t]+]	match only whitespace characters, excluding newlines.
+
+:[hole.]	[_.]		match >=1 alphanum chars and punct (. ;) not affecting balanced syntax. Language dependent.
+
+# Useful command line options
+-i	replace files in place
+-d dir	only process files recursively and directories in dir
+-zip zipfile	process files in a ZIP archive
+-jobs n	run n processes in parallel
+-matcher language	select the language to parse the file as (see more)
+-exclude prefix	exclude files with names or paths that start with prefix
+-exclude-dir prefix	same as -exclude but applies only to directories
+
+# – Exclude multiple prefixes with commas:
+comby -exclude-dir vendor,node_modules,test ...
+See comby -help for a complete list of flags.
+
+# multiple search-and-replace templates?
+look at using configuration files. Alternatively, use a directory of
+rewrite templates with the -templates option and run it like so:
+
+# filtering : -f
+#
+#It’s important to use the -f option
+#for filtering files when using -templates, or comby will think it is an
+#anonymous argument for a command line template.
+comby -f .go -templates /path/to/directory
+
+The path/to/directory should contain folders, one for each rewrite pattern, that contain two files: one named match and the other named rewrite. An optional rule can be put in the same directory, in a file called rule. For example,
+
+path/to/directory
+├── some-rewrite
+│   ├── match
+│   └── rewrite
+├── another-rewrite-with-rule
+│   ├── match
+│   ├── rule
+│   └── rewrite
+···
+See the catalog directory layout for a sample catalog of templates.
+
+# Extract matches?
+##First way: Add -match-only -json-lines will print matched content, matched values for holes, and ranges in JSON format. One line is printed per match.
+
+comby 'a :[1] c d' '' -stdin .txt -json-lines -match-only <<< "a b c d"
+#Use jq to extract values you’re interested in from the JSON. See the JSON schema for what the JSON output contains.
+
+#Second way: Add -newline-separated -stdout if you’re only interested in the matched fragments and don’t want to fiddle with JSON.
+
+comby 'a :[1] c d' '' -stdin .txt -match-only -newline-separated -stdout <<< "a b c d"
+#This will print all matches terminal, one entry per line. If -match-only is removed, all rewritten-values are printed.
+
+# -review  : Review changes before accepting them?
+#Interactively review changes on the command line using -review, just like in codemod:
+comby 'foo(:[1], :[2])' 'bar(:[2], :[1])' sub.js -review
+for example:
+------ sub.js
+++++++ sub.js
+@|-1,3 +1,3 ============================================================
+-|function subtract(param1, param2) {
++|function subtract(param2, param1) {
+ |  return param1 - param2;
+ |}
+Accept change (y = yes [default], n = no, e = edit original, E = apply+edit, q = quit)?
+
+# Get raw patches?
+Add -diff to get patches as unified diffs.
+
+comby 'foo(:[1], :[2])' 'bar(:[2], :[1])' -stdin -diff <<< 'foo(a, b)'
+--- /dev/null
++++ /dev/null
+@@ -1,1 +1,1 @@
+-foo(a, b)
++bar(b, a)
+
+# -matcher :  Select the language to parse?
+# Comby uses generic parser if it fails to guess lang. -matcher forces a language
+-matcher .js
+-matcher .c.
+
+# -stdin
+accept input from pipes,
+
+# -stdout
+write to standard out.
+
+# Pipe input to comby?
+Add -stdin to have comby accept input from pipes, and -stdout to write to print to standard out.
+echo 'foo(a, b)' | \
+comby 'foo(:[1], :[2])' 'bar(:[2], :[1])' -stdin -stdout .js | \
+comby 'bar(:[_])' 'qux(:[_])' -stdin -stdout .js
+
+# Specify rules on the command line?
+Use the -rule option to specify rules:
+comby 'foo(:[1])' 'bar(:[1])' .py -rule 'where :[1] == "self"'
+
+# Run a rewrite pass. Comby runs in current directory by default. The '-stdin' option rewrites input on stdin.
+  comby [MATCH_TEMPLATE REWRITE_TEMPLATE [FULL_FILE_PATHS_OR_FILE_SUFFIXES ...]]
+# flags
+[-bound-count num]             Stop when num matches found (possibly more for parallel jobs).
+[-color]                       Color matches or replacements (patience diff).
+[-count]                       Display a count of matches in a file.
+[-custom-matcher path]         Path to a JSON file that contains a custom matcher
+[-custom-metasyntax path]      Path to a JSON file that contains a custom metasyntax definition
+[-default-no]                  If set, RET will NOT apply change. Setting activates -review mode
+[-depth n]                     Depth to recursively descend into directories
+[-diff]                        Output diff
+[-directory path]              Run recursively. Default is current directory: (alias: -d)
+[-disable-substring-matching]  Allow :[holes] to match substrings
+[-editor editor]               manual review with [editor]. This activates -review mode.
+[-exclude prefixes]            Comma-sep prefixes of files/paths to exclude.
+[-exclude-dir prefixes]        [.] Comma-sep prefixes of dirs to exclude.
+[-extensions extensions]       Comma-sep file extensions to include, ext used to infer  matcher
+[-fast-offset-conversion]      Enable fast offset conversion. experimental; default once vetted.
+[-in-place]                    Rewrite files on disk, in place
+[-jobs n]                      Number of worker processes. Default: 4
+[-json-lines]                  Output JSON line format
+[-json-only-diff]              Output only the URI and diff in JSON line format
+[-list]                        Display supported languages and extensions
+[-match-newline-at-toplevel]   Enable matching newlines at the top level for :[hole].
+[-match-only]                  Only matching. empty rewrite template as argument 2(aliases: -o)
+[-matcher extension]           Use matcher on all files, unless -custom-matcher spec'd
+		(aliases: -m, -lang, -l, -language)
+[-newline-separated]           output rewrites separated by newlines.
+[-omega]                       Use Omega matcher engine.
+[-parany]                      force comby to use alt parany parallel processing library.
+[-regex]                       print a regex that file must satisfy  for a pattern to be run
+[-review]                      Review patch and accept,reject, or modify with $EDITOR [vim].
+[-editor]			 Override $EDITOR (alias: -r)
+[-ripgrep flags]               Activate ripgrep for filtering files. (alias: -rg)
+[-rule rule]                   Apply rules to matches.
+[-sequential]                  Run sequentially
+[-statistics]                  Dump statistics to stderr (alias: -stats)
+[-stdin]                       Read source from stdin
+[-stdout]                      Print changed content to stdout.
+[-substitute-only JSON]        Do not match or rewrite (match templates and inputs ignored).
+[-tar]                         read tar format from stdin.
+[-templates paths]             CSV of dirs containing templates, or TOML config files
+	(aliases: -config, -configuration)
+[-timeout seconds]             Set match timeout on a source. Default: 3 seconds
+[-verbose]                     Log to /tmp/comby.out
+[-zip zipfile]                 A zip file containing files to rewrite (alias: -z)
+[-build-info]                  print info about this build and exit
+[-version]                     print the version of this build and exit
+[-help]                        print this help text and exit (alias: -?)
+
+# matches (only)
+comby 'a :[1] c d' '' -stdin .txt -match-only -newline-separated -stdout <<< "a b c d"
+
+
+# using configs
+comby -config comby.toml -f .js
+
+# configs
+[delete_paren_contents]
+match='(:[1])'
+rewrite='()'
+rule='where nested'
+[remove_first_paren_element]
+match='(:[1],:[2])'
+rewrite='(:[2])'
+[blank_brace]
+match='{ }'
+rewrite='{}'
+[delete_trailing_paren_whitespace]
+match='(:[1] )'
+rewrite='(:[1])'
+
+# templates
+# It’s important to use the -f option for filtering files when using -templates, or comby will think it is an anonymous argument
+# for a command line template.
+comby -f .go -templates /path/to/directory
+
+# using templates
+The path/to/directory should contain folders, one for each rewrite pattern, that contain two files: one named match and the other named rewrite. An optional rule can be put in the same directory, in a file called rule. For example,
+ path/to/directory
+├── some-rewrite
+│   ├── match
+│   └── rewrite
+├── another-rewrite-with-rule
+│   ├── match
+│   ├── rule
+│   └── rewrite
+···
+
+# rewrite catalog
+https://catalog.comby.dev
+
+# source search
+https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/torvalds/linux%24+list_del%28:%5Bx%5D%29%3B+list_add%28:%5Bx%5D%2C+:%5B_%5D%29&patternType=structural
+
+# Comby matches "token(:[foo])" against things like "longer_token(...)". ie. the token in the input string is treated as a suffix, rather than a full token.
+Try adding -disable-substring-matching on the command line, does that work?
+echo "serif(font); if(font); ser.if(font)" | comby -stdin 'if(font)' 'foo(font)' -disable-substring-matching
+Alternatively, there is a simple regex that may work well enough using \b for word boundaries like :[~\bif](foo) https://bit.ly/3wrshWd
+echo "serif(font); if(font); ser.if(font); ser_if(font)" | comby -stdin 'if(font)' 'foo(font)' -disable-substring-matching
+
+# escaping symbols
+#
+#
+
+# ex
+comby 'task { :[_] }' '' -matcher .generic -stdout -f .wdl > topmed.tasks
+perl -ne 'print "$1\n" if /task (\w+) {/' aligner/*/*  > topmed.tasks

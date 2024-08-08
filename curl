@@ -20,7 +20,7 @@ curl -x <proxy-host>:<port> <url>
 curl -u <username>:<password> -O ftp://example.com/pub/file.zip
 
 # To get an FTP directory listing:
-curl ftp://username:password@example.com
+curl ftp://<username>:<password>@example.com
 
 # To resume a previously failed download:
 curl -C - -o <partial-file> <url>
@@ -35,7 +35,23 @@ curl http://ifconfig.me/all.json
 curl --limit-rate 1000B -O <outfile>
 
 # To get your global IP:
-curl httpbin.org/ip 
+curl httpbin.org/ip
 
 # To get only the HTTP status code:
 curl -o /dev/null -w '%{http_code}\n' -s -I URL
+
+# data-urlencode
+ --data-urlencode <data>    (HTTP) posts data, similar to -d, --data options with the exception that this performs URL-encoding.
+              To  be  CGI-compliant,  the  <data> part should begin with a name followed by a separator and a content specification. The <data> part can be  passed to curl using one of the following syntaxes:
+      content
+      URL-encode content and pass on. be careful that the content doesn't contain any = or  @  symbols,
+         as that will then make the syntax match one of the other cases below!
+      =content
+        URL-encode the content and pass on. The preceding = symbol is not included in the data.
+      name=content
+        URL-encode content and pass that on. Note that the name part is expected to be URL-encoded already.
+      @filename
+        load data from the given file (including any newlines), URL-encode that data and pass it on in the POST.
+      name@filename
+        load data from given file (including any newlines), URL-encode that data and pass it on in the POST. The name
+        part gets an equal sign appended, resulting in name=urlencoded-file-content. Note that the name is expected to be URL-encoded already.

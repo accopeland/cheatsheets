@@ -4,11 +4,17 @@ tags: [ packaging ]
 # To list environments
 conda env list
 
-# To initialise an environment
+# To create an environment
+conda create -n py35 python=3.5 anaconda # new conda env with specific python version
+conda create --mkdir --path /global/projectb/scratch/copeland/something # new conda env with path
+conda create --name snowflakes biopython # create an env and install programs
 conda create --name <environment_name>
 
-# To initialise an environment with python3.10 
+# To initialise an environment with python3.10
 conda create --name <environment_name> python=3.10
+
+# duplicate an environment
+conda create --clone env1 -n newenv
 
 # To install from a file
 conda install --file <requirements.txt>
@@ -38,3 +44,47 @@ conda env export > <environment.yml>
 
 # To export an activated environment, listing only manually installed packages (no dependencies)
 conda env export --from-history > <environment.yml>
+
+# clone environment from a file
+source activate myenv
+conda list -e > myenv.yml
+conda install --file myenv.yml
+
+# list all conda pkgs
+conda list
+
+# searching
+$ anaconda search -t conda <pkg>
+$ anaconda search -t pypi <pypi-pkg>
+
+# list revisions of env
+conda list --revisions
+
+#  channels
+$ anaconda search -t conda biopython
+$ conda install -c <channel> <pkg>
+
+# conda install
+conda install -c r r-essentials #for R
+conda install -c BioBuilds perl-biopython # conda for perl
+
+# remove package
+conda remove --name env biopython
+
+# remove env
+conda remove --name env --all
+conda remove -n flowers --all
+
+# use particular revision (downgrade)
+conda install --revision 3 pkg
+
+# list of all my environments
+conda info --envs
+
+# sharing
+source activate /some/shared/env/path/test
+
+# copy env
+source activate env
+conda env extract > env.yml
+conda create -f env.yml ...

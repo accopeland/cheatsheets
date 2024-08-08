@@ -1,0 +1,67 @@
+https://python-control.readthedocs.io/en/latest/intro.html
+
+see also
+- matlab / control system toolbox
+- sympy
+- tbcontrol
+- octave : https://gnu-octave.github.io/packages/  # https://octave.sourceforge.io/list_functions.php
+
+ The scipy.signal library handles conversion between transfer function coefficients and state space matrices easily. Note that scipi.signal only handles SISO transfer functions.
+
+# bode
+def bode(G):
+    fig, [ax_mag, ax_phase] = plt.subplots(2, 1)
+    ax_mag.loglog(omega, numpy.abs(G))
+    ax_phase.semilogx(omega, numpy.angle(G))
+
+# nyquist
+def nyquist(G):
+    plt.plot(G.real, G.imag,
+             G.real, -G.imag)
+    plt.xlabel('Real')
+    plt.ylabel('Imag')
+    plt.axis('equal')
+
+# bode 2
+import control
+G = control.tf(1, [tau**2, 2*tau*zeta, 1])
+control.bode(G, omega);
+
+# root locus
+def rlocus(order, tau_p, K):
+    Gp = 1/(tau_p*s + 1)**order
+    Gc = 1
+
+    L = Gp*Gc
+    CL = K*L/(1 + K*L)
+    control.root_locus(L);
+    control.pzmap(CL)
+    plt.title('')
+
+# this whole notebook is awesome -- https://dynamics-and-control.readthedocs.io/en/latest/2_Control/3_PID_controller_design_tuning_and_troubleshooting/Direct%20synthesis%20PID%20design.html
+
+# 	poles / zeros -- Locating poles and zeros of a complex function
+construct a complex transfer function by specifying the poles, zeros and gain separately.
+zeros = [1]
+poles = [-1 + 1j, -1 - 1j]
+gain = 1
+from numpy.polynomial.polynomial import polyvalfromroots
+def G(s):
+    return gain*polyvalfromroots(s, zeros)/polyvalfromroots(s, poles)
+It will be useful for us to be able to plot a complex curve easily
+
+def plotcomplex(curve, color='blue', marker=None):
+    plt.plot(numpy.real(curve), numpy.imag(curve), color=color, marker=marker)
+def plotpz():
+    for p in poles:
+        plotcomplex(p, color='red', marker='x')
+    for z in zeros:
+        plotcomplex(z, color='red', marker='o')
+
+# tbcontrol --
+
+# dc gain = Yss / r(t)  ;
+Yss = steady state output = lim t->OO y(t) = lim s->0 sY(s)
+r(t) = input
+transfer function gain is the magnitude of the transfer function, putting s=0.
+Otherwise, it is also called the DC gain of the system, as s=0 when the input is constant DC.

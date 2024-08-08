@@ -1,0 +1,14 @@
+# description
+Tool for navigation of c/c++ projects
+Ctags finds the definition of a symbol or a function. Cscope can find all the places calling a function. using both of them makes navigation in large source trees very easy.
+
+# install
+brew instal cscope
+
+# docs
+
+# usage
+C-d exit
+<spc> choose next item
+
+

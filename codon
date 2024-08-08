@@ -1,0 +1,39 @@
+# description
+Seems broken (or at least seq plugin is) and no updates since Fall 2023.
+Update/replacement for seq.
+
+# install
+/bin/bash -c "$(curl -fsSL https://exaloop.io/install.sh)"
+
+# build seq plugin
+git clone https://github.com/exaloop/seq.git
+cmake -S . -B build -G Ninja -DLLVM_DIR=/Users/copeland/.codon/include/codon/cir/llvm/llvm.h -DCODON_PATH=/Users/copeland/.codon -DCMAKE_BUILD_TYPE=Release
+cmake --install build --prefix /Users/copeland/.codon/lib/codon/plugins/seq
+
+# run seq plugin
+codon run -plugin seq code.codon ...
+
+
+# docs
+https://github.com/exaloop/codon?tab=readme-ov-file
+
+# config
+set the CODON_PYTHON environment variable to the CPython shared library, as explained in the the docs.)
+
+
+# compile and run the program
+codon run fib.py
+# 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987
+
+# compile and run the program with optimizations enabled
+codon run -release fib.py
+# 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987
+
+# compile to executable with optimizations enabled
+codon build -release -exe fib.py
+./fib
+# 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987
+
+# compile to LLVM IR file with optimizations enabled
+codon build -release -llvm fib.py
+# outputs file fib.ll

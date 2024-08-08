@@ -1,0 +1,5 @@
+# description
+Notes on macos clang compiler
+
+# omp
+On macOS, install GCC compiler since Clang has issues with OpenMP library:

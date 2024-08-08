@@ -1,0 +1,54 @@
+# description
+
+#install
+
+# docs
+
+* cvmfs user mount
+	# user mount
+	cvmfs2 -o config=mycon.conf atlas.cern.ch /home/user/atlas
+	singularity-3.4 + premount
+	docker + bind mount | mount repo inside container
+	docker-volume-cvmfs
+
+* parrot + cvmfs
+	PARROT_CVMFS_REPO=...
+	# e.g.
+	export PARROT_CVMFS_REPO="<default-repositories> alice-ocdb.cern.ch:url=${CERN_S1}/alice-ocdb.cern.ch,pubkey=<PATH/key.pub> ilc.desy.de:url=${DESY_S1}/ilc.desy.de,pubkey=<PATH/key.pub>"
+
+* remove reference databases
+	galaxy::cvmfs
+	galaxy::rsync  rsync -avzP rsync://datacache.galaxyproject.org/indexes/microbes/63
+
+
+
+# cvmfs / singularity - runs well via singularity and cvmfs2  (https://eessi.github.io/docs/pilot/)
+	$ singularity shell --fusemount "$EESSI_CONFIG" --fusemount "$EESSI_PILOT" docker://eessi/client-pilot:centos7-$(uname -m)
+
+# cvmfs / singularity
+	 singularity run --cleanenv -S /var/run/cvmfs -B ${GEN_SHARED_CVMFS}:/cvmfs-cache \
+    -B "$BIND_LIST" \
+    --fusemount \
+      "container:cvmfs2 cvmfs-config.computecanada.ca /cvmfs/cvmfs-config.computecanada.ca" \
+    --fusemount "container:cvmfs2 soft.mugqic /cvmfs/soft.mugqic"   \
+    --fusemount "container:cvmfs2 ref.mugqic /cvmfs/ref.mugqic" \
+    ${IMAGE_PATH}/genpipes.sif "$@"
+
+# cmvfs / singularity
+	~/Projects/2021/20210121-_cctools/cc> singularity pull docker://cvmfs/service
+	./service_latest.sif  # works!!
+* cvmfs / singularity - runs well via singularity and cvmfs2  (https://eessi.github.io/docs/pilot/)
+	$ singularity shell --fusemount "$EESSI_CONFIG" --fusemount "$EESSI_PILOT" docker://eessi/client-pilot:centos7-$(uname -m)
+
+* cvmfs / singularity
+	 singularity run --cleanenv -S /var/run/cvmfs -B ${GEN_SHARED_CVMFS}:/cvmfs-cache \
+    -B "$BIND_LIST" \
+    --fusemount \
+      "container:cvmfs2 cvmfs-config.computecanada.ca /cvmfs/cvmfs-config.computecanada.ca" \
+    --fusemount "container:cvmfs2 soft.mugqic /cvmfs/soft.mugqic"   \
+    --fusemount "container:cvmfs2 ref.mugqic /cvmfs/ref.mugqic" \
+    ${IMAGE_PATH}/genpipes.sif "$@"
+
+* cmvfs / singularity
+	~/Projects/2021/20210121-_cctools/cc> singularity pull docker://cvmfs/service
+	./service_latest.sif  # works!!

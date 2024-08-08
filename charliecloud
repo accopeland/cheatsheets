@@ -1,0 +1,44 @@
+# description
+Another container runner without root
+
+# docs
+
+# install
+linux only
+spack install charliecloud
+
+# usage
+spack load /iff
+ch-test --version
+ch-image build -t hello -f Dockerfile .
+ch-image list
+ch-run hello
+ch-convert hello hello.sqfs
+ch-run hello.sqfs -- /hello.py
+
+# container
+# see https://hpc.github.io/charliecloud/tutorial.html#seconds-to-charliecloud
+# create private gitlab registry 'test-registry'
+# enable container registry
+# create PAT (see ~/.gitlab-test-registry)
+# chmod 600 ~/.gitlab-test-registry
+source ~/.gitlab-test-regsitry
+# https://code.jgi.doe.gov/ACCopeland/test-registry
+ch-image push hello gitlab.com:5050:/$USER/test-registry/hello:latest
+
+# oci
+skopeo copy docker://alpine:3.17 oci:/tmp/oci:img
+[...]
+ls /tmp/oci
+blobs  index.json  oci-layout
+umoci unpack --rootless --image /tmp/oci:img /tmp/alpine:3.17
+[...]
+ls /tmp/alpine:3.17
+config.json
+rootfs
+sha256_2ca27acab3a0f4057852d9a8b775791ad8ff62fbedfc99529754549d33965941.mtree
+umoci.json
+ls /tmp/alpine:3.17/rootfs
+bin  etc   lib    mnt  proc  run   srv  tmp  var
+dev  home  media  opt  root  sbin  sys  usr
+ch-run /tmp/alpine:3.17/rootfs -- cat /etc/alpine-release

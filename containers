@@ -1,0 +1,58 @@
+# descriptions
+tools and utilities for working with containers
+
+# see
+podman
+podman-hpc
+singularity-ce
+singularity-hpc
+singularity (dev)
+inspect
+skopeo
+Whaler
+dive
+atomic
+tern
+
+# login
+podman login quay.io
+podman login -u accopeland@lbl.gov code.jgi.doe.gov # OK (use PAT)  registry login ???
+echo "<password>" | podman login library.jgi.doe.gov:5050 -u <username> --password-stdin ## code.jgi.doe.gov 'password'
+
+# build
+podman build -t nginx https://git.io/Jf8ol
+podman run -d -p 8080:80 nginx
+curl localhost:8080
+podman login quay.io
+podman tag localhost/nginx quay.io/accopeland/nginx  # tag image so that we can push it into our user account:
+podman push quay.io/accopeland/nginx # push image
+podman inspect quay.io/accopeland/nginx
+
+# tips and tricks
+https://docs.olcf.ornl.gov/software/containers_on_summit.html
+
+# several times to clean out dangling images and layers for a full reset.
+podman system prune && podman image rm --force $(podman image ls -aq)
+
+# Full container storage purge
+chmod -R +w /tmp/containers/<username>
+rm -r /tmp/containers/<username>.
+
+# kill podman
+pkill podman  # then log out and log back in to reset your cgroup usage.
+
+# If you already have a “image.tar” file created with podman save from earlier that you are trying to replace, you will need to delete it first before running any other podman save to replace it. podman save won’t overwrite the tar file for you.
+
+# Error: overflow $HOME with cache
+# Fix: Not using the --disable-cache flag in your singularity build commands could cause your home directory to get quickly filled by singularity caching image data.
+You can set the cache to a location in /tmp/containers with export SINGULARITY_CACHEDIR=/tmp/containers/<username>/singularitycache if you want to avoid using the --disable-cache flag.
+
+# Error: ERRO[0000] stat /run/user/16248: no such file or directory or Error: Cannot connect to the Podman socket
+# Fix: make sure there is a Podman REST API service running.
+
+# Error: error creating tmpdir: mkdir /run/user/12341: permission denied,
+# Fix: try logging out and logging back in. If that fails, then after logging in run
+ssh login<number> # where login<number> is the login node you are currently logged in to.
+If all else fails, write to the help@olcf.ornl.gov and we can see if the issue can be fixed from there.
+
+# If you’re trying to mount your home directory with --bind /ccs/home/<user>:/ccs/home/<user> in your singularity exec command, it might not work correctly. /ccs/home/user is an alias to /autofs/nccs-svm1_home1/user or /autofs/nccs-svm1_home2/user. You can find out which one is yours with stat /ccs/home/user and then mount your home directory with --bind /autofs/nccs-svm1_home1/user:/ccs/home/user to make /ccs/home/user visible within your container.

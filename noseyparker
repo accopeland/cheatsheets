@@ -1,0 +1,22 @@
+# description
+tool for finding leaked secrets in git repos
+
+# see also
+pre-commit::
+trufflehound
+git-hound
+(secrets)
+
+# install
+brew install noseyparker
+
+# usage
+noseyparker scan .
+nosepyarker report
+
+# list repos
+noseyparker github repos list --user octocat
+
+# scan remotes
+noseyparker scan --datastore np.noseyparker --git-url https://github.com/praetorian-inc/noseyparker
+

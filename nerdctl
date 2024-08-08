@@ -1,0 +1,27 @@
+# description
+yet another container run time, around this time, containerd
+
+# see also
+kubectl
+lima
+colima
+
+# install -- lima provides Linux virtual machines for macOS, with built-in integration for nerdctl.
+https://github.com/containerd/nerdctl
+$ brew install lima
+$ limactl start
+$ lima nerdctl run -d --name nginx -p 127.0.0.1:8080:80 nginx:alpine
+
+# usage
+nerdctl run -it --rm alpine  # see nerdctl.lima
+
+# build --  using BuildKit:
+nerdctl build -t foo /some-dockerfile-directory
+nerdctl run -it --rm foo
+
+# kubernetes
+nerdctl --namespace k8s.io ps -a
+
+# rootless container
+$ containerd-rootless-setuptool.sh install  # rootless containerd
+$ nerdctl run -d -p 8080:80 --name nginx nginx:alpine

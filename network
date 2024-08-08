@@ -1,0 +1,228 @@
+# description
+Collection of misecellaneous notes about network performance monitoring and testing tools and utils
+
+# see also
+perfsonar
+perf
+hepfile
+darkstat
+ethr
+bpytop
+
+# ucx
+https://openucx.org/introduction/
+
+# infiniband
+[rsegan@ln000 openmpi-4.1.5]$ /usr/bin/ibdev2netdev
+mlx5_0 port 1 ==> ib0 (Up)
+#---
+[rsegan@ln000 openmpi-4.1.5]$ /usr/bin/ibv_devinfo
+libibverbs: Warning: couldn't open config directory '/etc/libibverbs.d'.
+libibverbs: Warning: no userspace device-specific driver found for /sys/class/infiniband_verbs/uverbs0
+No IB devices found
+
+# tuning
+https://science.gsfc.nasa.gov/606.1/docs/M07_tutorial.pdf
+https://docs.nvidia.com/networking-ethernet-software/knowledge-base/Configuration-and-Usage/Monitoring/Throughput-Testing-and-Troubleshooting/
+https://fasterdata.es.net/host-tuning/
+https://www.automat-it.com/post/testing-aws-network-performance
+https://community.rti.com/static/documentation/perftest/3.0/tuning_os.html
+https://www.mcs.anl.gov/~kettimut/talks/pfldnet04.pdf
+
+# load testing
+ws
+vegeta
+wrk2
+k6
+
+# monitoring
+bmon
+darkstat
+trafshow - obsolete
+ifstat
+nethogs
+nfdump
+perfsonar,
+iperf,
+tcpkali,
+cl-netstat
+bwctl
+nuttcp
+iperf3
+owping
+ethr (https://github.com/microsoft/ethr)
+bwm-ng
+vnstat
+bandwhich
+
+#  data transfer
+#  see data_xfer
+sftpd
+pnssh
+
+# dtn list
+https://scienceregistry.netsage.global/rdb/
+
+# network latency: blip
+(http://gfblip.appspot.com)
+
+# hpnssh
+https://www.psc.edu/hpn-ssh-home/hpn-ssh-faq/
+
+# netstat -s
+
+# perfsonar
+
+# calcs
+ bps = 0.7 * MSS / RTT*sqrt(drop/total)
+ MSS = ping MTU - 20 - 20 - 12 (1500 -> 1448; 8000 -> 7492 )
+ RTT from ping
+
+# bandwidth delay product:
+# BDP = Mbps * RTT (min/avg/max)
+# Mbps : output from
+#   nuttcp -t -T10 -i1 -w8m dtn03.nersc.gov
+
+# UDP tuning (https://fasterdata.es.net/host-tuning/linux/udp-tuning/) --
+# UDP will not get a full 10Gbps (or more) without some tuning as well. The important factors are:
+- use jumbo frames: performance will be 4-5 times better using 9K MTUs
+- packet size: best performance is MTU size minus packet header size. For example for a 9000Byte MTU, use 8972 for IPV4, and 8952 for IPV6.
+- socket buffer size: For UDP, buffer size is not related to RTT the way TCP is, but the defaults are still not large enough. Setting the socket buffer to 4M seems to help a lot in most cases
+- core selection: UDP at 10G is typically CPU limited, so it is important to pick the right core. This is particularly true on Sandy/Ivy Bridge motherboards.
+Sample commands for iperf, iperf3, and nuttcp:
+   nuttcp -l8972 -T30 -u -w4m -Ru -i1 -xc4/4 remotehost
+   iperf3 -l8972 -T30 -u -w4m -b0 -A 4,4  -c remotehost
+   numactl -C 4 iperf -l8972 -T30 -u -w4m -b10G -c remotehost
+
+
+# BDP etc.
+http://ce.sc.edu/cyberinfra/workshops/workshop_2022/Bandwidth-delay%20Product%20and%20TCP%20Buffer%20Size.pdf
+
+#   TCP buff size
+ nuttcp -w -t -T10 -w8m dtn03.nersc.gov
+
+#   http://amp.nlanr.net
+
+#  Test throughput and jitter with iperf3
+iperf3 -c 23.20.188.12 --port 5001 --parallel 128
+. . . . .
+[SUM]   0.00-10.00  sec  5.36 GBytes  4.61 Gbits/sec  7205             sender
+[SUM]   0.00-10.00  sec  4.52 GBytes  3.88 Gbits/sec                  receiver
+iperf Done.
+# iperf3 -c 23.20.188.12 --port 5001 -u -b 10g
+. . . . .
+
+# iperf3 UDP tuning test
+copeland@perlmutter:login32:~> ssh -vvfN  dtn03.nersc.gov "iperf3 -s & "
+copeland@perlmutter:login32:~> iperf3 -l8972 -T30 -u -w4m -b0 -A 4,4  -c dtn03.nersc.gov
+warning: UDP block size 8972 exceeds TCP MSS 8948, may result in fragmentation / drops
+30:  Connecting to host dtn03.nersc.gov, port 5201
+30:  [  5] local 128.55.64.41 port 41061 connected to 128.55.205.20 port 5201
+30:  [ ID] Interval           Transfer     Bitrate         Total Datagrams
+30:  [  5]   0.00-1.00   sec  3.80 GBytes  32.6 Gbits/sec  454770
+30:  [  5]   1.00-2.00   sec  3.61 GBytes  31.0 Gbits/sec  432330
+30:  [  5]   2.00-3.00   sec  3.74 GBytes  32.1 Gbits/sec  447700
+30:  [  5]   3.00-4.00   sec  2.68 GBytes  23.0 Gbits/sec  320550
+30:  [  5]   4.00-5.00   sec  3.76 GBytes  32.3 Gbits/sec  450480
+30:  [  5]   5.00-6.00   sec  3.78 GBytes  32.4 Gbits/sec  451940
+30:  [  5]   6.00-7.00   sec  3.78 GBytes  32.4 Gbits/sec  451910
+30:  [  5]   7.00-8.00   sec  3.78 GBytes  32.5 Gbits/sec  452310
+30:  [  5]   8.00-9.00   sec  3.68 GBytes  31.6 Gbits/sec  440110
+30:  [  5]   9.00-10.00  sec  3.78 GBytes  32.4 Gbits/sec  451890
+30:  - - - - - - - - - - - - - - - - - - - - - - - - -
+30:  [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+30:  [  5]   0.00-10.00  sec  36.4 GBytes  31.3 Gbits/sec  0.000 ms  0/4353990 (0%)  sender
+30:  [  5]   0.00-10.00  sec  20.2 GBytes  17.3 Gbits/sec  0.002 ms  1935401/4352494 (44%)  receiver
+30:  iperf Done.
+
+# tcp tuning recommendations /etc/sysctl.conf
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.ipv4.tcp_rmem = 4096 87380 33554432 # increase Linux autotuning TCP buffer limit to 32MB
+net.ipv4.tcp_wmem = 4096 65536 33554432
+net.ipv4.tcp_congestion_control=htcp  # recommended default congestion control is htcp
+net.ipv4.tcp_mtu_probing=1 # recommended for hosts with jumbo frames enabled
+net.core.default_qdisc = fq  # recommended to enable 'fair queueing'
+
+# exvivo
+net.core.default_qdisc = pfifo_fast
+net.core.rmem_max = 262144
+net.core.wmem_max = 212992
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_mtu_probing = 0
+net.ipv4.tcp_rmem = 4096	131072	6291456
+net.ipv4.tcp_wmem = 4096	16384	4194304
+
+# cori
+can't probe
+
+# ln011 -- [accopeland@ln011 ~]$ tcp_tuning
+net.core.default_qdisc = fq
+net.core.rmem_max = 134217728
+net.core.wmem_max = 134217728
+net.ipv4.tcp_congestion_control = htcp
+net.ipv4.tcp_mtu_probing = 1
+net.ipv4.tcp_rmem = 4096        87380   67108864
+net.ipv4.tcp_wmem = 4096        65536   67108864
+# ln010
+[accopeland@ln010 ~]$ tcp_tuning
+net.core.default_qdisc = fq_codel
+net.core.rmem_max = 212992
+net.core.wmem_max = 212992
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_mtu_probing = 0
+net.ipv4.tcp_rmem = 4096        87380   6291456
+net.ipv4.tcp_wmem = 4096        16384   4194304
+
+# perlmutter
+net.core.default_qdisc = fq_codel
+net.core.rmem_max = 2147483647
+net.core.wmem_max = 2147483647
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_mtu_probing = 0
+net.ipv4.tcp_rmem = 4096        87380   2147483647
+net.ipv4.tcp_wmem = 4096        87380   2147483647
+
+# esnet testpoints
+http://stats.es.net/ServicesDirectory/
+
+
+# docker network testing
+https://forums.docker.com/t/connecting-to-nginx-on-port-443-using-host-ip/134205/3
+
+# infiniband
+performance testing: linux-rdma/perftest
+spack: rdma-perftest
+ib_read_bw
+ib_write_bw
+ib_read_lat
+ib_write_lat
+rdma_monitor
+
+# ethtool
+
+
+# debugging
+ip addr
+ethtool -S eth1 | grep drop
+ethtool -S eth0 | grep drop
+nmcli connection show
+ip link show
+nstat -az IpReasm*
+ping -c1 -Mdo -s 8972 dtn03.nersc.gov
+ethtool eth0 | grep -i speed
+iperf3 --time 60 --zerocopy --client dtn03.nersc.gov
+ping -c 10 dtn03.nersc.gov
+awk 'BEGIN { print  "10Gbps=1250MBs: 1250 / 0.000461 } ' 1
+nstat -az TcpExtTCPRcvCollapsed TcpExtRcvPruned
+ss -nti
+ss -nt
+ss -nti
+ethtool -i eth0
+modinfo -p i40e
+ip route show
+ip neigh
+
+# params
+net.ipv4.tcp_no_metrics_save = 1 # don't allow one large delayed packet to throtle conn
+net.core.netdev_max_backlog = 25000  #Also should change this for 10GE

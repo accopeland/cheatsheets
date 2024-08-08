@@ -1,0 +1,32 @@
+# debug
+mountstats
+nfsstat
+nfsiostat
+  cat /proc/self/mountinfo
+  cat /proc/self/mountstats
+  cat /proc/fs/jbd2/dm-1-8/info
+  cat /proc/fs/jbd2/dm-0-8/info
+  cat /proc/fs/jbd2/dm-3-8/info
+  cat /proc/net/snmp
+  cat /proc/sys/net/ipv4/ipfrag_high_thresh
+
+# docs
+https://support.vastdata.com/hc/en-us/articles/360012743419-NFS-Tuning
+https://www.mouser.com/pdfDocs/linux_monitor_storage_io_white_paper.pdf
+
+# running?
+rpcinfo -p
+
+# troubleshooting
+
+# status
+nfsstat
+
+# io
+nfsiostat
+
+# speed
+dd if=/dev/zero of=tempfile bs=1M count=1024 conv=fdatasync,notrunc
+
+# rsize / wsize  - see BDP
+cat /proc/self/mountinfo

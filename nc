@@ -23,3 +23,9 @@ nc -x<proxy-host>:<proxy-port> -Xconnect -Pruser <host> <port>
 
 # To choose the source IP for the testing using the -s option
 nc -zv -s source_IP target_IP Port
+
+# example
+$ tar -cf - -C /path/of/small/files . | pigz | nc -l 9876 # Source
+$ nc source_machine_ip 9876 | pigz -d | tar -xf - -C /put/stuff/here # Destination (Download)
+or
+$ nc source_machine_ip 9876 > smallstuff.tar.gz  # Destination (Archive)

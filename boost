@@ -1,0 +1,10 @@
+# boost
+module switch PrgEnv-pgi PrgEnv-gnu
+# add to ~/user-config.jam
+using mpi : <find-shared-library>mpich ;
+using gcc : : <compileflags>-I/opt/mpt/default/xt/mpich2-gnu/include <linkflags>-L/opt/mpt/default/xt/mpich2-gnu/lib ;
+
+# bjam
+./bjam --prefix=~copeland/local
+./bjam install --prefix=~copeland/local
+

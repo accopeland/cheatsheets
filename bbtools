@@ -1,0 +1,29 @@
+
+# crossblock / kapa contam
+sbatch --nodes 1 --qos regular --time 12:00:00 --constraint cpu --account=m342 -J NPSWU.2.xblock.minc1 --wrap "shifter -i bryce911/bbtools:latest decontaminate.sh minc=1 readnamefile=../NPSWU.su.fof refnamefile=../NPSWU.asm.fof out=crossblock_out.mninc1"
+
+# wrappers
+bbfschk                    est_insert_size_bbmap2     run_bbduk_trim             run_bbmap
+bbit                       run_bbcms                  run_bbec                   run_bbmerge
+bbt                        run_bbcp                   run_bbest                  run_bbnorm
+bbtools                    run_bbcp_dir               run_bbformat               run_bbqc
+est_insert_size_bbmap      run_bbduk_filter           run_bbkmerct               run_bbsplit
+
+# kmer histogram
+khist.sh -- nope
+kmercountexact.sh in=4M.fastq prealloc=f khist=4M.khist ow"
+Benchmark 1: kmercountexact.sh in=4M.fastq prealloc=f khist=4M.khist ow
+  Time (mean ± σ):     12.637 s ±  1.839 s    [User: 66.511 s, System: 4.202 s]
+  Range (min … max):    8.621 s … 15.798 s    10 runs
+
+# kmer For a tiny file:
+# fastest to slowest
+kmercountexact.sh in=40k.fastq prealloc=f
+khist.sh in=40k.fastq -Xmx1g
+kmercountexact.sh in=40k.fastq
+khist.sh in=40k.fastq
+## big file
+khist.sh in=big.fastq -Xmx1g  (however, this one won't be very accurate)
+kmercountexact.sh in=big.fastq
+khist.sh in=big.fastq
+kmercountexact.sh in=big.fastq prealloc=f

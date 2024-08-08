@@ -4,27 +4,233 @@ tags: [ mac, deps ]
 ---
 # Update
 brew update
+# description
+Homebrew mac package manager
 
-# Upgrade everything
-brew upgrade
+# docs
+brew
+formula
+bottle - pre-packaged binary
+cask
+
+# install
+curl ...
+sudo yum groupinstall 'Development Tools'
+sudo yum install procps-ng curl file git
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Upgrade specific formula
 brew upgrade <formula>
 
+# uninstall
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
+
 # Install formula
 brew install <formula>
 
-# Install cask
-brew install --cask <formula>
+# uninstall formula
+brew uninstall <pkg>
 
-# Uninstall
-brew uninstall <formula>
+# remove pkg + deps
+brew deps <pkg>  | xargs brew remove --ignore-dependencies && brew missing | xargs brew install
 
-# List installed formulae
-brew list
+# cask uninstall
+brew cask uninstall --force
 
-# Fix
-brew doctor
+# Fix fouled up brew git repo (update hangs)
+cd $(brew --repository) && git fetch && git reset --hard origin/master
+
+# cask
+brew cask info <pkg>
+brew cask install <pkg>
+open ~/Applications/"pkg.app"
+
+# bottle
+brew install --force-bottle systemd # avoid trying to compile
+
+# cleanup
+brew cleanup -n
+brew cleanup -s
+rm $(brew --cache)
+
+# Uninstall formulae that were only installed as a dependency of another formula
+brew autoremove
+
+# pip error fix
+# Error:   return self._vengine.load_library()
+File "/Users/copeland/Library/Python/2.7/lib/python/site-packages/cffi/vengine_cpy.py", line 155, in load_library raise ffiplatform.VerificationError(error)
+# pip error: Library not loaded: /usr/local/lib/libssl.1.0.0.dylib
+   return self._vengine.load_library()
+  File "/Users/copeland/Library/Python/2.7/lib/python/site-packages/cffi/vengine_cpy.py", line 155, in load_library
+    raise ffiplatform.VerificationError(error)
+cffi.ffiplatform.VerificationError: importing '/Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so': dlopen(/Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so, 2): Library not loaded: /usr/local/lib/libssl.1.0.0.dylib
+  Referenced from: /Users/copeland/Library/Python/2.7/lib/python/site-packages/cryptography/_Cryptography_cffi_a269d620xd5c405b7.so
+  Reason: image not found
+# Fix: brew install --upgrade openssl; brew unlink openssl && brew link openssl --force
+#or
+pip install cryptography --upgrade --force-reinstall --no-use-wheel
+
+# Error: update error
+Stashing your changes:
+UU octave.rb
+octave.rb: needs merge
+octave.rb: unmerged (8b377d72104597205cf5c680ffbf2d2e34885dc1)
+fatal: git-write-tree: error building trees
+Cannot save the current index state
+Error: Failed to update tap: homebrew/science
+# Fix:
+cd `brew --cellar`
+git reset --hard HEAD
+brew upgrade <formula>
+# or for a tap
+cd /usr/local/Library/Taps/homebrew/homebrew-science
+#git reset --hard HEAD
+git check <form>
+
+# Error: ld: library not found for -lssl
+# Fix:
+> brew install --upgrade openssl; brew unlink openssl && brew link openssl --force
+
+# sourceforge mirrors
+remove trailing whitespace and add version if needed
+to modify configure files use 'inreplace' , FILE, A, WITH_B
+to modify makefile pass args to make command
+brew fetch formula which also displays the SHA1 and SHA256 v
+ENV.append "LIBS", "-losxfuse"
+
+# debug
+~/Library/Caches/Homebrew/`
+# python dependencies - homebrew-pypi-poet
+> pip install homebrew-pypi-poet
+> poet -f <somepypkg>
 
 # Clean up
 brew cleanup
+
+# Fix broken cheat
+Error:  brew install cheat -> checksum error
+Fix:  brew fetch cheat : confirm checksum, then brew edit cheat
+brew install cheat : fails w bad checksum again
+brew install  --build-bottle cheat
+brew pin cheat
+
+# create
+brew update # required in more ways than you think (initializes the brew git repository if you don't already have it)
+cd `brew --repository`
+
+# Create new git branch for your formula so your PR is easy to modify during review.
+git checkout -b <some-descriptive-name>
+git add Library/Formula/foo.rb
+git commit
+
+# fix git sync issues with homebrew
+cd /usr/local/Library
+git pull origin master
+
+# java / osx
+brew update && brew upgrade brew-cask && brew cleanup && brew cask cleanup
+
+# python - brew python pip
+https://github.com/Homebrew/homebrew/wiki/Homebrew-and-Python
+basically just use pip
+
+# blast+
+	--with-dll
+	--without-gnutls
+	--without-debug
+	--with-mt
+
+# google / gmail command line query tool: google
+brew search google-cl
+google docs list
+
+# git download issues
+# seem to be due to ruby problems and fix by adjusting path
+export PATH='/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+echo $PATH
+brew install brew-cask # for example
+
+# ruby
+> brew unlink ruby193
+Unlinking /usr/local/Cellar/ruby193/1.9.3-p551... 21 symlinks removed
+copeland@acopeland:~/local> brew link ruby
+Linking /usr/local/Cellar/ruby/2.2.2... 1053 symlinks created
+
+# versions
+brew tap homebrew/versions
+brew search ruby
+brew install ruby192
+brew switch <formula> <version>
+
+# ruby
+export PATH=$(brew --prefix ruby)/bin:$PATH
+
+# rubygems
+# Method 1 - have gems install into /usr/local
+echo "gem: -n/usr/local/bin" >> ~/.gemrc
+sudo gem update --system
+
+# rubygems
+# Method 2 - install everything into Homebrew prefix
+echo "export GEM_HOME='$(brew --prefix)'" >> ~/.bashrc
+# Method 3 - use RVM
+
+# dependencies
+brew uses --installed bibtex2html
+brew info bibtex2html
+brew deps hevea
+
+# install from repo
+brew install --enable-cxx --enable-fortran https://raw.github.com/Homebrew/homebrew-dupes/master/gcc.rb
+
+# env
+brew --env
+
+# config
+brew --config
+
+# science
+brew tap homebrew/science
+
+# update formula
+# (https://jonathanchang.org/coding/updating-homebrew-formulae-when-your-software-gets-a-new-version/)
+-Install hub via brew install hub in the Terminal.
+- cd $(brew --repo homebrew/science)
+- Fork Homebrew-science repository with hub fork (enter GitHub username and password)
+- Create branch to work on updated formula : git checkout -b muscle-3.8.1551.
+- brew edit muscle
+- edit url to the URL of the latest release. In the case of muscle I also had to update the version field.
+- in the Terminal get the latest release: brew fetch muscle
+  brew will complain about hash mismatch since formula still contains old hash;just copy provided hash into sha256 field of muscle.rb
+- The formula has a revision field, so remove that line as it’s a new version.
+- run brew install -vsd --git muscle
+- Hopefully the new release compiles!
+
+# pin/unpin
+brew list --pinned		# list pinned software
+brew pin tomcat			# pin
+brew unpin <package_name>	# unpin
+
+# install old / other version of tool -- use git hash url
+e.g. brew install https://github.com/Homebrew/homebrew-core/raw/869efd7bc8/Formula/kubernetes-helm.rb
+
+# fucking python
+ brew uninstall python@3.9
+Error: Refusing to uninstall /usr/local/Cellar/python@3.9/3.9.19
+because it is required by libslirp, llvm@12, matplotlib, pdf2svg and sshfs-mac, which are currently installed.
+You can override this and force removal with:
+  brew uninstall --ignore-dependencies python@3.9
+
+# more fucking python
+> brew uninstall python@3.10
+Error: Refusing to uninstall /usr/local/Cellar/python@3.10/3.10.14
+because it is required by fades, git-filter-repo, gprof2dot, jsonschema, llvm@11, quast, spades and woof, which are currently installed.
+You can override this and force removal with:
+  brew uninstall --ignore-dependencies python@3.10
+
+# still more fucking python
+brew uninstall python@3.11
+Error: Refusing to uninstall /usr/local/Cellar/python@3.11/3.11.8
+because it is required by awscli, datalad, google-cloud-sdk, icdiff, ldns, pastebinit, python-tk@3.11, semgrep and xdot, which are currently installed.
+You can override this and force removal with:
+  brew uninstall --ignore-dependencies python@3.11

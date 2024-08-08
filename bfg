@@ -1,0 +1,43 @@
+# description
+tool to provide a faster, simpler alternative to git filter-repo for removing unwanted data, and for finding and removing big files from git repos
+
+# install
+$ brew install bfg
+
+# docs
+https://rtyley.github.io/bfg-repo-cleaner/
+
+# source
+https://github.com/rtyley/bfg-repo-cleaner
+
+# To remove file with sensitive data and leave latest commit untouched
+$ bfg --delete-files YOUR-FILE-WITH-SENSITIVE-DATA
+$ git push --force
+
+# To replace all text listed in passwords.txt wherever it can be found in your repository's history
+$ bfg --replace-text passwords.txt
+$ git push --force
+
+# After the sensitive data is removed, you must force push your changes to GitHub.
+# Force pushing rewrites the repository history, which removes sensitive data from the commit history.
+# If you force push, it may overwrite commits that other people have based their work on.
+
+# Delete all files named 'id_rsa' or 'id_dsa' :
+$ bfg --delete-files id_{dsa,rsa}  my-repo.git
+
+# Remove all blobs bigger than XX megabytes
+$ bfg --strip-blobs-bigger-than 50M  my-repo.git
+
+# Replace all passwords listed in a file (prefix lines 'regex:' or 'glob:' if required) with ***REMOVED*** wherever they occur in your repository :
+$ bfg --replace-text passwords.txt  my-repo.git
+
+# To Remove all folders or files named '.git' - a reserved filename in Git. These often become a problem when migrating to Git from other source-control systems like Mercurial :
+$ bfg --delete-folders .git --delete-files .git  --no-blob-protection  my-repo.git
+
+# usage (full)
+$ git clone --mirror git://example.com/some-big-repo.git  # bare repo (normal files not visible, but it's a full copy of db)
+$ java -jar bfg.jar --strip-blobs-bigger-than 100M some-big-repo.git  # clean commits and all branches and tags, but don't physically delete the unwanted stuff.
+$ cd some-big-repo.git3 # Examine the repo to make sure your history has been updated, then use git gc to strip out unwanted data:
+$ git reflog expire --expire=now --all && git gc --prune=now --aggressive
+$ git push # push repo back up (note that because your clone command used the --mirror flag, this push will update all refs on your remote server):
+## inform all users to to ditch old copies of the repo and do fresh clones. To prevent repeating, delete all old clones, since they'll have dirty history

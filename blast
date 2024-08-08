@@ -1,0 +1,128 @@
+# description
+
+# install
+
+# docs
+
+# source code:
+docs: https://www.ncbi.nlm.nih.gov/books/NBK569861/
+changelog: http://www.ncbi.nlm.nih.gov/books/NBK131777
+https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+
+# compile : configure / make
+cd c++
+./configure
+# CC="zig cc -target aarch64-linux-gnu" CXX="zig c++ -target aarch64-linux-gnu" AR="zig ar" RANLIB="zig ranlib"  ./configure
+#  CC="gcc10-cc" CXX="gcc10-c++" ./configure
+cd ReleaseMT/build
+make all_r
+
+# s3 ncbi blast databases (see email 20191219 Tom Madden, David Arndt, Lee Pang)
+aws s3 ls s3://ncbi-blast-databases/ --no-sign-request
+http://s3.amazonaws.com/ncbi-blast-databases docker run --rm ncbi/blast
+update_blastdb.pl --showall pretty --source aws
+https://github.com/ncbi/blast_plus_docs aws ls s3://ncbi-blast-databases/latest-dir (on AWS)
+or gs://blast-db/latest-dir (on GCP). latest-dir is a text file with a date stamp (e.g., 2020-09-29-01-05-01)
+aws s3 ls  s3://ncbi-blast-databases/2020-12-15-01-05-02/
+
+# gcp ncbi docker : https://github.com/ncbi/blast_plus_docs
+docker run --rm ncbi/blast update_blastdb.pl --showall pretty --source gcp
+
+# databases and download ebi
+rsync -av rsync://ftp.ensembl.org/ensembl/pub/current_embl/homo_sapiens .
+ftp://ftp.ensemblgenomes.org/pub/fungi
+
+# databases
+GCP: https://ncbi.github.io/blast-cloud/blastdb/available-blastdbs-gcp.html
+NCBI: docker run --rm -it ncbi/blast update_blastdb.pl --showall pretty --source NCBI [GCS]
+
+# benchmark
+# Hyperfine w cache clearing:  --prepare 'sync; echo 3 | sudo tee /proc/sys/vm/drop_caches'
+# blast with either shifter or docker (ncbi/blast:latest
+blastn -query ../polished_assembly.fasta -db /global/dna/projectdirs/fungal/assembly/aclum/blast_test/20190731/refseq.bacteria/refseq.bacteria/refseq.bacteria  -task megablast -perc_identity 90 -evalue 1e-30 -dust "yes" -num_threads 8)
+##  aws s3 cp s3://aclum/polished_assembly.fasta .
+#/home/ec2-user/polished_assembly.fasta
+# sudo amazon-linux-extras install -y lustre2.10
+#sudo mkdir /fsx
+#sudo mount -t lustre -o noatime,flock fs-0c2de20f25ba9da42.fsx.us-west-2.amazonaws.com@tcp:/fsx /fsx
+#
+# masking - see https://www.ncbi.nlm.nih.gov/books/NBK569849/
+can mask blast database and/or query with seg, dust, windowmasker or via lowercase fasta file
+If you mask the blast db then masking algorithm and info is provided via blastdbcmd -info
+To use masking in blast supply option -db_soft_mask <ID> or -db_hard_mask <ID>
+to query params
+
+# performance
+megablast indexed db: idx 4x larger than blastdb and must fit in RAM
+-dust yes
+-db_soft_mask : 2-10x
+-mt_mode 0 | 1 threading models : mode 1 ='thread by query' if small db AND many queries; need 2.5Mbp/thread and db<14B nt
+BATCH_SIZE : make sure large enough to keep  threads busy but small enough to avoid OOM
+-culling_limit 10  best hit algorithm :
+-word_size
+-window_size  for 2 hit algorithm
+
+_windowmasker -in /global/dna/shared/rqc/ref_databases/ncbi/CURRENT/ref_p
+rok_rep_genomes/ref_prok_rep_genomes -infmt blastdb -checkdup true -parse_seqids -mk_counts -out ref_prok_rep.counts
+
+# windowmasker ref_prok_rep_genomes: https://www.ncbi.nlm.nih.gov/books/NBK569845/
+# 1. counts
+_windowmasker -in $DB_REF_PROK_REP/ref_prok_rep_genomes.15 -infmt blastdb -checkdup true -parse_seqids -mk_counts -out ref_prok_rep.15.counts
+50m22s 481M output
+# 2. make asnb
+_windowmasker -in $DB_REF_PROK_REP/{} -infmt blastdb -parse_seqids -outfmt maskinfo_asn1_bin -out {}.mask.asnb -ustat {}.counts
+# 3. make blastdb masked
+_makeblastdb -input_type blastdb -in $DB_REF_PROK_REP/{} -mask_data {}.mask.asnb -dbtype nucl -parse_seqids -out {}.wmasked -title ref_prok_rep_wmask
+# 4. use masked db (about 5x faster)
+_blastn  -db ./ref_prok_rep_genomes  -task megablast -query S_tropica.fasta -outfmt 6 -out t.out.softmask -db_soft_mask 30
+
+# taxonomic blast outupt
+cat rprg.mask.8min31s | c 2 | sort -u > /tmp/a
+_blastdbcmd -db $DB_REF_PROK_REP/ref_prok_rep_genomes -entry_batch /tmp/a  -outfmt "%T" | sort -u | _bbt taxonomy.sh in=stdin
+
+# no self hits
+# Run the restricted database search, which shows there are no self-hits:
+-negative_taxids  exclude by taxid
+-negative_taxidlist  exclude by taxids in file
+-negative_seqidlist exclude sequences by accession
+$ blastn -db ecoli -negative_seqidlist exclude_me -show_gis -num_alignments 0 -query exclude_me
+
+# top hits
+-subject_besthit
+-num_alignments
+-num_descriptions
+-max_hsps
+-culling_limit
+-best_hit_overhang (0.1)
+-best_hit_score_edge (0.1)
+
+# taxonomy support
+vesrion 5 lmdb
+leaf nodes only => i
+get_species_taxids.sh
+https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/ provide a mapping from accession to taxid
+https://ncbiinsights.ncbi.nlm.nih.gov/2018/02/22/new-taxonomy-files-available-with-lineage-type-and-host-information/
+https://www.ncbi.nlm.nih.gov/Taxonomy/TaxIdentifier/tax_identifier.cgi  -- perform species name to taxid lookups
+
+# makeblastdb taxonomy support
+-taxid_map 2colfile.txt
+where 2colfile is:
+fasta+acc|fasta+gi|gi|localid  taxid
+
+# blast databases NCBI
+NCBI databases searchable on the NCBI web site are available on its FTP site. For tax searches It is better to download preformatted databases
+since databases on the FTP site contain taxonomic information for each sequence, include the identifier indices for lookups, and can be up to four times smaller than the FASTA. Also The original FASTA can be generated from the BLAST database using blastdbcmd.
+
+
+# query concatenation
+...
+
+# metadata
+see contents of .njs file (json)
+
+
+# blastdbcmd
+bl,astdbcmd -db $D -info
+
+# blastdb from blastdb
+makeblastdb -input_type blastdb -in $DB_REF_PROK_REP/{} -mask_data {}.mask.asnb -dbtype nucl -parse_seqids -out {}.v5 -title "Somedb"

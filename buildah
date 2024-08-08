@@ -1,0 +1,61 @@
+# description
+builder for podman but superset of podman build actions
+Using Buildah is different from building images with the docker command in the following ways:
+- No Daemon
+- Buildah requires no container runtime.
+- Base image or scratch
+- You can build an image based on another container or start with an empty image (scratch).
+- Build tools are external
+- Buildah does not include build tools within the image itself resulting in smaller images
+- Better security by excluding software from the resulting image.
+- Allows to transport the images using fewer resources because of the reduced image size.
+
+# docs
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/building_running_and_managing_containers/assembly_building-container-images-with-buildah
+https://towardsdatascience.com/its-time-to-say-goodbye-to-docker-5cfec8eff833
+
+# install
+brew install podman
+
+# go build -- nope
+go install github.com/containers/buildah@latest
+
+# build
+git clone https://github.com/containers/buildah
+cd buildah
+make runc all SECURITYTAGS="apparmor seccomp"
+sudo make install install.runc
+buildah --help
+
+# usage
+see https://jn-moal.gitlab.io/blog/posts/building_oci_images_with_buildah/
+
+# example
+$ buildah bud -f Dockerfile .
+$ buildah from alpine:latest  # Create starting container - equivalent to "FROM alpine:latest"
+...
+alpine-working-container  # Name of the temporary container
+$ buildah run alpine-working-container -- apk add --update --no-cache python3  # equivalent to "RUN apk add --update --no-cache python3"
+...
+$ buildah commit alpine-working-container my-final-image  # Create final image
+
+# images
+
+# manifest
+buildah manifest create
+buildah manifest add image1
+buildah manifest add image2
+buildah manifest push --all
+
+# cross architecture build (see https://github.com/containers/buildah/issues/1590)
+$ cat /tmp/Containerfile
+FROM docker.io/fedora:33
+RUN arch
+$ rpm -q qemu-user-static
+qemu-user-static-5.1.0-9.fc33.x86_64
+$ buildah bud /tmp
+...
+x86_64
+$ buildah bud --arch arm64 /tmp
+...
+aarch64

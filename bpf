@@ -1,0 +1,35 @@
+# description
+
+# install
+
+# docs
+
+# kernel flags
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+# [optional, for tc filters]
+CONFIG_NET_CLS_BPF=m
+# [optional, for tc actions]
+CONFIG_NET_ACT_BPF=m
+CONFIG_BPF_JIT=y
+# [for Linux kernel versions 4.1 through 4.6]
+CONFIG_HAVE_BPF_JIT=y
+# [for Linux kernel versions 4.7 and later]
+CONFIG_HAVE_EBPF_JIT=y
+# [optional, for kprobes]
+CONFIG_BPF_EVENTS=y
+# Need kernel headers through /sys/kernel/kheaders.tar.xz
+CONFIG_IKHEADERS=y
+
+# docker
+sudo docker run --rm -it --privileged \
+  -v /lib/modules:/lib/modules:ro \
+  -v /sys:/sys:ro \
+  -v /usr/src:/usr/src:ro \
+  alpine:3.12
+
+# compile bpf code
+# see https://qmonnet.github.io/whirl-offload/2020/04/12/llvm-ebpf-asm/
+$ clang -target bpf -g -S -o bpf.s bpf.c
+$ llvm-mc -triple bpf -filetype=obj -o bpf.o bpf.s
+$ llvm-objdump -S bpf.o

@@ -1,0 +1,84 @@
+# description
+
+# install
+spack:  spack install -v  bbcp cxxflags='-std=c++11'
+
+# alternatives
+bbcp
+ascp
+lftp
+gridFTP
+nc
+
+# docs
+
+# compile
+
+# other docs
+http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+http://www.slac.stanford.edu/~abh/bbcp
+http://pcbunn.cacr.caltech.edu/bbcp/using_bbcp.htm
+
+# tuning
+according to  http://pcbunn.cacr.caltech.edu/bbcp/using_bbcp.htm,  for a 10G/s iface , you should set -w to
+10G/s * $(ping delay)/2
+
+# dtn tuning
+for xfer from ren to dtn01 this is : 3.75G/s
+
+# testing -  try bumping -w and -s (default=4; try up to 32)
+>bbcp -P 2 -v -w 2M /dev/zero stimpy:/dev/null # local test only 100M/s
+
+# dtn01 : 100M/s
+>bbcp -P 2 -v -w 4M -s 2 /dev/zero dtn01.nersc.gov:/dev/null
+# net 20M/s : started near 120M/s then slowed
+>bbcp -s 4 -w 2m -P 2 -V IFZX.10M.fastq dtn01.nersc.gov:ifzx.10M.fq
+# success!! net 105M/s ; further inc in -s doesn't help
+> bbcp -f -s 8 -w 1m -P 2 -V IFZX.10M.fastq dtn01.nersc.gov:ifzx.10M.fq
+
+# To DTN; /global/projectb/scratch/bthakur/apps/bbcp/bbcp.old
+bbcp -T "ssh -x -a -oFallBackToRsh=no %I -l %U %H /usr/common/usg/bin/bbcp" foo dtn03.nersc.gov:/global/projectb/scratch/bthakur/apps/bbcp/foo.1
+
+# from DTN:
+bbcp -S "ssh -x -a -oFallBackToRsh=no %I -l %U %H /usr/common/usg/bin/bbcp" dtn03.nersc.gov:/global/projectb/scratch/bthakur/apps/bbcp/foo foo.2
+
+# 20160701 build
+bbcp-new -4 -P 2 -f -s 8 -w 1m -v  -r /global/seqfs/sdm/prod/illumina/staging/hiseq09/160614_HISEQ09_0301_BC9D5AANXX/Thumbnail_Images/L001/C20*/ .
+
+# nersc file transfer: https://fasterdata.es.net/performance-testing/DTNs/
+# test files ; see http://fasterdata.es.net/performance-testing/esnet-io-testers/
+# globus : test endpoints R/O:  esnet#anl-diskpt1, esnet#bnl-diskpt1, esnet#lbl-diskpt1
+# ftp etc : elpa-dtn.es.net  elpa-dtn-v6.es.net
+/data1/100M.dat, /data1/1G.dat, /data1/10G.dat, /data1/50G.dat, /data1/100G.dat
+/data2/100M.dat, /data2/1G.dat, /data2/10G.dat, /data2/50G.dat, /data2/100G.dat
+
+# globus
+        globus-url-copy -list ftp://sunn-dtn.es.net:2811/data1/ #make sure you can connect to server
+        globus-url-copy -vb -fast ftp://sunn-dtn.es.net:2811/data1/10G.dat file:///tmp/test.out     # copy 1G file
+        globus-url-copy -vb -fast -p 4 ftp://sunn-dtn.es.net:2811/data1/10G.dat file:///tmp/test.out  # copy 1G file using 4 parallel streams
+# comparison
+scp - only good for small (<1G) files
+nuttcp - nuttscp -v -N 4 -l 256K -f /mydir/myfile remotehost:/data1/mydir/myfile.out
+sftp
+bbcp -S "ssh -x -a -oFallBackToRsh=no %I -l %U %H /path/to/bbcp/on/remote/host" "user_name@remote.host.com:/remote/path/file" /local/path
+gridFTP
+
+# globusconnect (3cf4ea94-72c1-45e9-b692-b322b4df455b)
+globus online (http://www.nersc.gov/users/data-and-networking/transferring-data/globus-online/) (accopeland/uP-xJCv$4-)
+# add identity: MyAccount->ManageIdent->AddSSHpubKey
+# 90Mbps
+> ssh accopeland@cli.globusonline.org
+> endpoint-activate -U copeland nersc#dtn
+> ls nersc#dtn
+> scp nersc#dtn:~/scratch desktop:~/
+
+# globus
+> ssh accopeland@cli.globusonline.org scp go#ep1:/share/godata/file1.txt go#ep2:~/myfile.txtTask ID: 392dd80a-5420-11e1-9674-123138151443
+# add endpoint
+> ssh accopeland@cli.globusonline.org endpoint-add dtn3 -p gsiftp://dtn03.nersc.gov:2811/
+#activate
+
+* copying data
+% scp user_name@franklin.nersc.gov:myfile.txt .
+% bbcp -option(s) sourcespec targetspec
+spack list mpifileutils # dcp,dsync,...

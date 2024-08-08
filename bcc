@@ -1,0 +1,21 @@
+# description
+BCC stands for BPF Compiler Collection and is one of the oldest ways to develop BPF applications. It helps you embed your BPF code into your user-space program in the form of a plain string. When the user-space program is executed by the kernel, BCC invokes its embedded Clang/LLVM, pulls in system-wide kernel headers and compiles the program on the spot.
+
+# install
+
+# config
+
+# docs
+# see https://devops.com/libbpf-vs-bcc-for-bpf-development/
+
+# BCC relies on kernel header packages that need to be installed on the target host machines. While it is not a problem in most cases, it can get difficult to set up and maintain if you are working on multiple machines.
+
+# libbpf
+On the other hand, Libbpf enables you to generate binaries that are compiled once and can be run anywhere. You do not need any system-wide dependencies to be present on the target machine for running such apps. Hence, it reduces the overall application size as well as resource consumption on runtime.
+
+# avoid kernel header dep
+$ bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
+
+# missing gelf.h  // GElf_Nhdr
+elfutils/gelf.h
+typedef Elf64_Nhdr GElf_Nhdr ;

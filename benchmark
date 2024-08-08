@@ -1,0 +1,44 @@
+
+# benchmarking -- tools and frameworks for benchmarking
+
+# aws benchmarking
+https://aws.amazon.com/blogs/publicsector/generalized-approach-benchmarking-genomics-workloads-cloud-bwa-read-aligner-graviton2/
+https://aws.amazon.com/blogs/publicsector/accelerating-genome-assembly-aws-graviton2/
+
+# IO - macsio
+https://www.vi4io.org/tools/benchmarks/macsio
+
+# IO pytokio
+https://sites.google.com/a/lbl.gov/glennklockwood/benchmarks-tools/tokio-client-counters?authuser=0
+curl -L -H "Accept: application/json" 'http://app.pytokio.dev-cattle.stable.spin.nersc.org:8081/hdf5/cscratch/writerates?start=1509793200&end=1509793215'
+# API
+$ curl -L -H "Accept: application/json" 'http://app.pytokio.dev-cattle.stable.spin.nersc.org:8081/hdf5'
+
+# python  https://sites.google.com/a/lbl.gov/glennklockwood/benchmarks-tools/profiling-python?authuser=0
+python -m cProfile -o profile.out myscript.py arg1 arg2
+gprof2dot -f pstats profile.out -o profile_callgraph.dot
+dot -Tsvg profile_callgraph.dot -o profile_callgraph.svg
+
+# benchmark language speed: https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-node-5.html
+
+# benchmarking
+hyperfine - comparing times of 2 or more programs/ methods and summarizing
+
+# julia
+@benchmark df[ismissing.(df.a),:a] = 0 # Median time: 38.7 µs
+
+# web
+vegeta
+k6
+wrk2
+
+# ML
+dvc
+kubebench
+
+# bioinformatics
+https://github.com/j-andrews7/awesome-bioinformatics-benchmarks
+https://openebench.readthedocs.io/en/latest/introduction/3_background.html
+
+# BPF
+Oxtools

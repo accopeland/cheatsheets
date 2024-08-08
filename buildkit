@@ -1,0 +1,24 @@
+# description
+BuildKit is a toolkit for converting source code to build artifacts in an efficient, expressive and repeatable manner.
+concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit
+
+# install
+brew install buildkit
+
+# source
+https://github.com/moby/buildkit
+
+# podman
+podman run -d --name buildkitd --privileged moby/buildkit:latest
+buildctl --addr=podman-container://buildkitd build --frontend dockerfile.v0 --local context=. --local dockerfile=. --output type=oci | podman load foo
+
+# containerd image store
+buildctl build ... --output type=image,name=docker.io/username/image
+ctr --namespace=buildkit images ls
+
+# multi arch
+buildctl build \
+  --frontend dockerfile.v0 \
+  --opt platform=linux/amd64,linux/arm64 \
+  --output type=image,name=docker.io/username/image,push=true \
+  ...

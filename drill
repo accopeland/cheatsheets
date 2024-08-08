@@ -1,0 +1,5 @@
+start drill: drill-embedded
+
+drill webUI: http://localhost:8047
+
+drill docs: https://drill.apache.org/docs/rdbms-storage-plugin/

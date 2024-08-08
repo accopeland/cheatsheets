@@ -1,0 +1,31 @@
+# see also
+drill (ldns)
+
+# basic query
+dig www.google.com
+
+# return only ANSWER section
+dig google.com +noall +answer
+
+# reverse lookup
+dig -x 172.16.1.1
+
+# dig query types
+A : ipv4 address
+AAAA : ipv6
+CNAME : canonical name record
+MX : mail server host nameNS
+NS : dns names
+SOA : canonical information about a DNS zone
+TXT : text record
+
+# query specific nameserver
+dig @ns.domain.com <query>
+
+# get short answer
+dig +short <query>
+dig +short cyberciti.biz NS
+dig @8.8.8.8 +short cyberciti.biz NS
+
+# read from file
+dig -f <file>

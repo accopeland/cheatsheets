@@ -1,0 +1,82 @@
+
+echo 'x -> y' > input.d2
+d2 -w input.d2 out.svg
+
+https://d2lang.com/tour/install
+
+
+samples: {
+ shape: sql_table
+	sample_id: int4 {CONSTRAINT: primary_key }
+	sample_id: int4 {CONSTRAINT FOREIGN_KEY }
+	sample_id: int4 { constraint: not null}
+	gls_sample_id: varchar(16)
+	sample_name: varchar(255)
+	collection_time: timestamp(0)
+	collection_latitude: numeric
+	collection_longitude: numeric
+	collection_altit_depth_meters: numeric
+	collection_site_growth: varchar(4000)
+	dna_isolation_method: varchar(4000)
+	qc_date: timestamp(0)
+	qc_comments: varchar(4000)
+	total_amount_requested_ug: numeric(38,: 1)
+	known_or_contam_organisms: varchar(4000)
+	purity_evidence: varchar(4000)
+	pathogenicity: varchar(4000)
+	risk_group_level: int2
+	'...'
+	freezer_location_updated_date: timestamp(0)
+	source_sample_pid: varchar(255)
+	onboarding: varchar(32)
+	min_depth_meters: numeric
+	max_depth_meters: numeric
+	min_elevation_meters: numeric
+	max_elevation_meters: numeric
+
+}
+a -> b -> c
+
+#bar.sub task
+foo.shape: cloud
+bar.shape: cylinder
+
+
+clouds: {
+  aws: {
+    load_balancer -> api
+    api -> db
+  }
+  gcloud: {
+    auth -> db
+  }
+
+  gcloud -> aws
+}
+
+clouds: {
+  aws: AWS {
+    load_balancer -> api
+    api -> db
+  }
+  gcloud: Google Cloud {
+    auth -> db
+  }
+
+  gcloud -> aws
+}
+
+users -> clouds.aws.load_balancer
+users -> clouds.gcloud.auth
+
+ci.deploys -> clouds
+
+explanation: |s
+  awsSession := From(c.Request.Context())
+  client := s3.New(awsSession)
+
+  ctx, cancelFn := contxt.WithTimeout(c.Request.Context(), AWS_TIMEOUT)
+  defer cancelFn()
+| {
+  near: a
+}

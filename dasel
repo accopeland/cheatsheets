@@ -1,0 +1,29 @@
+# description
+Data selector.  Allows you to query and modify data structures using selector strings.
+Replacement for yq, jq. Works with json, yaml, toml, xml, csv. No runtime dependencies.
+
+# install
+brew install dasel
+
+# docs
+github.com/tomwright/dasel
+
+# select
+echo '{"name": "Tom" } | dasel -r json - '.name' "Tom"
+
+# json to yaml
+echo '{"name": "Tom" } | dasel -r json -w yaml name: Tom
+
+# put
+echo '{"name": "Tom" } | dasel put string -r json '.email' 'contact@tomwwrigth.me'
+
+# delete
+echo '{ "email", "contact@tomwright.me", "name" : "Tom" }' dasel  delete -r json '.email'
+
+# features
+query/select
+update
+create
+linux/mac/windows
+docker support
+faster than jq/yq

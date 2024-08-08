@@ -1,6 +1,13 @@
 ---
 tags: [ date, time ]
 ---
+# arithmetic
+gdate -d "2003-10-01 -10day"
+
+# add date w formatting
+date +"%Y-%m-%d" -d "-1 day"
+gdate '+%C%y%m%d' -d "2003-10-01 -10day"
+
 # To print Abbreviated weekday name:
 date +"%a"
 
@@ -50,3 +57,18 @@ TZ=CET date
 
 # To show the time on the west coast of the US (use tzselect(1) to find TZ):
 TZ='America/Los_Angeles' date
+
+# parse date output
+date -j -f "%a %b %d %T %Z %Y" "`date`" "+%s"
+
+# -I
+date -Iseconds -r 1440359821
+
+# osx v gnu
+echo "yesterday" | date +"%d %m %Y" -f -
+date: illegal time format
+echo "yesterday" | gdate +"%d %m %Y" -f -
+18 01 2024
+
+# git log
+git log --oneline --format="%aE %at" --since=8-weeks-ago | awk '{print $2}' | tail | xargs -I{} date -r {}

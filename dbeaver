@@ -1,0 +1,19 @@
+# description
+database UI
+
+# doc
+
+# usage
+
+# port forwarding / firewalls - need both VPN and port forward
+dwtunnel (){ ssh -i ~/.ssh/nersc -fN -l copeland -L 5432:128.3.122.41:5432 cori.nersc.gov ; }
+
+# install
+brew install --cask dbeaver-community
+
+# apple signing - DBeaver.app can’t be opened because Apple cannot check it for malicious software
+brew reinstall --cask dbeaver-community
+System PRefs -> Security -> Allow DBeaver
+
+# debugging codesign error:  open /Applications/DBeaver.app
+ codesign --verify --verbose /Applications/DBeaver.app

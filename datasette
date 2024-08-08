@@ -1,0 +1,16 @@
+
+# description
+
+# install
+
+# docs
+
+# config
+
+
+
+# create sqlite d
+sqlite-utils insert NERSC.db outages NERSC-outages-all.csv --csv -d
+
+# use
+datasette NERSC.db

@@ -1,0 +1,43 @@
+# description
+Fast disk indexer and display tool
+
+# see
+mpifileutils::dwalk
+
+#doc
+https://github.com/zevv/duc/issues/259
+
+# install
+brew install duc
+https://github.com/zevv/duc
+
+# default db loc
+~/.cache/duc/duc.db
+
+# config
+~/.config/duc
+~/.ducrc
+
+# index
+duc index <FS>
+duc index -H --fs-exclude=/System -u copeland -x --dry-run <DIR>
+
+# nice
+nice 19 ionice -c 3 duc index [options]
+
+# list dir size
+duc ls
+
+# interface
+duc ui
+duc gui
+
+# index by parts
+duc -p -b -d /tmp/foo1 /some/path/a
+duc -p -b -d /tmp/foo1 /some/other/path
+...
+
+# join
+duc join -d master.db -a projects/*.db
+     -a   adds one or more DBs into master DB.
+

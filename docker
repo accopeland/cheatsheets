@@ -1,104 +1,322 @@
+# description
+is an open platform for developing, shipping, and running applications.
+
+# install
+brew install docker
+
+# docs
+https://docs.docker.com
+
+# Exemplary dockerfiles
+Go
+Perl
+Hy
+Rails
+
 # To start the docker daemon:
-docker -d
+$ docker -d
 
 # To build a docker image:
-docker build -t <image-tag-name> <path-of-Dockerfile>
+$ docker build -t <image-tag-name> <path-of-Dockerfile>
 
 # To start a container with an interactive shell:
-docker run -ti <image-name> /bin/bash
+$ docker run -ti <image-name> /bin/bash
 
 # To run a docker container in the background:
-docker run -d <image-name>
+$ docker run -d <image-name>
 
 # To "shell" into a running container (docker-1.3+):
-docker exec -ti <container-name> bash
+$ docker exec -ti <container-name> bash
 
 # To inspect a running container:
-docker inspect <container-name> (or <container-id>)
+$ docker inspect <container-name> (or <container-id>)
 
 # To get the process ID for a container:
-docker inspect --format {{.State.Pid}} <container-name-or-id>
+# Source: https://github.com/jpetazzo/nsenter
+$ docker inspect --format {{.State.Pid}} <container-name-or-id>
 
 # To list (and pretty-print) the current mounted volumes for a container:
-docker inspect --format='{{json .Volumes}}' <container-id> | python -mjson.tool
+# http://nathanleclaire.com/blog/2014/07/12/10-docker-tips-and-tricks-that-will-make-you-sing-a-whale-song-of-joy/
+$ docker inspect --format='{{json .Volumes}}' <container-id> | python -mjson.tool
 
 # To copy files/folders between a container and your host:
-docker cp foo.txt mycontainer:/foo.txt
+$ docker cp foo.txt mycontainer:/foo.txt
 
 # To list currently running containers:
-docker ps
+$ docker ps
 
 # To list all containers:
-docker ps -a
+$ docker ps -a
 
 # To remove all stopped containers:
-docker container prune
+$ docker container prune
 
 # To remove all stopped containers:
-docker rm $(docker ps -qa)
+$ docker rm $(docker ps -qa)
 
 # To list all images:
-docker images
+$ docker images
 
 # To only see all images id:
-docker image ls -q
+$ docker image ls -q
 
 # To remove all untagged images:
-docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
+$ docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
 
 # To remove all volumes not used by at least one container:
-docker volume prune
+$ docker volume prune
 
 # To save image as tar archive:
-docker save -o <archive-name>.tar <image-name>
+$ docker save -o <archive-name>.tar <image-name>
 
 # To restore image from a saved tar archive:
-docker load -i <archive-name>.tar
+$ docker load -i <archive-name>.tar
 
 # To remove an image:
-docker image rm <image-name-or-id>
+$ docker image rm <image-name-or-id>
 
 # To tag an image:
-docker image tag <image-name>:<tag-name> <image-name>:<new-tag-name>
+$ docker image tag <image-name>:<tag-name> <image-name>:<new-tag-name>
 
 # To login into hub.docker.com:
-docker login
+$ docker login
 
 # To push a docker image into dockerhub repository:
-docker push <image-name>:<image-tag-name>
+$ docker push <image-name>:<image-tag-name>
 
 # List all networks daemon knows about:
-docker network ls
+$ docker network ls
 
 # Create a specific network:
-docker network create "<network_name>"
+$ docker network create "<network_name>"
 
 # Connect a specific container to a network:
-docker network connect "<network_id|name>" "<container_id|name>"
+$ docker network connect "<network_id|name>" "<container_id|name>"
 
 # Disconnect a specific container from network:
-docker network disconnect "<network_id|name>" "<container_id|name>"
+$ docker network disconnect "<network_id|name>" "<container_id|name>"
+
+# network testing
+https://forums.docker.com/t/connecting-to-nginx-on-port-443-using-host-ip/134205/3
+$ docker run -it --net container:mynginx1 nicolaka/netshoot netstat -tln
 
 # To see the logs of a background or stopped container:
-docker logs <container-id>
+$ docker logs <container-id>
 
 # To publish a port of container on localhost:
-docker run -p <localhost-port>:<container-port> <image-name>
+$ docker run -p <localhost-port>:<container-port> <image-name>
 
 # To create a docker volume:
-docker volume create <volume-name>
+$ docker volume create <volume-name>
 
 # To see information of a docker volume:
-docker volume inspect <volume-name>
+$ docker volume inspect <volume-name>
 
 # To use a volume in the container:
-docker run -v <volume-name>:<folder-path-in-container> <image>
+$ docker run -v <volume-name>:<folder-path-in-container> <image>
 
 # To link current folder between host and container for development:
-docker run <image-name> -v $(pwd):<folder-path-in-container> <image>
+$ docker run <image-name> -v $(pwd):<folder-path-in-container> <image>
 
 # To copy a file from the running container to host mechine:
-docker cp <container-id>:<path/to/file> <host/copy/path>
+$ docker cp <container-id>:<path/to/file> <host/copy/path>
 
 # To copy a file from host mechine to the running container:
-docker cp <host/copy/path> <container-id>:<path/to/file>
+$ docker cp <host/copy/path> <container-id>:<path/to/file>
+
+# pruning / cleanup
+$ docker image prune --all --filter until=...
+
+# LRU
+docuum --threshold '10 GB'   ## brew install docuum
+
+# vs shifter
+https://tin6150.github.io/psg/blogger_container_hpc.html
+
+# docker in docker:  https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+# ... generally a bad idea, so instead
+$ docker run -v /var/run/docker.sock:/var/run/docker.sock ...
+this container will have access to the Docker socket, and will therefore be able to start containers.
+Except that instead of starting “child” containers, it will start “sibling” containers.
+
+# docker labels for internal documentation
+http://label-schema.org/rc1/#build-time-labels
+https://speakerdeck.com/garethr/shipping-manifests-bill-of-lading-and-docker-metadata-and-container
+# docker LABEL metadata : https://speakerdeck.com/garethr/shipping-manifests-bill-of-lading-and-docker-metadata-and-container
+FROM alpine
+LABEL net.foo.dockerfile="/Dockerfile" net.foo.exec.packages="apk info -vv"
+RUN api add --update bash && rm -rf /var/cache/apk/*
+COPY Dockerfile /
+#
+then to discover API or read Dockerfile ...
+$ docker inspect -f "{{json .Config.Labels }}" foo/bar | jq
+$ docker run -i -t foo/bar cat /Dockerfile
+
+# inspecting labels https://github.com/garethr/docker-label-inspector
+dli lint
+
+# docker build
+git clone https://accopeland@gitlab.com/JGI/prodege.git
+$ docker build -t "jgi:prodege" .
+$ docker run -t jgi:prodege
+
+# run
+$ docker run --volume=`pwd`/input_data:/bbx/input:ro --volume=`pwd`/output_data:/bbx/output:rw bioboxes/velvet default
+
+# docker cleanup
+$ docker rm $(docker ps -a -q)
+$ docker rmi $(docker images -q)
+rm -rf ~/Library/Containers/com.docker.docker/Data/*
+
+# remove containers and images
+...
+
+# remove all untagged images:
+$ docker rmi $(docker images | grep "^<none>" | awk '{print $3}')
+
+# remove all volumes not used by at least one container:
+$ docker volume prune
+
+# save image as tar archive:
+$ docker save -o <archive-name>.tar <image-name>
+
+# restore image from a saved tar archive:
+$ docker load -i <archive-name>.tar
+
+# remove image
+$ docker image rm <name|id>
+
+# tag an image:
+$ docker image tag <image-name>:<tag-name> <image-name>:<new-tag-name>
+
+# login into hub.docker.com
+docker login -p <p> -u <u>
+
+# push image to dockerhub repository:
+$ docker push <image-name>:<image-tag-name>
+
+# List all networks daemon knows about:
+$ docker network ls
+
+# Create a specific network:
+$ docker network create "<network_name>"
+
+# Connect a specific container to a network:
+$ docker network connect "<network_id|name>" "<container_id|name>"
+
+# Disconnect a specific container from network:
+$ docker network disconnect "<network_id|name>" "<container_id|name>"
+
+# network testing
+https://forums.docker.com/t/connecting-to-nginx-on-port-443-using-host-ip/134205/3
+$ docker run -it --net container:mynginx1 nicolaka/netshoot netstat -tln
+
+# see the logs of a background or stopped container:
+$ docker logs <container-id>
+
+# list containers then remove
+$ docker ps -a
+$ docker rm <containerid>
+
+# list images then remove
+$ docker images
+$ docker rmi <imgid>
+
+# list and remove with newer docker
+$ docker system prune
+$ docker network prune
+
+# nuke from space
+rm  ~/.docker/machine/machines/default/
+
+# docker /tensorFlow
+(see http://petewarden.com/2016/02/28/tensorflow-for-poets/?mkt_tok=3RkMMJWWfF9wsRonuqTMZKXonjHpfsX57uorWaKwlMI%2F0ER3fOvrPUfGjI4DS8FjI%2BSLDwEYGJlv6SgFQ7LMMaZq1rgMXBk%3D)
+$ docker run -it b.gcr.io/tensorflow/tensorflow:0.7.1-devel
+# add some images, exit then
+$ docker run -it -v $HOME/tf_files:/tf_files b.gcr.io/tensorflow/tensorflow:0.7.1-devel
+
+# Error: Docker: dial tcp 216.58.199.241:443: i/o timeout
+# Fix: docker network ls
+
+# multi arch
+# see https://medium.com/@tonistiigi/faster-multi-platform-builds-dockerfile-cross-compilation-guide-part-1-ec087c719eaf
+
+# size
+$ docker container ls -s  # view the approximate size of a running container, you can use the command
+$ docker image ls  	# shows the sizes of your images.
+$ docker image history my_image:my_tag  # size of intermediate images that make up your image
+$ docker image inspect my_image:tag  	# show many things about image, including the sizes of each layer.
+$ dive 			#  the dive package makes it easy to see into your layer contents.
+
+# reduce size
+&& rm -rf /var/lib/apt/lists/*
+dive
+
+# clean
+$ alias docker_clean_images='docker rmi $(docker images -a --filter=dangling=true -q)'
+$ alias docker_clean_ps='docker rm $(docker ps --filter=status=exited --filter=status=created -q)'
+$ docker system prune -a
+$ docker builder prune
+
+# IO testing docker - good info here  https://github.com/moby/moby/issues/21485
+https://github.com/opencontainers/runc/issues/861
+https://github.com/moby/moby/PULL/24307
+
+# problem w slow docker IO due to blkio + cgroup
+$ docker run --rm --net=none --log-driver=none --read-only -v "/workspace:/workspace" -v "/usr/share/dbench:/usr/share/dbench" -v "/usr/bin/dbench:/usr/bin/dbench" opensuse bash -c "dbench -D /workspace -s -S -t 10 5"
+$ echo y | mkfs.ext3 /dev/sdb
+$ mount /dev/sdb /workspace
+$ dbench -D /workspace -s -S -t 10 5  # Can you blktrace -d <the device> while the dd is running?
+
+# IO issues docker https://github.com/opencontainers/runc/issues/861
+#https://github.com/moby/moby/PULL/24307
+#Switch IO scheduler on the underlying disk to 'deadline'   -  completely lose propotional IO weighting between blkio cgroups and
+#     also some other features of CFQ IO scheduler. But it may work fine.
+$ echo deadline >/sys/block/<device>/queue/scheduler
+# A less drastic option - turn off CFQ scheduler idling by:
+$ echo 0 >/sys/block/<device>/queue/iosched/slice_idle
+$ echo 0 >/sys/block/<device>/queue/iosched/group_idle
+# CFQ IO scheduler will not wait before switching to serving
+# another process / blkio cgroup. So performance will not suffer when using
+# blkio cgroups but "IO hungry" cgroup / process can get disproportionate
+# amount of IO time compared to cgroup that does not have IO always ready.
+
+# cmvfs / singularity
+$ singularity PULL docker://cvmfs/service
+$ ./service_latest.sif  # works!!
+
+# perfsonar docker - set up testpoint
+$ docker pull perfsonar/tools
+$ docker run -d -P --net=host perfsonar/tools # run container in background, so others can test to you:
+$ docker ps -a # Get the Container ID, then run interactive shell to run tests
+$ docker exec -it <ID> bash # Then use above ID in this command:
+
+# Error: creating build container: short-name resolution enforced but cannot prompt without a TTY
+# Fix: change name in 'From' to specify repository
+FROM golang:1.17-alpine3.14 as builder --> FROM docker.io/golang:1.17-alpine3.14 as builder
+
+# Exemplary dockerfiles
+Go
+Perl
+Hy
+Rails
+
+# run docker as regular user
+$ sudo usermod -a -G docker ec2-user
+
+# tarball to docker
+$ cat exampleimage.tgz | docker import --message "New image imported from tarball" - exampleimagelocal:new
+
+# adding existing files to image via Dockerfile
+FROM ubuntu:latest
+RUN apt-get -y update
+ADD hmmer-arm64-bin.tgz .
+
+# architecture: --platform os/arch/variant e.g.
+$ docker run --rm ncbi/blast --platform linux/arm/v8 efetch -db protein -format fasta -id Q90523,P80049,P83981,P83982,P83983 > nurse-shark-proteins.fsa
+
+# docker /tensorFlow
+(see http://petewarden.com/2016/02/28/tensorflow-for-poets/?mkt_tok=3RkMMJWWfF9wsRonuqTMZKXonjHpfsX57uorWaKwlMI%2F0ER3fOvrPUfGjI4DS8FjI%2BSLDwEYGJlv6SgFQ7LMMaZq1rgMXBk%3D)
+$ docker run -it b.gcr.io/tensorflow/tensorflow:0.7.1-devel
+# add some images, exit, then
+$ docker run -it -v $HOME/tf_files:/tf_files b.gcr.io/tensorflow/tensorflow:0.7.1-devel

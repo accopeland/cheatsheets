@@ -1,0 +1,28 @@
+# description
+Collection of disk hogs that can be pruned to save space. Found via 'duc'
+
+# xcode ~/Library/Developer/Xcode/Archives
+xcrun simctl delete unavailable
+rm ~/Library/Developer/Xcode/Archives
+rm ~/Library/Developer/Xcode/CoreSimulator/Caches
+
+# homebrew  ~/Library/Caches/Homebrew
+brew cleanup -s
+brew cleanup --prune=all
+rm -rf $(brew cache)/downloads
+
+# pip  ~/Library/Caches/pip/
+pip cache info
+pip cache purge
+
+# llvmenv ~/Library/Caches/llvmenv
+
+# papers3
+
+# Messages ~/Library/Messages/Attachments/...
+
+# singularity
+  $HOME/.singularity/cache
+
+
+# rmlint

@@ -1,0 +1,17 @@
+# description
+fast quick and dirty dir scanner
+
+# install
+git clone https://github.com/spikebike/go-dirscan
+cd go-dirscan
+go build dirscan.go
+
+# run
+go run dirscan.go .. 8
+dirscan <dir> <threads>
+
+# docs
+see the code
+
+# notes
+flaky but very fast

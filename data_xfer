@@ -1,0 +1,71 @@
+# description
+TOols for data transfer
+
+# options
+mutil - https://github.com/pkolano/mutil/blob/master/patch/coreutils-8.22.patch
+dcache / dccp - how to install ?
+aria - aria2c
+axel
+lftp
+fdt
+mpifileutils - fpart / fpsync
+rsync
+globus - globus-url-copy
+https://docs.globus.org/premium-storage-connectors/v5/google-drive/
+bbcp
+vsftpd
+hpnssh (https://github.com/rapier1/openssh-portable) https://www.psc.edu/hpn-ssh-home/
+cpio
+parallel+rsync
+aspera-cli / ascp
+xrootd
+nc
+
+# minio
+ https://min.io/docs/minio/linux/reference/minio-mc.html#quickstart
+
+# mpifileutils
+cheat -e mpifileutils
+
+# fdt
+http://monalisa.cern.ch/FDT/
+https://github.com/fast-data-transfer/fdt.git
+
+# s3
+s5cmd
+s3parcp
+s3p (node)
+
+# s5cmd
+## uploads: s5cmd is 32x faster than s3cmd and 12x faster than aws-cli.
+## downloads: s5cmd can saturate a 40Gbps link (~4.3 GB/s), whereas s3cmd and aws-cli can only reach 85 MB/s and 375 MB/s respectively.
+https://github.com/peak/s5cmd
+
+#s3parcp
+https://github.com/chanzuckerberg/s3parcp
+
+#
+https://www.mcs.anl.gov/~kettimut/talks/pfldnet04.pdf
+
+# aws
+# This script will explain how to transfer a file to EC2 using SSM ONLY!
+# You will need to have permission to run SSM commands on the target machine and have sudo access as well
+INSTANCE_ID=i-1234567890
+FILE_NAME=the_file.tar.gz
+# Step 1: Run command on machine to install netcat and dump from port to filename
+aws ssm start-session --target $INSTANCE_ID --document-name
+# < (On target machine) :
+cd && sudo yum install nc -y && sudo nc -l -p 1234 > the_file.tar.gz
+# Step 2: On another shell, open a port-forwarding session from your machine to the target machine
+aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["1234"],"localPortNumber":["1234"]}'
+# Step 3: On yet another shell, cat the source file into the transfer port on localhost over the tunnel
+nc -w 3 127.0.0.1 1234 < the_file.tar.gz
+# Step 4: Once the command in step 3 finishes, close all of the other shell sessions. Your file should be on the target now.
+ls -l the_file.tar.gz
+
+# test files
+ftp://speedtest:speedtest@ftp.otenet.gr/test100Mb.db
+http://speedtest.ftp.otenet.gr/files/test100Mb.db
+esnet: dtns.
+globus
+s3 test files

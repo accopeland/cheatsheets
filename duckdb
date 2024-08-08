@@ -1,0 +1,279 @@
+# description
+
+# install
+https://duckdb.org/docs/installation/
+brew install duckdb
+https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip
+
+# doc
+https://duckdb.org/docs
+
+# config
+
+# duckdb
+https://duckdb.org/docs/sql/window_functions
+
+# plot
+curl -sL "https://api.github.com/users/dacort/events?per_page=100" \
+   | duckdb -s "COPY (SELECT type, count(*) AS event_count FROM read_json_auto('/dev/stdin') GROUP BY 1 ORDER BY 2 DESC LIMIT 10) TO '/dev/stdout' WITH (FORMAT 'csv', HEADER)" \
+   | uplot bar -d, -H -t "GitHub Events for @dacort"
+
+# window functions
+https://duckdb.org/docs/sql/window_functions
+
+# create database
+duckdb myDB "create table T as select * from 'file.gz' "
+duckdb> ...
+
+# in-memory db
+$ duckdb :memory: "SELECT 42 AS the_answer"
+
+# create csv
+COPY (SELECT 42 AS woot UNION ALL SELECT 43 AS woot) TO 'test.csv' (HEADER);
+
+# stdin
+$ cat test.csv | duckdb :memory: "SELECT * FROM read_csv('/dev/stdin')"
+$ cat  dsi.aa.dm_archive.20240408.du | duckdb :memory: "select sum(column0)/1e12 from (select column0 from read_csv_auto('/dev/stdin'))"
+
+# calcs
+D select mean(column0)/1e12 as m, sum(column0)/1e12 as s from (select column0  from read_csv_auto('dsi.aa.jaws.20240408'));
+
+# plot
+brew install youplot
+
+# csv -> duckdb
+SELECT * FROM read_csv_auto('test.csv', delim='|', header=True, columns={'FlightDate': 'DATE', 'UniqueCarrier': 'VARCHAR', 'OriginCityName': 'VARCHAR'});
+
+# csv -> duckdb
+COPY weather FROM '/home/user/weather.csv';
+
+# csv -> duckdb
+function csv2duckdb() {  local F=${1:?"file.csv"} ; local T=${2:-${F/.*}} ;
+        #SELECT * FROM read_csv_auto('test.csv', delim='|', header=True, columns={'FlightDate': 'DATE', 'UniqueCarrier': 'VARCHAR', 'OriginCityName': 'VARCHAR'});
+        local DELIM=","
+        local DB="DD" #${F.duck}
+        duckdb $DB "create table $T as select * from read_csv_auto('$F',delim=$DELIM)"
+}
+
+# csv -> duckdb
+duckdb> create table T as select * from read_csv_auto('vw_sow_segment_hist.csv');
+
+# csv -> duckdb
+duckdb A "create table T as select * from read_csv_auto('file.csv')"
+
+
+# s3
+install httpfs
+
+# mysql
+install mysql
+ATTACH 'host=localhost user=root port=0 database=mysql' AS mysqldb (TYPE mysql)
+USE mysqldb;
+
+# iceberg -- apache iceberg
+install iceberg ;
+
+# json plugin
+duckdb> install 'json'
+duckdb> load 'json' ;
+
+# json
+# see https://duckdb.org/2023/03/03/json.html
+duckdb A create table T as select * from read_json_auto('foo.json')
+duckdb> select * from 'foo.json.gz' ;
+duckdb>  select date."$date" as dt , open."$numberDecimal" as op from (select * from 'asset-manager.assets.vtsnx.json' limit 10 ) ;
+
+# json formats: 'values' and 'array_of_values', 'array_of_records', 'records'
+SELECT * FROM read_json('todos.json', auto_detect=true, json_format='array_of_records');
+SELECT * FROM read_json('todos2.json', auto_detect=true, json_format='records');
+...
+
+# json structure
+SELECT json_group_structure(json)
+FROM (  SELECT *  FROM 'foo.json.gz');
+
+# .schema
+CREATE TABLE integers(i BIGINT);;
+CREATE TABLE strings(i BIGINT, s VARCHAR, ms VARCHAR, ds VARCHAR);;
+CREATE TABLE t(column00 BIGINT, column01 BIGINT, column02 BIGINT, column03 BIGINT, column04 VARCHAR, column05 BIGINT, column06 VARC
+HAR, column07 BIGINT, column08 BIGINT, column09 BIGINT, column10 VARCHAR, column11 BIGINT, column12 BIGINT, column13 BIGINT, column
+14 BIGINT, column15 VARCHAR);;
+
+# basic counting
+select count(*) from T ;
+
+# describe
+duckdb> describe T
+
+# desribe
+duckdb DD "describe ga0436458_proteins__per_residue__point01"
+
+# join
+D select a.contig,a.product,b.product from ga0436458_functional_annotation a join ga0436458_ppr b on ( a.contig=b.contig ) ;
+
+# extension
+select * from duckdb_extensions;
+
+# postgres scanner
+LOAD '/Users/copeland/Repos/Other/postgres_scanner/build/release/extension/postgres_scanner/postgres_scanner.duckdb_extension'
+
+# timestamptz  -- convert to timestamp
+select now()::timestamptz + interval (1) second;
+
+# timestamptz convert
+select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date"::TIMESTAMPTZ as dt date."$date" as dt
+  split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;
+
+# timestamptz
+need icu extension
+
+# timediffs
+select datediff('hours', min(o_start), now()::timestamp)   from T ;
+
+# unix epoch (sec since 01-01-1970) -> TIMESTAMP
+select current_date, to_timestamp(column11) from t ;
+select  epoch_ms(1679529742*1000::BIGINT) from t;
+select  yearweek(epoch_ms(column11::BIGINT*1000)) from t;
+D select current_localtimestamp() -  to_timestamp(column11) from t ;
+D select current_date(),  datetrunc('d', to_timestamp(column11)) from t ;
+select sum(column03)/1e12 as TB, (current_date() - datetrunc('d', to_timestamp(column11))) as days from t group by 2 order by 2
+
+# timestamp conversion
+strftime(timestamp, format)	Converts timestamp to string according to the format string
+strptime(text, format)	Converts string to timestamp according to the format string
+
+#  csv
+duckdb T "create table t as select * from read_csv('/tmp/data', header=False, columns={'inode': 'BIGIN
+T', 'gen':'INTEGER', 'snapshotid': 'INTEGER', 'file_size':'BIGINT', 'fileset':'VARCHAR', 'attr':'VARCHAR', 'link':'INTEGER', 'uid':
+'INTEGER', 'gid':'INTEGER', 'mode':'VARCHAR','atime':'TIMESTAMP', 'mtime':'TIMESTAMP','blocksize':'INTEGER','ctime':'TIMESTAMP','fi
+le':'VARCHAR'});"
+
+# percentile
+WITH stats as ( SELECT percentile_disc([0.25, 0.50, 0.75]) WITHIN GROUP (ORDER BY "trip_distance") AS percentiles
+  FROM "yellow_tripdata_2022-01.parquet")
+SELECT  percentiles[1] as q1,  percentiles[2] as median,  percentiles[3] as q3
+FROM stats;
+
+select percentile_cont([0.25, 0.5, 0.75]) within group(order by i desc) from generate_series(0,100) tbl(i);
+
+# jupysql
+https://duckdb.org/2023/02/24/jupysql.html
+
+# functions
+SELECT  schema_name, function_name FROM duckdb_functions() ORDER BY ALL DESC ;
+
+# date create
+select date '1992-01-01' + concat(i, ' months')::interval as d from range(100) tbl(i);
+
+# range
+#
+# aggregates
+cume_dist()
+percent_rank()
+histogram()
+percentile_cont()
+percentile_disc()
+approx_count_distinct9)
+approx_quantile(x,pos) -- pos is LIST
+reservoir_quantile(x,quantiles,sample_size=N)
+mad()
+median()
+quantile_cont(x,pos)
+ntile()
+percentile_cont(fraction) within group (order by ...)
+
+# time
+time_bucket()
+select time_bucket(INTERVAL '...', col::...)
+
+# date
+datediff('weeks' min(c1), now()::timestamp)
+
+# csv
+read_csv()
+read_csv_auto()
+params:
+dtypes={'a':T1, 'b':T2, ...}
+header=0|1
+parallel=0|1
+columns={'a':'T1', ... }
+column_types=
+AUTO_DETECT=0|1
+skip=N
+names=['a','b','c',...]
+timestampformat=...
+dateformat=...
+
+# create ints
+CREATE TABLE list_ints (l INTEGER[]);
+INSERT INTO list_ints SELECT LIST(i) FROM range(100) tbl(i);
+
+# series
+select i from generate_series(1,10) tbl(i) ;
+or
+select a.* from generate_series(1,10) as a(a) ;
+also
+select a.* from generate_series(1,10,2) as a(a) ;
+select unnest(generate_series(1,10,2)) r;
+
+# reuse window
+select datetrunc('d', to_timestamp(atime)) as d, sum(size) over cumsum as sum_s from T
+window cumsum as (partition by d order by atime, size rows between unbounded preceding and current row)
+order by atime;
+
+# grouping
+D select row_number() over() r,size,atime,ntile(10) over (order by size) as g, ntile(10) over(order by atime) as h from t order by h;
+
+# graphs
+CREATE TABLE edge(node1id int, node2id int);
+INSERT INTO edge VALUES (1, 3), (1, 5), (2, 4), (2, 5), (2, 10), (3, 1), (3, 5),
+  (3, 8), (3, 10), (5, 3), (5, 4), (5, 8), (6, 3), (6, 4), (7, 4), (8, 1), (9, 4);
+WITH RECURSIVE paths(startNode, endNode, path) AS (
+   SELECT -- define the path as the first edge of the traversal
+        node1id AS startNode,
+        node2id AS endNode,
+        [node1id, node2id] AS path
+     FROM edge
+     WHERE startNode = 1
+   UNION ALL
+   SELECT -- concatenate new edge to the path
+        paths.startNode AS startNode,
+        node2id AS endNode,
+        array_append(path, node2id) AS path
+     FROM paths
+     JOIN edge ON paths.endNode = node1id
+    -- Prevent adding a repeated node to the path.
+    -- This ensures that no cycles occur.
+    WHERE node2id != ALL(paths.path)
+)
+SELECT startNode, endNode, path
+FROM paths
+ORDER BY length(path), path;
+
+# qualify (like having for a window function)
+SELECT
+    schema_name,
+    function_name,
+    -- In this example the function_rank column in the select clause is for reference
+    row_number() over (partition by schema_name order by function_name) as function_rank
+FROM duckdb_functions()
+QUALIFY
+    row_number() over (partition by schema_name order by function_name) < 3;
+
+# filter (instead of case)
+SELECT
+    count(*) as total_rows,
+    count(*) FILTER (WHERE i <= 5) as lte_five,
+    count(*) FILTER (WHERE i % 2 = 1) as odds
+FROM generate_series(1,10) tbl(i);
+
+# filename / glob
+D select * from read_json_auto('quote-manager/*.json', filename=true) ;
+
+# profiling
+EXPLAIN ANALYZE SELECT name FROM students JOIN exams USING (sid) WHERE name LIKE 'Ma%';
+
+# regexp, filename
+select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date" as dt date."$date" as dt,
+open."$numberDecimal" as op, close."$numberDecimal" as cls, dividend."$numberDecimal" as div ,
+split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;

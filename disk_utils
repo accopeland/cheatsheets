@@ -1,0 +1,16 @@
+# description
+various utilities for monitoring disk usage and performance
+
+#k IO
+bwm-ng
+iostat
+iostat -xmdz 1
+
+# utilization / storage
+df -kh
+di -f SMbuf1T
+duc gui
+disk inventory x
+About this mac -> Storage -> Manage
+disk Utility.app
+du

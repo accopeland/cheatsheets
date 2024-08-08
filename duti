@@ -1,0 +1,27 @@
+# description
+a command-line utility capable of setting default applications for various document types on macOS, using Apple's Uniform Type Identifiers (UTI). A UTI is a unique string describing the format of a file's content. For instance, a Microsoft Word document has a UTI of com.microsoft.word.doc. Using duti, the user can change which application acts as the default handler for a given UTI.
+
+# install
+autoreconf -i
+./configure
+make
+sudo make install
+
+# docs
+https://github.com/moretension/duti/
+
+# Set Safari as default handler for HTML documents:
+duti -s com.apple.Safari public.html all
+
+# Set TextEdit as the default handler for Word documents:
+echo 'com.apple.TextEdit   com.microsoft.word.doc all' | duti
+
+# Set Finder as the default handler for ftp:// URLs:
+duti -s com.apple.Finder ftp
+
+# Get default application information for .jpg files:
+duti -x jpg
+# Output
+Preview
+/Applications/Preview.app
+com.apple.Preview

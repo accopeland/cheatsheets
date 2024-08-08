@@ -1,0 +1,220 @@
+# description
+Collection of useful data collections and repositories
+
+# USA
+https://catalog.data.gov/dataset/
+
+# AWS
+https://aws.amazon.com/marketplace/search/results?FULFILLMENT_OPTION_TYPE=DATA_EXCHANGE&CONTRACT_TYPE=OPEN_DATA_LICENSES&filters=FULFILLMENT_OPTION_TYPE%2CCONTRACT_TYPE
+
+# GCP
+https://cloud.google.com/bigquery/public-data/
+https://cloud.google.com/storage/docs/public-datasets/
+
+
+# google trends
+	https://static.googleusercontent.com/media/www.google.com/en//googleblogs/pdfs/google_predicting_the_present.pdf
+	https://datascienceplus.com/analyzing-google-trends-data-in-r/
+	https://toolbox.google.com/factcheck/explorer/search/origins%20covid-19;hl=en
+
+# SRA
+	sqlite3 SRAmetadb.sqlite
+
+# RQC
+ https://rqc.jgi.lbl.gov nerscdb04.nersc.gov
+
+# JGI data portal (data.jgi.doe.gov)
+ curl -X GET "https://files.jgi.doe.gov/search/?q=HNWOO&a=false&d=asc&p=1&x=10&api_version=2"
+	#       -H "accept: application/json" -H "X-CSRFToken: ..."
+	http "https://files.jgi.doe.gov/search/?q=GPSTZ"
+	http "https://files.jgi.doe.gov/search/?q=bogoriensis"
+
+# charity
+	https://www.charitynavigator.org/
+	https://www.charitywatch.org/
+	https://www.give.org/search-options
+	https://www.givewell.org/
+	https://www.globalgiving.org/
+	https://www.impactmatters.org/
+
+# altruism
+https://www.effectivealtruism.org
+
+# JGI all_inclusive_report
+	curl 'https://prospero.jgi.doe.gov/ws/export-data?query=all-inclusive' -L -i -X GET  ## Need -L for redirect
+	http https://prospero.jgi.doe.gov/ws/all-inclusive/do?search=sp_project_id%3D%3D1000004   ## works
+	http https://prospero.jgi.doe.gov/ws/all-inclusive/do?search=sp_project_id==1000550
+	xsv search -s 21 -i "Metagenome Annotated Standard Draft" 2021.air.csv | xsv select 21,246,176,172,167,7,35,59,82,67,202,205,214,235,193,192,184,261> MGASD.csv
+
+* JGI databases: https://docs.jgi.doe.gov/display/PPS/PPS+Servers+and+DB+configuration
+
+# budget history
+	https://www.aaas.org/programs/r-d-budget-and-policy/historical-trends-federal-rd
+	https://www.aaas.org/programs/r-d-budget-and-policy/historical-rd-data
+
+# gene -> function prediction
+# 	https://biothings.io/explorer/explain
+	http://bte_trapi.smart-api.info/portal/translator/metakg
+	ncbi mesh
+	esearch
+
+# cloud reference databases
+	https://github.com/ewels/AWS-iGenomes
+	http://refgenomes.databio.org
+	rsync --dry-run -avzP rsync://datacache.galaxyproject.org/indexes  # galaxy::rsync
+	ref.mugqic   # cvmfs computecanada.ca
+	https://docs.computecanada.ca/wiki/Genomics_data
+
+# HMP data: https://portal.hmpdacc.org/query/f?query=subject.project_name%20in%20%5B%22Human%20Microbiome%20Project%20(HMP)%22%5D%20and%20sample.body_site%20in%20%5B%22feces%22%5D%20and%20file.format%20in%20%5B%22FASTQ%22%5D&filters=%7B%22query%22:%22subject.project_name%20in%20%5B%5C%22Human%20Microbiome%20Project%20(HMP)%5C%22%5D%20and%20sample.body_site%20in%20%5B%5C%22feces%5C%22%5D%20and%20file.format%20in%20%5B%5C%22FASTQ%5C%22%5D%22%7D&pagination=%7B%22files%22:%7B%22count%22:20,%22sort%22:%22file.node_type:desc,%22,%22from%22:1,%22size%22:20,%22sample_total%22:504,%22total%22:719,%22page%22:1,%22pages%22:36%7D%7D
+
+
+# data search
+https://datasetsearch.research.google.com
+
+#* cvmfs compute canada (data and tools) : https://docs.computecanada.ca/wiki/Accessing_CVMFS
+	reference data : https://docs.computecanada.ca/wiki/Genomics_data
+
+# assembler test data (nucleotides-data repo)
+	aws s3 ls  s3://nucleotides-prod/inputs/62/6281b75d4cb3d36797280f42e9b26d7ccc91bd79341d61d04f49f055331726e1
+	(see https://github.com/nucleotides/nucleotides-data/blob/master/inputs/data/algiphilus_aromaticivorans_dg1253.yml)
+	GAA-4062 and earlier tickets for nucleotides
+
+# s3 public data
+	https://registry.opendata.aws
+	aws s3 ls  s3://sra-pub-src-2
+
+# aws s3 ncbi blast databases (see email 20191219 Tom Madden, David Arndt, Lee Pang)
+	aws s3 ls s3://ncbi-blast-databases/ --no-sign-request
+	http://s3.amazonaws.com/ncbi-blast-databases docker run --rm ncbi/blast
+	update_blastdb.pl --showall pretty --source aws
+	https://github.com/ncbi/blast_plus_docs aws ls s3://ncbi-blast-databases/latest-dir (on AWS)
+	or gs://blast-db/latest-dir (on GCP). latest-dir is a text file with a date stamp (e.g., 2020-09-29-01-05-01)
+	aws s3 ls  s3://ncbi-blast-databases/2020-12-15-01-05-02/
+
+# blast databases and download ebi
+	rsync -av rsync://ftp.ensembl.org/ensembl/pub/current_embl/homo_sapiens .
+	ftp://ftp.ensemblgenomes.org/pub/fungi
+
+# ebi / ena taxonomy database
+	ftp://ftp.ebi.ac.uk/pub/databases/ena/taxonomy/
+
+# blast databases
+	GCP: https://ncbi.github.io/blast-cloud/blastdb/available-blastdbs-gcp.html
+	NCBI: docker run --rm -it ncbi/blast update_blastdb.pl --showall pretty --source NCBI [GCS]
+
+
+# internet data - common crawl (http://commoncrawl.org/the-data/examples/)
+
+# simulated mg data :http://www.bork.embl.de/~mende/simulated_data.
+
+# presto - open source distributed SQL query engine for running interactive analytic queries against data sources of all sizes
+	needs java >= 1.8
+	Add connectors to /usr/local/Cellar/presto/0.150/libexec/etc/catalog/. See: https://prestodb.io/docs/current/connector.html
+	# To start presto with launchd and restart login:
+	  brew services start presto
+	#Or, if you don't want/need a background service you can just run:
+	  presto-server run
+
+# download all refseq bacteria (2016)
+	see www.ncbi.nlm.nih.gov/genome/doc/ftpfaq
+
+# data visualization
+http://phinch.org/viz.html
+
+# public PacBio data
+	https://github.com/PacificBiosciences/DevNet/wiki/Datasets
+	P6/ C4
+	- C. elegans 40x
+	P5/C3
+	- Human 54x + 10x
+	- Human microbiome (Mock Community B sample from the HMP):
+	- Drosophila
+	- Arabidopsis lyrata
+	- Arabidopsis thaliana Ler-0
+	- Neurospora crassa (genome, epigenome, transcriptome)
+	P4/C2
+	- E. coli size selected 20kb
+	- Saccharomyces cerivisiae W303
+
+#  datasets
+	RDatasets.datasets()
+	using RDatasets
+
+# google data search
+https://datasetsearch.research.google.com
+
+# citations
+dimensions
+http://www.excellencemapping.net/#/view/measure/top10/calculation/a_ohne_kovariable/field/all-areas/significant/false/org/
+scopus
+https://localcitationnetwork.github.io
+openalex (see cheat sheet)
+pubmed
+field citation ratio
+citing author network
+
+
+# campaign finance
+http://www.opensecrets.org/
+
+# school rank
+http://www.shanghairanking.com/Search.jsp
+
+# cia
+https://www.cia.gov/the-world-factbook/
+
+# amazing and varied graphs and tables
+https://ourworldindata.org/
+https://ourworldindata.org/plastic-pollution
+
+# standard reference data
+http://www.nist.gov/srd/
+- mass spec
+- xtal structures
+- thermochem tables
+- phase diagrams
+- IR
+- chem
+- atomic spectra
+- pure compounds
+- fundamental physical constants
+- ionic liquids
+- CMC
+- ...
+
+# dead link
+# https://www.quantopian.com/algorithms
+
+# land use
+https://www.bloomberg.com/graphics/2018-us-land-use/
+
+# trends
+https://trends.google.com/trends/?geo=US
+
+# economics
+https://econofact.org/
+https://econofact.org/going-away-to-college-school-distance-as-a-barrier-to-higher-education
+
+# energy data
+https://openei.org/doe-opendata/dataset
+
+# google dataset search
+https://toolbox.google.com/datasetsearch
+
+# climate
+probablefutures.org
+FUD: https://www.merchantsofdoubt.org/
+https://coolclimate.org/data
+FUD: https://influencemap.org/EN/report/Climate-Change-and-Digital-Advertising-a40c8116160668aa2d865da2f5abe91b#
+
+# calendars
+https://docs.google.com/spreadsheets/d/1XF1FQOqg4w5NG-qP5kyWDHn1BETg4Rj3bdLxFnjU9oE/edit#gid=1270971721
+
+# census
+https://factfinder.census.gov/faces/nav/jsf/pages/community_facts.xhtml
+
+# world
+ https://www.worldometers.info
+
+# publications
+https://arxiv-sanity-lite.com

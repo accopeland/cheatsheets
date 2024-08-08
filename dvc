@@ -1,0 +1,24 @@
+# where
+
+# based on git-lfs
+
+# startup
+init
+git commit
+git add *.dvc data/.gitignore
+
+# commands
+remote add
+push
+pull
+checkout
+list
+get
+import
+stage
+add
+repro
+metrics
+plots
+exp run
+exp show

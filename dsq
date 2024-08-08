@@ -1,0 +1,13 @@
+# description
+Command line tool for running sql queries against csv, parquet, json, xls/x, yaml, avro
+
+# see also
+duckdb
+q
+textql
+csvq
+
+# example
+$ dsq testdata/userdata.parquet 'select count(*) from {}'
+[{"count(*)":1000}
+]

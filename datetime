@@ -1,0 +1,54 @@
+# description
+Notes and tools for dealing with dates and datetime
+
+# see also
+date
+
+# jq
+jq ´fromdate´
+"2015-03-05T23:51:47Z"
+=> 1425599507
+
+jq ´strptime("%Y-%m-%dT%H:%M:%SZ")´
+"2015-03-05T23:51:47Z"
+=> [2015,2,5,23,51,47,4,63]
+
+jq ´strptime("%Y-%m-%dT%H:%M:%SZ")|mktime´
+"2015-03-05T23:51:47Z"
+=> 1425599507
+
+# R::lubridate
+
+# postgres
+function dw_ct0() { local F=${1:?"dt_created"} ; local T=${2:-"$(date +"%Y-%m-%d")"};
+date_format(sdm_seq_complete_date ,"%Y-%m-%d") as dt_seq_end,
+where sam_ship_approve_date >= (date_add(date('$F'), interval 7 hour))
+and sam_receive_date is not null and sam_ship_approve_date is not null" ;
+
+# mysql
+function sam_rcv_by_wk() { local F=${1:?"dt_created"} ; local T=${2:-"$(date +"%Y-%m-%d")"};
+	rqc <<< "select sam_receive_date as d,
+	from_days(to_days(cast(sam_receive_date as datetime)) - mod(to_days(cast(sam_receive_date as datetime)) - 1 - 1, 7)) y_w, count(*) as N
+	where sam_receive_date >= (date_add(date('$F'), interval 7 hour))
+
+# postgres
+function lib_create_by_wk() { local F=${1:?"dt_created"} ; local T=${2:-"$(date +"%Y-%m-%d")"};
+	rqc <<< "select lib_create_date as d, from_days(to_days(cast(lib_create_date as datetime)) - mod(to_days(cast(lib_create_date as datetime)) - 1 - 1, 7)) y_w, count(*) as N	where lib_create_date >= (date_add(date('$F'), interval 7 hour)) ...
+
+# dategrep
+for f in *.tsv ; do echo -n $f :  ; tail -n +2 $f | dategrep --start 2020-09-30  --end 2021-09-30 --format  "%Y-%m-%dT%H:%M:%S" | wc -l ; done
+
+# date tricks
+date +"%Y-%m-%d" -d "+1day"
+function du_sdm_platform() { local D=${1:-$(date +"%Y-%m-%d" -d "-1day")} ;
+        local P="/clusterfs/jgi/scratch/dsi/aa/dm_archive/sdm"
+        fd . --type f --newer $D $P -X du -b | cut -d'/' -f1,9 | \
+                duckdb :memory: "select count(*) as N, column1 as prod, sum(column0)/1e12 as T from (select * from read_csv_auto('/dev/stdin')) group by 2";
+}
+
+# date tricks
+function jamo_files_report() { local F=${1:?"dt_created"} ; local T=${2:-"$(date +"%Y-%m-%d")"};
+    jamo report select file_date,file_type,file_size,file_group,file_name,_id where file_date gte '$F' as csv ;
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+	local T=$(date "+%s")
+

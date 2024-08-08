@@ -27,3 +27,16 @@ kubectl get events --sort-by='.metadata.creationTimestamp'
 
 # To switch context of a specific cluster:
 kubectl config use-context CONTEXT_NAME [options]
+
+# contexts -- Kubernetes contexts are a shortcut that allow you to access cluster,user, and namespace params conveniently.
+kubectl config use-context  # define multiple contexts in config file to target multiple clusters, or same cluster w different users or namespaces
+The problem:
+- If you are working with multiple k8s clusters, it can become cumbersome to manage configuration files as you are switching from one cluster to the other.
+- If your clusters have multiple namespaces: you need to specify --namespace or -n every time you use kubectl.
+- Combined with multiple  clusters, every kubectl command is going to look something like
+    kubectl  --namespace <NAMESPACE_NAME> --kubeconfig <PATH_TO_KUBECONFIG> …,
+##
+kubectl config use-context  # This allows you to define multiple contexts in your configuration file, which
+				you can then use to target multiple Kubernetes clusters, or the same cluster
+				with a different set of users or namespaces. You can quickly switch between
+				clusters by using the kubectl config use-context

@@ -1,0 +1,48 @@
+# description
+Various notes about how to capture key codes , remap key codes, create key combinations, etc.
+
+# docs
+You're looking at them
+
+# see also
+~/.inputrc
+
+# tools
+cat -v
+karabiner-elements (brew)
+KeyCastr
+hk - https://tratt.net/laurie/src/hk/
+
+# starship / tmux interference
+# ???
+
+# failing hotkey
+https://tratt.net/laurie/blog/2023/debugging_a_failing_hotkey.html
+
+# apple keycodes -- ???
+key codes
+
+# mappings
+cmd-L : 55
+cmd-R : 54
+^-L   : 59
+^-R   : 62
+opt-L : 58
+opt-R : 61
+
+# osx keyboard mapping
+http://xahlee.info/kbd/osx_keybinding.html
+/Library/StartupItems/DoubleCommand/uninstall.command # uninstall double command
+
+# create keyboard shortcut for app/task osx -
+http://computers.tutsplus.com/tutorials/how-to-launch-any-app-with-a-keyboard-shortcut--mac-31463
+automator / sysprefs -> keyboard -> shortcuts -> services
+
+# osx keyboard remapping
+~/Library/KeyBindings/DefaultKeyBinding.dict
+
+# OSX swap ctrl caps lock
+system preferences -> keyboard -> modifier keys -> select keyboard -> [builtin, usb, etc.]
+
+# report keys
+xxd

@@ -1,0 +1,16 @@
+# description
+portable secure password store
+
+# install
+brew install keepassxc
+download from web site / install
+compile
+
+# build
+
+
+# disable network req
+you can compile KeePassXC without any networking code. Simply
+configure CMake with -DWITH_XC_NETWORKING=OFF (see Building KeePassXC).
+
+

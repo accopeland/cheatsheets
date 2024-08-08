@@ -1,0 +1,123 @@
+# description
+Notes and tools on DNA kmers
+
+# docs
+https://arxiv.org/pdf/2404.01519.pdf
+
+# optimal kmer size (Fofanov, 2004)
+if using homopolymer compression then n=4
+n=3 ; echo $g $e | awk '{print $1"\t"(1-$2)/$2}' | awk -v n=$n '{print log($1*$2)/log(n)}'
+e.g. g=100000000 e=0.001 n=3
+canu can/does this?
+
+# cardinality
+testfileformat.sh
+
+# storage
+kff-tools  github.com/Kmer-File-Format/kff-tools
+
+# count (see below)
+
+# query
+kmtricks https://github.com/tlemane/kmtricks [pipeline|repart|superk|count|merge|format|filter|dump|aggregate|index|query|infos]
+https://github.com/tlemane/kmtricks/wiki/kmtricks-pipeline
+kmindex https://github.com/tlemane/kmindex
+kmerdb: https://github.com/refresh-bio/kmer-db
+meryl: https://github.com/marbl/meryl
+merqury: https://github.com/marbl/merqury
+kmdiff: https://github.com/tlemane/kmdiff
+findere: https://github.com/lrobidou/findere
+
+# set operations
+meryl
+KMC3 (Kokot et al., 2017)
+GenomeTester4 (Kaplinski et al., 2015)
+unikmer (slower)
+
+# MG comparison -- 12 tools currently published for k-mer-based de novo comparative metagenomic tasks.
+Older tools use k-mers to compare MG read content. these approaches don't scale
+Commet
+TriageTool
+Compareads
+Newer approaches compare datasets directly on k-mer content. Most tools able to compute pairwise distances in less than 5 h.
+Simka -- comparison of samples on complete k-mer spectra in less than 3 h ; 32B reads in <= 10h, <= 70GB RAM.
+Sketching approaches provide robust estimation of the k-mer-based distance if sketch >= 1 million k-mers, and is more accurate for quantitative distances like Bray-Curtis
+SourMash
+Mash
+SimkaMin -- (MinHash) able to perform the comparison in less than 30 minutes.
+
+# deBruijn graphs
+https://github.com/medvedevgroup/TwoPaCo
+bcalm
+https://github.com/kamimrcht/REINDEER
+https://github.com/Malfoy/Blight
+https://github.com/pmelsted/bifrost
+
+# fitting - GeneScopeFK
+Histex -G data/Pvir1/FastK_Table | GeneScopeFK -o data/Pvir1/GenomeScopeFK/ -k 17
+mkdir -p data/Pvir1/FastK_raw && mv data/Pvir1/FastK_Table* data/Pvir1/FastK_raw
+
+# comparison v K
+k-mers are a natural unit for comparing communities:
+(1) sufficiently long k-mers are usually specific of a genome (Fofanov et al., 2004),
+(2) k-mer frequency is linearly related to genome’s abundance (Wu and Ye, 2011),
+(3) k-mer aggregates organisms with very similar k-mer composition (e.g. bacterial strains) w/out need for classification of those organisms (Teeling et al., 2004).
+Dubinkina et al. (2016) demonstrate that k-mer-based distances are well correlated to taxonomic ones, and are accurate enough to recover known biological structure,
+but also to uncover previously unknown biological features that were missed by reference-based approaches due to incompleteness of reference databases.
+Importantly, the greater k, the more correlated these taxonomic and k-mer-based distances seem to be
+
+# count
+KCOSS -- running time of KCOSS is 9.4–21.4% of that of Jellyfish2, 17.3–45.6% of that of CHTKC and 19.3–58.5% of that of KMC3 when k = 64.
+CHTKC --
+KMC3 --
+kaarme --
+metahipmer -- git clone git@bitbucket.org:berkeleylab/mhm2.git
+hipmer https://sourceforge.net/projects/hipmer/
+kmerind https://github.com/ParBLiSS/kmerind
+ntcard -- 2.5x faster than FastK, max count = 65404 ?
+FastK -- v. fast but max count = 32768 , 3x faster than kmc
+KMC2 -- refined minimizer to signatures , sorting, optimized for k<32
+gerbil -- two disk approach, can use GPU, minimizer, parallel, radix sort,
+jellyfish -- Among the first,uses a lock-free hash table that allows parallel insertion.
+BFCounter -- reduce runtime and memory, uses bloom filters for k-mer counting to filter out rarely occurring k-mers stemming from sequencing errors.
+DSK -- single hash table , two-disk architecture and aim at reducing expensive IO operations, efficient for large k but slower than KMC2 for small k
+Turtle -- replaces a standard Bloom filter by a cache-efficient counterpart.
+MSPKmerCounter --  introduces the concept of minimizers to the k-mer counting, thus further optimizing the disk-based approach.
+KCMBT -- multiple burst trees, under some conditions even faster than KMC2, however, k < 32 and vast memory requirements
+
+# kmer hist (approx)
+# Input:                          1000000 reads           150260684 bases.
+Benchmark 1: FastK -v -T8 -k31 4M.fastq && Histex -A 4M.hist >/dev/null
+  Time (mean ± σ):      5.215 s ±  0.484 s    [User: 23.717 s, System: 1.802 s]
+  Range (min … max):    4.509 s …  6.290 s    10 runs
+
+Benchmark 1: kmc -k33 4M.fastq kmc /tmp
+  Time (mean ± σ):     11.256 s ±  1.252 s    [User: 38.355 s, System: 3.959 s]
+  Range (min … max):   10.238 s … 14.734 s    10 runs
+
+Benchmark 1: jellyfish count -m 31 -t 8 -s 1000M -C 4M.fastq  && jellyfish histo mer_counts.jf>/dev/null
+  Time (mean ± σ):     26.101 s ±  2.862 s    [User: 131.957 s, System: 9.059 s]
+  Range (min … max):   22.404 s … 32.557 s    10 runs
+
+Benchmark 1: khist.sh -Xmx1000m in=4M.fastq hist=4M.khist ow
+  Time (mean ± σ):     35.394 s ±  3.568 s    [User: 243.473 s, System: 4.187 s]
+  Range (min … max):   33.733 s … 45.520 s    10 runs
+
+Benchmark 1: unikmer count -j 4 -k 31 4M.fastq -o 4M.k31
+  Time (mean ± σ):     82.390 s ±  8.350 s    [User: 77.690 s, System: 5.644 s]
+  Range (min … max):   74.454 s … 94.891 s    10 runs
+IO: io=0 faults=19 MEM: max=5419340 kb Average=0 kb CPU: Percentage=99% real=76.44 sys=4.81 user=71.08
+
+#                    khist            kmercountexact
+#                    ---------------- ---------------
+# jellyfish FastK   Raw_Ct  Unique    Count   logScale
+1 89974720  899747  91019357 91019357 89974720 8997472
+2  7540540  754054  14316533  7158267  7540540  150810
+3   740074  740074   2091567   697189   740074  222022
+4   219703  219703    795756   198939   219703   87881
+5   114035  114035    559923   111985   114035   57018
+6    83153   83153    490509    81752    83153   49892
+7    62605   62605    439308    62758    62605   43823
+8    49925   49925    401714    50214    49925   39940
+9    38832   38832    348992    38777    38832   34949
+10   30523   30523

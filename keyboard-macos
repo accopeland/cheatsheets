@@ -1,0 +1,26 @@
+# macos keyboard stuff
+
+# keyboard keys  or mappings stop working - external keyboard
+unplug it and replug
+
+# macos unminimize / unzoom - https://apple.stackexchange.com/questions/26182/keyboard-shortcut-to-unhide-or-unminimize-a-window-in-os-x
+	You can also ⌘+Tab, keep holding ⌘, release tab, press option, release ⌘
+	cmd-tab -> cmd-arrow -> arrow -> enter
+
+# create keyboard shortcut for app/task osx -
+	http://computers.tutsplus.com/tutorials/how-to-launch-any-app-with-a-keyboard-shortcut--mac-31463
+	automator / sysprefs -> keyboard -> shortcuts -> services
+
+# osx keyboard mapping
+	http://xahlee.info/kbd/osx_keybinding.html
+	 /Library/StartupItems/DoubleCommand/uninstall.command # uninstall double command
+
+# osx keyboard remapping
+	~/Library/KeyBindings/DefaultKeyBinding.dict
+
+# mac swap ctrl caps lock
+	system preferences -> keyboard -> modifier keys -> select keyboard -> [builtin, usb, etc.]
+
+# show keystrokes in display : keycastr -
+https://github.com/keycastr/keycastr
+brew install --cask keycastr

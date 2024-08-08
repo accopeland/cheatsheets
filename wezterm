@@ -1,0 +1,109 @@
+# description
+Wez terminal with ssh mux
+
+# installl
+brew install --cask wezterm --no-quarantine
+
+# config
+~/.config/wezterm
+$HOME/.config/wezterm/wezterm.lua
+
+# fonts
+ wezterm ls-fonts --list-system
+# stuff
+$HOME/.config/wezterm/wezterm.lua
+
+# keybindings
+wezterm show-keys --lua
+$ wezterm --config enable_scroll_bar=true
+$ wezterm --config 'exit_behavior="Hold"'
+
+# other
+# keys
+Hyper, Super, Meta, Cancel, Backspace, Tab, Clear, Enter, Shift, Escape, LeftShift, RightShift, Control, LeftControl, RightControl, Alt, LeftAlt, RightAlt, Menu, LeftMenu, RightMenu, Pause, CapsLock, VoidSymbol, PageUp, PageDown, End, Home, LeftArrow, RightArrow, UpArrow, DownArrow, Select, Print, Execute, PrintScreen, Insert, Delete ,Help, LeftWindows, RightWindows, Applications, Sleep, Numpad0, Numpad1, Numpad2, Numpad3, Numpad4, Numpad5, Numpad6, Numpad7, Numpad8, Numpad9, Multiply, Add, Separator, Subtract, Decimal, Divide, NumLock, ScrollLock, BrowserBack, BrowserForward, BrowserRefresh, BrowserStop, BrowserSearch, BrowserFavorites, BrowserHome, VolumeMute, VolumeDown, VolumeUp, MediaNextTrack, MediaPrevTrack, MediaStop, MediaPlayPause ,ApplicationLeftArrow, ApplicationRightArrow, ApplicationUpArrow, ApplicationDownArrow, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19,
+F20, F21, F22, F23, F24.
+
+# mouse
+local wezterm = require 'wezterm';
+return { mouse_bindings = {
+-- Right click sends "woot" to the terminal
+{
+event={Down={streak=1, button="Right"}}, mods="NONE", action=wezterm.action{SendString="woot"}
+},
+-- Change the default click behavior so that it only selects
+-- text and doesn't open hyperlinks {
+event={Up={streak=1, button="Left"}},
+mods="NONE", action=wezterm.action{CompleteSelection="PrimarySelection"},
+},
+-- and make CTRL-Click open hyperlinks
+{
+event={Up={streak=1, button="Left"}}, mods="CTRL", action="OpenLinkAtMouseCursor",
+},
+-- NOTE that binding only the 'Up' event can give unexpected behaviors.
+-- Read more below on the gotcha of binding an 'Up' event only.
+}, }
+
+# colors
+return { colors = {
+-- the first number is the hue measured in degrees with a range
+-- of 0-360.
+-- The second number is the saturation measured in percentage with
+-- a range of 0-100.
+-- The third number is the lightness measured in percentage with
+-- a range of 0-100. foreground = "hsl:235 100 50",
+} }
+
+# background opacity
+ return { window_background_opacity = 1.0,
+}
+
+# colorschemes
+ return {
+color_scheme = "3024 Day",
+color_scheme = "Belafonte Day",
+color_scheme = "Belafonte Night",
+color_scheme = "Broadcast",
+color_scheme = "Builtin Solarized Dark",
+color_scheme = "Material",...
+
+# scrollback
+ return {
+-- How many lines of scrollback you want to retain per tab
+  scrollback_lines = 3500,
+}
+
+# quickselect
+The QuickSelect key assignment is used to enter quick select mode; it is bound to CTRL-SHIFT- SPACE by default.
+
+# copy/paste
+The ActivateCopyMode key assignment is used to enter copy mode; it is bound to CTRL-SHIFT-X by default.
+When copy mode is activated, the title is prefixed with "Copy Mode" and the behavior of the tab is changed; keyboard input now controls the cursor and allows moving it through the scrollback, scrolling the viewport as needed, in a style similar to that of the Vim editor.
+Move the cursor to the start of the region you wish to select and press v to toggle selection mode (it is off by default), then move the cursor to the end of that region. You can then use Copy (by default:
+CTRl-SHIFT-C ) to copy that region to the clipboard.
+
+# images
+$ wezterm imgcat /path/to/image.png
+
+# ssh
+ wezterm ssh wez@my.server
+
+
+# unix sockets --  connection to multiplexer via a unix socket referred to as a unix domain. The bare minimum configuration to enable a unix domain is this, which will spawn a server if needed and then connect the gui to it automatically when wezterm is launched:
+return { unix_domains = {
+{
+name = "unix",
+} },
+-- This causes `wezterm` to act as though it was started as
+-- `wezterm connect unix` by default, connecting to the unix
+-- domain on startup.
+-- If you prefer to connect manually, leave out this line. default_gui_startup_args = {"connect", "unix"},
+}
+
+# tls domain
+
+# locale / unicode
+export LANG=en_US.UTF-8
+# You don't strictly need this collation, but most technical people # probably want C collation for sane results
+export LC_COLLATE=C
+
+#

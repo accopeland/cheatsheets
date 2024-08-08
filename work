@@ -1,0 +1,21 @@
+checkin Bryce 20160914
+	- expose changelog in RQC   - on Bryce's list
+	- RQC dev roadmap - Bryce will produce
+	- tools for checking on all queues (how many itag are waiting or in progress for all products). Have already?
+		* all things run are on pipelines page
+	- itag min report - Bryce will add
+		* merge rate
+		* total usable reads / lib
+		* control charting for fail rate (<5000 reads; <10000 reads)
+	- itag V4-V5 euk failures
+	- hacksaw coding exercise with Alex S
+		* https://docs.google.com/document/d/16XhLww7EuGVaoMJKY8Zz1g_FxptpcnWcjq0EWeDBjPU/edit#heading=h.i8oakibovvrq
+		* requirements
+		* testing
+		* dev plan?
+	- GAA-2292 help - assign to Bryce
+	- TC BB : try every other week
+
+	TODO
+	MGM - Alex to talk to Nikos
+	Single Particle Sort - Alex verified with TW to use amplified CE process

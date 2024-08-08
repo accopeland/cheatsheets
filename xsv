@@ -1,0 +1,34 @@
+# install
+cargo install xsv
+brew install xsv
+
+# see also
+	csvkit
+	xsv
+	visidata - csv tools
+	rq
+	duckdb
+	xsv
+
+# docs
+https://github.com/BurntSushi/xsv
+
+# typical workflow
+	curl 'https://prospero.jgi.doe.gov/ws/export-data?query=all-inclusive' -L -i -X GET  ## Need -L for redirect
+	http https://prospero.jgi.doe.gov/ws/all-inclusive/do?search=sp_project_id%3D%3D1000004   ## works
+	http https://prospero.jgi.doe.gov/ws/all-inclusive/do?search=sp_project_id==1000550
+	xsv search -s 21 -i "Metagenome Annotated Standard Draft" 2021.air.csv | xsv select 21,246,176,172,167,7,35,59,82,67,202,205,214,235,193,192,184,261,254,253 > MGASD.csv
+
+# format
+xsv fmt
+[copeland@login25:~/tmp] xsv fmt -d'\t' pipeline_status | xsv stats
+
+# rows2cols
+	xsv flatten
+	egzact::conv 1
+	kenttools::rowsToCols
+
+
+# search
+	xsv search -s 246 -i -v "iTag" 2021.air.csv | xsv frequency -s 246 -l 0 -j 2
+	xsv search -s 21 -i "Metagenome Annotated Standard Draft" 2021.air.csv | xsv select 21,246,176,172,167,7,35,59,82,67,202,205,214,235,193,192,184,261,254,253 > MGASD.csv

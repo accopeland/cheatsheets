@@ -1,0 +1,9 @@
+# clean up Xcode bloat
+> cd /Applications/Xcode.app/Contents/Developer/Platforms/
+> sudo rm -rf AppleTV* Watch* iPhone*
+# OPTIONAL: save another half-gigabyte if not using SWIFT:
+> sudo rm -rf /Applications/Xcode.app/Contents/Developer/Toolchains/Swift_2.3.xctoolchain
+# OPTIONAL: save another 3.1GB by removing (not always this large, but can be)
+> rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/
+# OPTIONAL: remove support for iPhone/iPad/etc simulators (up to another gigabyte or so)
+> rm -rf ~/Library/Developer/CoreSimulator/Devices/*

@@ -1,0 +1,114 @@
+# convert
+freexl
+csvkit
+data-science-toolbox
+readr
+soffice --invisible --convert-to xls:"MS Excel 97"
+vd -b input.csv -o output.json
+vd *xls
+
+# convert xls to csv: csvkit
+#ideally
+pip install --upgrade setuptools
+pip install --upgrade csvkit
+in2csv data.xls > data.csv
+csvcut -c column_a,column_c data.csv > new.csv
+csvstat data.csv
+# if python is broken again
+brew link openssl --force
+pip uninstall cryptography
+pip uninstall cryptography --no-use-wheel
+pip install cryptography --no-use-wheel
+brew unlink openssl
+pip install --upgrade csvkit
+
+# data-science-toolbox : xlsx to csv
+in2csv data/imdb-250.xlsx
+
+# plate data - library(platetools)
+library(readxl)
+d=read_excel("sheet.xlsx",sheet=1)
+d0=subset(d,select=c("Values","Wells"))
+raw_map(d$Values,d$Wells,plate=96)
+
+# xlsx R
+cran xlsx - huge java pain in the ass
+cran readxl - wickham
+readr - hadleyverse  # library(readr) (read_csv, read_tsv)
+install.packages("readxl")
+# only the binary install worked; grab tarball then unpack into /Users/copeland/Library/R/3.2
+library(readxl)
+d=read_excel("/Users/copeland/Work/klail//RQC_metrics.xlsx",sheet="Sheet1")
+
+#  excel julia
+using ExcelFiles, DataTables, IndexedTables, TimeSeries, Temporal, Gadfly
+dt = DataTable(load("data.xlsx", "Sheet1"))			# Load into a DataTable
+it = IndexedTable(load("data.xlsx", "Sheet1"))			# Load into an IndexedTable
+ta = TimeArray(load("data.xlsx", "Sheet1"))			# Load into a TimeArray
+ts = TS(load("data.xlsx", "Sheet1"))				# Load into a TS
+plot(load("data.xlsx", "Sheet1"), x=:a, y=:b, Geom.line)	# Plot directly with Gadfly
+
+# ExcelFiles.jl
+using ExcelFiles.jl
+df = load("bar.xlsx","Sheet Name 1")
+df |> save("foo.xlsx")
+#
+using Serialization
+serialize("m1.jls",m1)
+
+# xlsx.jl (https://github.com/felipenoris/XLSX.jl/blob/master/docs/src/tutorial.md)
+Queryverse::ExcelFiles  -> load()
+XLSX
+ x= XLSX.readxlsx("cscratch.xlsx")
+XLSXFile("cscratch.xlsx") containing 5 Worksheets
+    sheetname size          range
+-------------------------------------------------
+      read qc 2171x17       B1:R2171
+         asm2 4137x21       B1:V4137
+        notes 40x1          A1:A40
+     Aligment 1603x14       B1:O1603
+       Sheet1 91x4          B1:E91
+rdqc = XLSX.readdata("20190320.cscratch.xlsx","read qc","B1:K2171") |> DataFrame
+
+
+# XLSX.jl
+using XLSX
+x= XLSX.readxlsx("cscratch.xlsx")
+x["Sheet1"]
+x["Sheet1!B1:C91"]
+x["Sheet1!B1:C91"] |> DataFrame |> Voyager()
+x["Sheet1!B1:C91"] |> DataFrame |> @vlplot(x=:Date, y=:Count,:bar)
+x["Sheet1!B1:C91"] |> DataFrame |> @vlplot(x=:Date, y=:Count, :point)
+summary(xdf)
+using Dates
+Day(xdf[:Date])
+XLSX.eachrow(x["Sheet1"])[1]
+r=XLSX.eachrow(x["Sheet1"])
+x["Sheet1"](B1:C10)
+@vlplot(data=xdf, :bar, x=:Date, y=:Count)
+xdf |> mutate(_.run_date = Date(strip(_.run_date))) |> DataFrame
+xdf |> @mutate(run_date = strip!(_.run_date)) |> DataFrame
+xdf |> @mutate(bla=Dates::Date(_.run_date)) |> DataFrame
+xdf |> @mutate(bla=Dates.Date(_.run_date)) |> DataFrame
+xdf |> @mutate(_.run_date[2:11] ) |> DataFrame
+
+# XLSX.jl
+using XLSX, Queryverse , DataFrames, Dates
+x = XLSX.readxlsx("cscratch.xlsx")
+x.relationships
+x["read qc!B1:K21"]
+rdqc = x["read qc!B1:K2171"] |> DataFrame
+rdqc = XLSX.readdata("20190320.cscratch.xlsx","read qc","B1:K2171") |> DataFrame
+rdqc |> @rename(:x1=>:su_name,:x2=>:lib,:x3=>queue_id,:x4=>rd_ct,:x5=>:wallclock,:x6=>:month,:x7=>:dat,:x8=>:hour,:x9=>:1m,:x10=>:rate_perM)
+rdqc |> @rename!(:x1=>:su_name,:x2=>:lib,:x3=>queue_id,:x4=>rd_ct,:x5=>:wallclock,:x6=>:month,:x7=>:dat,:x8=>:hour,:x9=>:1m,:x10=>:rate_perM)
+rename!(rdqc, :x1=>:su_name, :x2=>:lib, :x3=>:queue_id, :x4=>:rd_ct, :x5=>:wallclock, :x6=>:month, :x7=>:dat, :x8=>:hour, :x9=>:1m, :x10=>:rate_perM)
+aln = XLSX.readdata("20190329.csratch.xlsx","Aligment","B1:L1603")
+aln = XLSX.readdata("20190329.csratch.xlsx","Aligment","B:L"; first_row=1603, header=true)
+daln = DataFrame(XLSX.readdata("20190329.csratch.xlsx","Aligment","B:L"))
+n = ["su_name","lib","queue_id","read_ct","wallclock","NA","mon","day","hour","M","rate_perM"]
+names!(daln, ["su_name","lib","queue_id","read_ct","wallclock","NA","mon","day","hour","M","rate_perM"])
+names!(daln, [:su_name,:lib,:queue_id,:read_ct,:wallclock,:NA,:mon,:day,:hour,:M,:rate_perM])
+
+# Error: unknown function 186
+# Fix: vim  /usr/local/Cellar/csvkit/1.1.0/libexec/lib/python3.11/site-packages/xlrd/formula.py
+add      186: ('HACKED',           1, 1, 0x02, 1, 'V', 'V'),

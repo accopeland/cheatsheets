@@ -1,0 +1,29 @@
+
+# can't open display
+fix_display
+fix_display0
+strace xterm | grep connect(3, {sa_family=AF_INET, sin_port=htons(6011), sin_addr=inet_addr("127.0.0.1")}, 16
+
+export DISPLAY=:0 means "X Server is running on localhost on port 6000".
+export DISPLAY=:10.0 means "X Server is running on localhost on port 6010."
+export DISPLAY=192.168.1.230:10.0 means "X Server is running on the server 192.168.1.230 on port 6010."
+
+xauth allows access to anyone who has the 'MIT-MAGIC-COOKIE-1'. The ~/.Xauthority file stores the cookie. The 'X' client presents the cookie to the 'X' server, and I guess the 'X' server matches the client cookie with the cookie it has. If the cookies don't match, the 'X' Server will reject the connection from the 'X' Client and throws an 'authentication' error.
+commands:
+xauth list # lists the authorization entries for each specified display
+xauth generate #generates authorization token and adds to 'X' server.
+xauth add # adds the authorization entry to ~/.Xauthority file.
+
+xdpyinfo : displays 'X' Server information. We can find where the 'X' server is running and set the DISPLAY variable based on that. For example
+
+xlsclients: lists the client's application running on the display server.
+
+
+strace xdpyinfo on a working session has
+getsockname(3, {sa_family=AF_INET, sin_port=htons(59302), sin_addr=inet_addr("128.55.64.41")}, [16]) = 0
+
+# debugging
+strace
+dbus
+systemctl
+ss -tunelp

@@ -1,0 +1,19 @@
+# vlang https://vlang.io
+
+# vlang install
+	git clone https://github.com/vlang/v
+	cd v
+	make
+
+# vlang test
+	# install
+	cd v
+	./v self
+
+# vlang symlink - add to /usr/local/bin/v
+
+# vlang run code
+	v run test.v
+
+# vlang compile production
+	v -prod test.v

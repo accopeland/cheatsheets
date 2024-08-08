@@ -1,0 +1,345 @@
+# descrription
+Visidata data and database summary tool
+
+# install
+brew install visidata
+pip3.11 install visidata
+pip3.11 install 'ibis...'
+
+# see also
+vdsql
+
+# config
+~/.visidatarc
+O options
+gO edit .visidatarc
+
+# commands
+W# pivot
+M melt
+F frequency
+I info
+U undo
+T transpose
+. select
+! select
+v multiline
+q quit current
+gq quit all
+
+# commands
+      ^Q              abort program immediately
+      ^C              cancel user input or abort all async threads on current sheet
+     g^C              abort all secondary threads
+       q              quit current sheet or menu
+       Q              quit current sheet and free associated memory
+      gq              quit all sheets (clean exit)
+      ^H              activate help menu (Enter/left-mouse to expand submenu or execute command)
+     g^H              view this man page
+     z^H              view sheet of command longnames and keybindings for current sheet
+     Space longname   execute command by its longname
+       U              undo the most recent modification (requires enabled options.undo)
+       R              redo the most recent undo (requires enabled options.undo)
+## Cursor Movement
+     Arrow PgUp       go as expected
+      h   j   k   l   go left/down/up/right
+     gh  gj  gk  gl   go all the way to the left/bottom/top/right of sheet
+          G  gg       go all the way to the bottom/top of sheet
+     Ic. End  Home    go all the way to the bottom/top of sheet
+     ^B  ^F           scroll one page back/forward
+     ^Left ^Right     scroll one page left/right
+     zz               scroll current row to center of screen
+     ^^ (Ctrl+^)      jump to previous sheet (swaps with current sheet)
+      /   ? regex     search for regex forward/backward in current column
+     g/  g? regex     search for regex forward/backward over all visible cols
+     z/  z? expr      search by Python expr forward/backward in current column (with column names as variables)
+      n   N           go to next/previous match from last regex search
+      <   >           go up/down current column to next value
+     z<  z>           go up/down current column to next null value
+      {   }           go up/down current column to next selected row
+      c regex         go to next column with name matching regex
+      r regex         go to next row with key matching regex
+     zc  zr number    go to column/row number (0-based)
+      H   J   K   L   slide current row/column left/down/up/right
+     gH  gJ  gK  gL   slide current row/column all the way to the left/bottom/top/right of sheet
+     zH  zJ  zK  zK <N>  slide current row/column number positions to the left/down/up/right
+     zh  zj  zk  zl   scroll one left/down/up/right
+
+ ## Column Manipulation
+       _ (underbar)   toggle width of current column between full and default width
+      g_              toggle widths of all visible cols between full and default width
+      z_ number       adjust width of current column to number
+     gz_ number       adjust widths of all visible cols to Ar number
+      - (hyphen)      hide current column
+     z-               reduce width of current column by half
+     gv               unhide all cols
+     ! z!             toggle/unset current column as a key column
+     ~  #  %  $  @  z#    set type of current column to str/int/float/currency/date/len
+       ^              rename current column
+      g^              rename all unnamed visible cols to contents of selected rows (or current row)
+      z^              rename current column to combined contents of current cell in selected rows (or current row)
+     gz^              rename all visible cols to combined contents of current column for selected rows (or current row)
+       = expr         create new column from Python expr, with column names, and attributes, as variables
+      g= expr         set current column for selected rows to result of Python expr
+     gz= expr         set current column for selected rows to the items in result of Python sequence expr
+      z= expr         evaluate Python expression on current row and set current cell with result of Python expr
+       i              add column with incremental values
+      gi              set current column for selected rows to incremental values
+      zi step         add column with values at increment step
+     gzi step         set current column for selected rows at increment step
+      ' (tick)        add a frozen copy of current column with all cells evaluated
+     g'               open a frozen copy of current sheet with all visible cols evaluated
+     z'  gz'          add/reset cache for current/all visible column(s)
+      : regex         add new cols from regex split; number of cols determined by example row at cursor
+      ; regex         add new cols from capture groups of regex (also requires example row)
+     z; expr          create new column from bash expr, with $columnNames as variables
+      * regex/subst   add column derived from current column, replacing regex with subst (may include \1 backrefs)
+     g*  gz* regex/subst  modify selected rows in current/all visible column(s), replacing regex with subst (may include \1 backrefs)
+      (   g(          expand current/all visible column(s) of lists (e.g. [3]) or dicts (e.g. {3}) one level
+     z(  gz( depth    expand current/all visible column(s) of lists (e.g. [3]) or dicts (e.g. {3}) to given depth (0= fully)
+      )               unexpand current column; restore original column and remove other cols at this level
+     zM               row-wise expand current column of lists (e.g. [3]) or dicts (e.g. {3}) within that column
+
+## Row Selection
+       s   t   u      select/toggle/unselect current row
+      gs  gt  gu      select/toggle/unselect all rows
+      zs  zt  zu      select/toggle/unselect all rows from top to cursor
+     gzs gzt gzu      select/toggle/unselect all rows from cursor to bottom
+      |   \ regex     select/unselect rows matching regex in current column
+     g|  g\ regex     select/unselect rows matching regex in any visible column
+     z|  z\ expr      select/unselect rows matching Python expr in any visible column
+      , (comma)       select rows matching display value of current cell in current column
+     g,               select rows matching display value of current row in all  visible cols
+     z, gz,           select rows matching typed value of current cell/row in  current column/all visible cols
+
+## Row Sorting/Filtering
+       [    ]         sort ascending/descending by current column; replace any existing sort criteria
+      g[   g]         sort ascending/descending by all key cols; replace any existing sort criteria
+      z[   z]         sort ascending/descending by current column; add to existing sort criteria
+     gz[  gz]         sort ascending/descending by all key cols; add to existing sort criteria
+      "               open duplicate sheet with only selected rows
+     g"               open duplicate sheet with all rows
+     gz"              open duplicate sheet with deepcopy of selected rows
+
+## Editing Rows and Cells
+       a   za         append blank row/column; appended cols cannot be to clipboard
+      ga  gza number  append number blank rows/cols
+       d   gd         delete current/selected row(s)
+       y   gy         yank (copy) current/all selected row(s) to clipboard in Memory Sheet
+       x   gx         cut (copy and delete) current/all selected row(s) to clipboard in Memory Sheet
+      zy  gzy         yank (copy) contents of current column for current/selected row(s) to clipboard in Memory Sheet
+      zd  gzd         set contents of current column for current/selected row(s) to options.null_value
+      zx  gzx         cut (copy and delete) contents of current column for current/selected row(s) to clipboard in Memory Sheet
+       p    P         paste clipboard rows after/before current row
+      zp  gzp         set cells of current column for current/selected row(s) to last clipboard value
+      zP  gzP         paste to cells of current column for current/selected row(s) using the system clipboard
+       Y   gY         yank (copy) current/all selected row(s) to system clipboard (using options.clipboard_copy_cmd)
+      zY  gzY         yank (copy) contents of current column for current/selected row(s) to system clipboard (using options.clipboard_copy_cmd)
+       f              fill null cells in current column with contents of non-null cells up the current column
+       e text         edit contents of current cell
+      ge text         set contents of current column for selected rows to text
+
+## Commands While Editing Input
+        Enter  ^C        accept/abort input
+        ^O  g^O          open external $EDITOR to edit contents of current/se‐
+                         lected rows in current column
+        ^R               reload initial value
+        ^A   ^E          go to beginning/end of line
+        ^B   ^F          go back/forward one character
+        ^←   ^→ (arrow)  go back/forward one word
+        ^H   ^D          delete previous/current character
+        ^T               transpose previous and current characters
+        ^U   ^K          clear from cursor to beginning/end of line
+        ^Y               paste from cell clipboard
+        Backspace  Del   delete previous/current character
+        Insert           toggle insert mode
+        Up  Down         set contents to previous/next in history
+        Tab  Shift+Tab   autocomplete input (when available)
+        Shift+Arrow      move cursor in direction of Arrow and re-enter edit mode
+
+#   Data Toolkit
+      o input         open input in VisiData
+     zo               open file or url from path in current cell
+     ^S g^S filename  save current/all sheet(s) to filename in format determined by extension (default .tsv)
+     z^S filename     save current column only to filename in format determined by extension (default .tsv)
+     ^D filename.vdj  save CommandLog to filename.vdj file
+     A                open new blank sheet with one column
+     T                open new sheet that has rows and cols of current sheet transposed
+      + aggregator    add aggregator to current column (see Frequency Table)
+     z+ aggregator    display result of aggregator over values in selected rows for current column; store result in Memory Sheet
+      &               append top two sheets in Sheets Stack
+     g&               append all sheets in Sheets Stack
+      w nBefore nAfter  add column where each row contains a list of that row, nBefore rows, and nAfter rows
+
+#   Data Visualization
+      . (dot)       plot current numeric column vs key cols. The numeric key column is used for the x-axis; categorical key column values determine color.
+     g.             plot a graph of all visible numeric cols vs key cols.
+
+# Canvas-specific Commands
+         +   -              increase/decrease zoom level, centered on cursor
+         _ (underbar)       zoom to fit full extent
+        z_ (underbar)       set aspect ratio
+         x xmin xmax        set xmin/xmax on graph
+         y ymin ymax        set ymin/ymax on graph
+         s   t   u          select/toggle/unselect rows on source sheet contained within canvas cursor
+        gs  gt  gu          select/toggle/unselect rows on source sheet visible on screen
+         d                  delete rows on source sheet contained within canvas cursor
+        gd                  delete rows on source sheet visible on screen
+         Enter              open sheet of source rows contained within canvas cursor
+        gEnter              open sheet of source rows visible on screen
+         1 - 9              toggle display of layers
+        ^L                  redraw all pixels on canvas
+         v                  toggle show_graph_labels option
+        mouse scrollwheel   zoom in/out of canvas
+        left click-drag     set canvas cursor
+        right click-drag    scroll canvas
+
+ ##Split Screen
+      Z             split screen in half, so that second sheet on the stack is
+                    visible in a second pane
+     zZ             split screen, and queries for height of second pane
+
+## Split Window specific Commands
+        gZ                  close an already split screen, current pane full
+                            screens
+         Z                  push second sheet on current pane's stack to the
+                            top of the other pane's stack
+         Tab                jump to other pane
+        gTab                swap panes
+        g Ctrl+^            cycle through sheets
+
+## Other Commands
+     Q                quit current sheet and remove it from the CommandLog
+     v                toggle sheet-specific visibility (multi-line rows on Sheet, legends/axes on Graph)
+      ^E  g^E         view traceback for most recent error(s)
+     z^E              view traceback for error in current cell
+      ^L              refresh screen
+      ^R              reload current sheet
+      ^Z              suspend VisiData process
+      ^G              show cursor position and bounds of current sheet on status line
+      ^V              show version and copyright information on status line
+      ^P              open Status History
+     m keystroke      first, begin recording macro; second, prompt for keystroke , and complete recording. Macro can then be executed everytime keystroke is used.
+     gm               open an index of all existing macros. Can be directly viewed with Enter, and then modified with ^S.
+      ^Y  z^Y  g^Y    open current row/cell/sheet as Python object
+      ^X expr         evaluate Python expr and opens result as Python object
+     z^X expr         evaluate Python expr, in context of current row, and open result as Python object
+     g^X module       import Python module in the global scope
+
+## Internal Sheets List
+      .  Directory Sheet             browse properties of files in a directory
+      .  Plugins Sheet               browse, install, and (de)activate plugins
+      .  Memory Sheet (Alt+Shift+M)        browse saved values, including clipboard
+
+## Metasheets
+C     .  cols Sheet (Shift+C)     edit column properties
+      .  Sheets Sheet (Shift+S)      jump between sheets or join them together
+      .  Options Sheet (Shift+O)     edit configuration options
+      .  Commandlog (Shift+D)        modify and save commands for replay
+      .  Error Sheet (Ctrl+E)            view last error
+      .  Status History (Ctrl+P)         view history of status messages
+      .  Threads Sheet (Ctrl+T)          view, cancel, and profile asynchronous threads
+
+## Derived Sheets
+      .  Frequency Table (Shift+F)   group rows by column value, with aggregations of other cols
+      .  Describe Sheet (Shift+I)    view summary statistics for each column
+      .  Pivot Table (Shift+W)       group rows by key and summarize current column
+      .  Melted Sheet (Shift+M)      unpivot non-key cols into variable/value cols
+      .  Transposed Sheet (Shift+T)   open new sheet with rows and cols transposed
+
+#   INTERNAL SHEETS --   Directory Sheet
+        Space open-dir-current  open the Directory Sheet for the current directory
+        Enter  gEnter    open current/selected file(s) as new sheet(s)
+         ^O  g^O         open current/selected file(s) in external $EDITOR
+         ^R  z^R  gz^R   reload information for all/current/selected file(s)
+          d   gd         delete current/selected file(s) from filesystem, upon commit
+          y   gy directory  copy current/selected file(s) to given directory, upon commit
+          e   ge name    rename current/selected file(s) to name
+          ` (backtick)   open parent directory
+        z^S              commit changes to file system
+
+# Plugins Sheet --     Browse through a list of available plugins. VisiData needs to be
+        Space open-plugins                         open the Plugins Sheet
+     (sheet-specific commands)
+        a                install and activate current plugin
+        d                deactivate current plugin
+
+#   Memory Sheet
+     Browse through a list of stored values, referanceable in expressions through their name.
+        Alt+Shift+M      open the Memory Sheet
+        Alt+M name       store value in current cell in Memory Sheet under name
+        e                edit either value or name, to edit reference
+
+#   METASHEETS   cols Sheet (Shift+C)
+        gC               open cols Sheet with all visible cols from all sheets
+         &               add column from appending selected source cols
+        g! gz!           toggle/unset selected cols as key cols on source sheet
+        g+ aggregator    add Ar aggregator No to selected source cols
+        g- (hyphen)      hide selected cols on source sheet
+        g~ g# g% g$ g@ gz# z%   set type of selected cols on source sheet to str/int/float/currency/date/len/floatsi
+         Enter           open a Frequency Table sheet grouped by column referenced in current row
+
+#   Sheets Sheet (Shift+S) --     open Sheets Stack, which contains only the active sheets on the current stack
+        gS               open Sheets Sheet, which contains all sheets from current session, active and inactive
+        Alt number       jump to sheet number
+         Enter           jump to sheet referenced in current row
+        gEnter           push selected sheets to top of sheet stack
+         a               add row to reference a new blank sheet
+        gC  gI           open cols Sheet/Describe Sheet with all visible cols from selected sheets
+        g^R              reload all selected sheets
+        z^C  gz^C        abort async threads for current/selected sheets(s)
+        g^S              save selected or all sheets
+         & jointype      merge selected sheets with visible cols from all,keeping rows according to jointype:
+
+#   Options Sheet (Shift+O)
+     (global commands)
+        Shift+O          edit global options (apply to all sheets)
+        zO               edit sheet options (apply to current sheet only)
+        gO               open options.config as TextSheet
+        Enter  e         edit option at current row
+        d                remove option override for this context
+        ^S               save option configuration to foo.visidatarc
+
+#   CommandLog (Shift+D)
+        D                open current sheet's CommandLog with all other loose ends removed; includes commands from parent sheets
+        gD               open global CommandLog for all commands executed in the current session
+        zD               open current sheet's CommandLog with the parent sheets commands' removed
+          x              replay command in current row
+         gx              replay contents of entire CommandLog
+         ^C              abort replay
+
+#   Threads Sheet (Ctrl+T)
+     (global commands)
+        ^T               open global Threads Sheet for all asynchronous
+                         threads running
+        z^T              open current sheet's Threads Sheet
+     (sheet-specific commands)
+         ^C              abort thread at current row
+        g^C              abort all threads on current Threads Sheet
+
+#   DERIVED SHEETS --   Frequency Table (Shift+F)
+A Frequency Table groups rows by one or more cols, and includes summary cols for those with aggregators.
+gF               open Frequency Table, grouped by all key cols on source sheet
+zF               open one-line summary for all rows and selected rows     (sheet-specific commands)
+s   t   u       select/toggle/unselect these entries in source sheet
+Enter  gEnter   open copy of source sheet with rows that are grouped in current cell / selected rows
+
+# Describe Sheet (Shift+I) --     A Describe Sheet contains descriptive statistics for all visible cols.
+gI               open Describe Sheet for all visible cols on all sheets
+zs  zu           select/unselect rows on source sheet that are being described in current cell
+!               toggle/unset current column as a key column on source sheet
+Enter           open a Frequency Table sheet grouped on column referenced in current row
+zEnter           open copy of source sheet with rows described in current cell
+
+#   Pivot Table (Shift+W) --     Set key column(s) and aggregators on column(s) before pressing Shift+W on the column to pivot.
+Enter           open sheet of source rows aggregated in current pivotrow
+zEnter           open sheet of source rows aggregated in current pivot cell
+
+#   Melted Sheet (Shift+M)
+     Open Melted Sheet (unpivot), with key cols retained and all non-key cols reduced to Var-Value rows.
+gM regex         (unpivot), with key cols retained and regex capture groups determining how non-key cols will be reduced to Var-Value rows.
+
+#   Python Object Sheet (^X ^Y g^Y z^Y)     (sheet-specific commands)
+Enter           dive further into Python object
+v               toggle show/hide for methods and hidden properties
+gv  zv           show/hide methods and hidden properties

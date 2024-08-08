@@ -1,0 +1,14 @@
+# description
+Notes and tips for Vivaldi web browser
+
+# based on chrome ...
+
+# bookmarks
+Library/Application Support/Vivaldi/Previous_Default/Bookmarks
+Library/Application Support/Vivaldi/Default/Bookmarks.bak
+Library/Application Support/Vivaldi/Default/Bookmarks
+ gron  "Library/Application Support/Vivaldi/Default/Bookmarks" | grep 'url ='
+
+# history
+
+#

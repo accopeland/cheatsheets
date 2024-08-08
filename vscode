@@ -1,0 +1,175 @@
+# description
+
+# docs
+
+# install
+brew install visual-studio-code-insiders
+brew install visual-studio-code
+
+# uninstall
+
+# multicursor - none of these work, nor does the menu command, w or w/out vim mode
+Alt+Ctrl+Up|Down
+Ctrl+Shift+L
+Shift+Alt+I
+
+# vim settings: settings.json
+# $HOME/Library/Application Support/Code/User/settings.json
+cmd-, # code -> preferences -> settings
+
+# full screen terminal
+cmd-`
+cmd-k z
+
+# cycle between windows
+ctrl-tab
+ctrl-ctrl
+
+
+# install linux cli
+wget --user-agent=Mozilla --content-disposition -E -c "https://code.visualstudio.com/sha/download?build=stable&os=linux-x64"
+
+#  keybindings.json
+cmd-shift-p		Preferences -> Open Kbd Shortcuts (JSON)
+
+#  vim settings: settings.json
+$HOME/Library/Application Support/Code/User/settings.json
+cmd-, # code -> preferences -> settings
+
+# rebind navigate fwd/back keys
+e.g. to ctrl-left/right:
+{ "key": "ctrl+left",  "command": "workbench.action.navigateBack" },
+{ "key": "ctrl+right", "command": "workbench.action.navigateForward" }
+
+#  Windows/Tabs
+c-tab		  	cycle between windows
+c-c		  	cycle between windows
+cmd-`			focus terminal
+cmd-k z			zen mode
+c-j			terminal
+c-\ 			split editor
+cmd-\			split editor
+cmd-2 etc		split editor
+cmd-opt-Right		switch to next editor
+c-cmd-Right		editor split / expand
+c-cmd-Left		editor shrink
+sh-tab			next tab
+cmd-sh-p		command palette
+c-q <view>		goto view
+cmd-sh-e + c-r		select project
+c-enter			send to repl
+c-sh-5			split terminal
+cmd-opt-L		split terminal focus
+cmd-opt-R 		split terminal focus
+cmd-sh-E		focus explorer
+cmd-b			hide explorer
+c-pgup  		switch views
+c-pgdn			switch views
+cmd-b			extensions clonse/open
+
+
+#  Editing
+Alt+Ctrl+Up|Down	multicursor - none of these work, nor does the menu command, w or w/out vim mode
+Ctrl+Shift+L		multicursor
+Shift+Alt+I		multicursor
+c-t			cycle between open files
+c-p			other file
+c-g			jump to error under cursor
+c-u 			goback
+cmd-sh-f		goto reference
+F12			find definition
+cmd-F12			find type definition
+F12			goto defininition
+opt-F12			peek definition
+cmd-k F12		peek reference
+F2			refactor
+cmd-sh-l 		refactor
+cmd-sh-opt-->		select code block
+alt-down		copy below
+cmd-/			toggle comments
+sh-opt-a		multiline comments
+cmd-alt-l		split into lines
+cmd-.			quick fix
+cmd-i			quickfix suggestion
+cmd-sh-spc		func signature
+cmd-[			index
+cmd-opt-up		multi-cursor
+spc			open
+cmd-opt-l		split lines
+F8			errors
+cmd-.			recommended action
+cmd-c-shift-L	 	block select
+cmd-c-shift-R 		block select
+c--			navigate back to previous location
+c-shift--		navigate forward to next location
+cmd-t			navigate to symbol
+F8			next problem
+shift-F8 		prev problem
+cmd-p-@			navigate symbols
+c-p			nav other file
+
+
+# vscode vim settings: settings.json( $HOME/Library/Application Support/Code/User/settings.json)
+cmd-, # code -> preferences -> settings
+
+
+
+cmd-sh-alt-arrow	select block
+alt-downarrow		copy below / above
+cmd-/			toggle comments
+sh-alt-a		multiline comment
+c-q 			quick view
+
+# Misc
+cmd-downarrow		select in explorer
+spc			open in explorer
+cmd-sh-e c-r		select project
+c-enter			send to repl
+alt-enter		send to repl
+alt-/			send to repl
+
+# debug -- launch.json
+click create launch.json file link in Run start view, it should now be available under your workspace's .vscode folder
+see https://code.visualstudio.com/docs/editor/variables-reference
+{
+  "configurations": [
+    {
+      "name": "Python: Current File (Integrated Terminal)",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Current File (External Terminal)",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "externalTerminal"
+    }
+  ]
+}
+
+# debug python
+# see https://code.visualstudio.com/docs/python/debugging
+* create a launch.json for the workspace
+* In the script code, add the following:
+```
+import debugpy
+debugpy.listen(5678)  # 5678 is the default port for VSCode,host defaults to 127.0.0.1
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
+```
+* Create New Terminal, which activates the script's selected environment.
+* In terminal, install the debugpy: python -m pip install --upgrade debugpy.
+* In terminal:
+``` python3 myscript.py```
+You should see the "Waiting for debugger attach" , and the script halts at the debugpy.wait_for_client() call.
+* Switch to Run/Debug view (⇧⌘D), select the appropriate configuration from the debugger dropdown list, and start the debugger.
+* debugger should stop on debugpy.breakpoint() , from which can use the debugger normally. also can set other breakpoints using the UI instead of using debugpy.breakpoint().
+
+# keymap
+keybindings.json
+	cmd-shift-p -> Preferences -> Open Kbd Shortcuts (JSON)

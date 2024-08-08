@@ -1,5 +1,18 @@
+# description
+Hashicorp virtualization manager,a tool for building and managing virtual machine environments in a single workflow.
+Machines are provisioned on top of VirtualBox, VMware, AWS, or any other provider. Then, provisioning tools such as shell
+scripts, Chef, or Puppet can automatically install and configure software on the virtual machine.
+
+# install
+brew install vagrant # also need e.g. virtualbox,
+
+# docs
+https://developer.hashicorp.com/vagrant/docs
+
 # To initate Vagrant:
 vagrant init
+
+# docs
 
 # To add a box to a vagrant repo:
 vagrant box add hashicorp/precise32
@@ -21,3 +34,24 @@ vagrant destroy
 
 # To restart a vm with a new provision script:
 vagrant reload --provision
+
+# To use vagrant-manager -- OSX status bar menu app to manage vagrant machines from a central location
+can automatically detect VirtualBox and Parallels machines. VirtualBox and Vagrant must be installed, and vboxmanage and vagrant in PATH.
+Be sure to run 'vagrant init' on any machine you want to appear in Vagrant Manager.
+
+# prune
+vagrant box prune
+
+# list
+vagrant box list
+
+# destroy
+vagrant destroy box
+
+# clean
+vagrant box list
+vagrant box remove box/name  # remove a box
+vagrant destroy vm-name  # destroy the VM
+
+# really clean
+Remove the ~/.vagrant.d directory to delete all the user data.

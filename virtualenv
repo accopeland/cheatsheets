@@ -13,10 +13,13 @@ source /path/to/project/env_name/bin/activate
 # To quit an environment:
 deactivate
 
-# To Virtualenvwrapper (wrapper for virtualenv) installation:
-pip install --user virtualenvwrapper
 # configuration
-# add in ~/.bashrc or similar
+add in ~/.bashrc or similar
+
+# install virtualenvwrapper (wrapper for virtualenv)
+pip install --user virtualenvwrapper
+
+# configure virtualenvwrapper : add in ~/.bashrc or similar
 export WORKON_HOME=~/.virtualenvs
 mkdir -p $WORKON_HOME
 source ~/.local/bin/virtualenvwrapper.sh

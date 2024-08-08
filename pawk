@@ -1,0 +1,19 @@
+# description
+like awk but python
+
+# install
+brew install pawk
+
+# docs
+https://github.com/alecthomas/pawk
+
+# import
+auto imports but only for installed libs
+
+# vars
+line - Current line text, including newline.
+l - Current line text, excluding newline.
+n - The current 1-based line number.
+f - Fields of the line (split by the field separator -F).
+nf - Number of fields in this line.
+m - Tuple of match regular expression capture groups, if any.

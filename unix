@@ -1,0 +1,3 @@
+
+# change other user passwd
+sudo passwd <user>

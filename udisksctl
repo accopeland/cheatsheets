@@ -1,3 +1,10 @@
+# description
+program to interact with the udisksd daemon that manages disk drives and block devices.
+It can mount, unmount, unlock, lock, loop-setup, loop-delete, power-off, smart-simulate and monitor.
+
+# install
+linux only
+
 # To get info about a device:
 udisksctl info -b <device>
 
@@ -8,4 +15,4 @@ udisksctl mount --block-device <device>
 udisksctl unmount --block-device <device>
 
 # To get help:
-udisksctl help 
+udisksctl help

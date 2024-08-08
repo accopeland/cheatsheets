@@ -1,0 +1,159 @@
+# description
+ugrep grep workalike with TUI and many other enhancements
+
+# install
+brew install ugrep
+
+# docs
+https://github.com/Genivia/ugrep
+
+# filters
+ug --filter='pdf:pdftotext % -' PATTERN ...
+ug --filter='doc:antiword %' PATTERN ...
+ug --filter='odt,docx,epub,rtf:pandoc --wrap=preserve -t plain % -o -' PATTERN ...
+ug --filter='odt,doc,docx,rtf,xls,xlsx,ppt,pptx:soffice --headless --cat %' PATTERN ...
+ug --filter='pem:openssl x509 -text,cer,crt,der:openssl x509 -text -inform der' PATTERN ...
+ug --filter='latin1:iconv -f LATIN1 -t UTF-8' PATTERN ...
+
+# returing part of matched line: -P and --format
+ug -P --format='%1%~' '(\d+)\s+exceeded\suni' DATA/README | head
+192
+
+# extract html table cells
+# use Perl matching (-P) to support group captures with lazy quantifier (.*?), and
+# translate the matches to a comma-separated list with format %,%1 (conditional comma and group capture):
+ug -P -o '<td>(.*?)</td>' --replace='%,%1' index.html
+
+# tui
+ug -Q
+
+# horizontal context
+-C <N>
+
+# boolean matches
+-%
+-%%
+--and
+--andnot
+ug -% 'A B C' ...                      ug -e 'A' --and 'B' --and 'C' ...
+ug -% 'A|B C' ...                      ug -e 'A' -e 'B' --and 'C' ...
+ug -% 'A -B -C' ...                    ug -e 'A' --andnot 'B' --andnot 'C' ...
+ug -% 'A -(B|C)'...                    ug -e 'A' --andnot 'B' --andnot 'C' ...
+ug -% '"abc" "def"' ...                ug -e '\Qabc\E' --and '\Qdef\E' ...
+
+# search binary files
+ug --hexdump -U BYTEPATTERN ...        ug --hexdump TEXTPATTERN ...
+ug -X -U BYTEPATTERN ...               ug -X TEXTPATTERN ...
+ug -W -U BYTEPATTERN ...               ug -W TEXTPATTERN ...
+
+# filter by extension
+ug -O EXT PATTERN ...                  ug -O ^EXT PATTERN ...
+
+# predefined patterns
+ug PATTERN -f c++/zap_comments -f c++/zap_strings ...
+ug PATTERN -f php/zap_html ...
+ug -f js/functions ... | ug PATTERN ...
+
+# replace
+ug --replace='TEXT' PATTERN ...        ug -y --replace='TEXT' PATTERN ...
+ug --replace='(%m:%o)' PATTERN ...     ug -y --replace='(%m:%o)' PATTERN ...
+ug -P --replace='%1' PATTERN ...       ug -y -P --replace='%1' PATTERN ...
+
+# repo
+$ git clone https://github.com/Genivia/ugrep
+
+# grep equivalence
+grep   = ugrep -G -U -Y -. --sort -Dread -dread
+egrep  = ugrep -E -U -Y -. --sort -Dread -dread
+fgrep  = ugrep -F -U -Y -. --sort -Dread -dread
+zgrep  = ugrep -z -G -U -Y -. --sort -Dread -dread
+zegrep = ugrep -z -E -U -Y -. --sort -Dread -dread
+zfgrep = ugrep -z -F -U -Y -. --sort -Dread -dread
+
+# improvements over grep
+- interactive query TUI with option -Q.
+- matches patterns across multiple lines when patterns match \n.
+- matches full Unicode by default (disabled with option -U).
+- Boolean patterns with AND, OR and NOT (option --bool).
+- gitignore with option --ignore-files.
+- fuzzy (approximate) matching with option -Z.
+- compressed files and archives with option -z.
+- searches cpio, jar, pax, tar, zip and 7z archives with option -z.
+- searches cpio, jar, pax, tar, zip and 7z archives recursively stored within archives with -z and --zmax=NUM for up to NUM levels deep.
+- searches pdf, doc, docx, xls, xlsx, epub, and more with --filter using third-party format conversion utilities as plugins.
+- searches a directory when the FILE argument is a directory, like most Unix/Linux utilities; use option -r to search directories recursively.
+- does not match hidden files by default
+- hidden files (hidden dotfile file matching is enabled with -.).
+- more expressive regexp. Extended regular expression (ERE) syntax is the default (i.e. option -E as egrep, whereas -G enables BRE).
+- threaded to improve search speed (disabled with option -J1).
+- hexdumps with -W (output binary matches in hex with text matches output as usual) and -X (output all matches in hex).
+- output matches in JSON, XML, CSV and user-defined formats (with option --format).
+- predefined patterns : option -f or predefined patterns in /usr/local/share/ugrep/patterns.
+- options -O, -M, and -t specify file extensions, file signature magic byte patterns, and predefined file types, respectively.
+- option -k, --column-number to display the column number
+- option -P (Perl regular expressions) supports backreferences (with --format) and lookbehinds
+- option -b with option -o or with option -u, displays exact byte offset of match instead of the byte offset of the start of the matched line
+- option -u don't group multiple matches per line; redisplay matched for each addl match. useful with -c to report total number of matches/file instead of matched lines/file.
+- option -D, --devices=ACTION is skip by default, instead of read. prevents hanging on named pipes in recursive dir search
+- option -d, --directories=ACTION [default=<skip>]. By default, dirs are searched, but not recursively deeper into subdirectories.
+
+# negative pattern
+- offers negative patterns -N PATTERN, which are patterns of the form (?^X) that skip all X input, thus removing X from the search. For example, negative patterns can be used to skip strings and comments when searching for identifiers in source code and find matches that aren't in strings and comments. Predefined zap patterns use negative patterns, for example, use -f cpp/zap_comments to ignore pattern matches in C++ comments.
+
+# empty match
+- option -Y match empty patterns. Grepping with empty-matching patterns is weird and gives different results with GNU grep versus BSD grep. Empty matches are not output by ugrep by default, which avoids making mistakes that may produce "random" results. For example, with GNU/BSD grep, pattern a* matches every line in the input, and actually matches xyz three times (the empty transitions before and between the x, y, and z). Allowing empty matches requires ugrep option -Y. Patterns that start with ^ or end with $, such as ^\h*$, match empty. These patterns automatically enable option -Y.
+
+# search all c/c++ for 'qsort'
+ug -R -Oc,cpp -nk -f c/functions | ug 'qsort'
+
+# gitignore
+ug -R -tc++ --ignore-files -f c++/defines
+
+# interactive search / tui
+ug -Q
+
+# tui keybindings
+Alt-key	toggle ugrep command-line option corresponding to key
+Alt-/xxxx/	insert Unicode hex code point U+xxxx
+Esc Ctrl-C	go back or exit
+Ctrl-Q	quick exit and output the results selected in selection mode
+Tab	chdir to the directory of the file shown at the top of the screen or select file
+Shift-Tab	chdir one level up or deselect file
+Enter	enter selection mode and toggle selected lines to output on exit
+Up Ctrl-P	move up
+Down Ctrl-N	move down
+Left Ctrl-B	move left
+Right Ctrl-F	move right
+PgUp Ctrl-G	move display up by a page
+PgDn Ctrl-D	move display down by a page
+Alt-Up	move display up by 1/2 page (MacOS Shift-Up)
+Alt-Down	move display down by 1/2 page (MacOS Shift-Down)
+Alt-Left	move display left by 1/2 page (MacOS Shift-Left)
+Alt-Right	move display right by 1/2 page (MacOS Shift-Right)
+Home Ctrl-A	move cursor to the beginning of the line
+End Ctrl-E	move cursor to the end of the line
+Ctrl-K	delete after cursor
+Ctrl-L	refresh screen
+Ctrl-O+key	toggle ugrep command-line option corresponding to key, same as Alt-key
+Ctrl-R F4	jump to bookmark
+Ctrl-S	jump to the next dir/file/context
+Ctrl-T F5	toggle split screen (--split starts a split-screen TUI)
+Ctrl-U	delete before cursor
+Ctrl-V	verbatim character
+Ctrl-W	jump back one dir/file/context
+Ctrl-X F3	set bookmark
+Ctrl-Y F2	view or edit the file shown at the top of the screen
+Ctrl-Z F1	view help and options
+Ctrl-^	chdir back to the starting working directory
+Ctrl-]	toggle color/mono
+Ctrl-\	terminate process
+
+# list all non empty files
+ug -R -l '' .
+
+# collect href from all HTML
+ug -r -thtml -P '<[^<>]+href\h*=\h*.([^\x27"]+).' --format='%1%~'
+##Same, but much easier by using the predefined html/href pattern:
+ug -r -thtml -P -f html/href --format='%1%~'
+## Same, but in this case select <script> src URLs when referencing http and https sites:
+ug -r -thtml -P '<script.*src\h*=\h*.(https?:[^\x27"]+).' --format='%1%~'

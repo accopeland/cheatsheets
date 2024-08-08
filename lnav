@@ -1,0 +1,196 @@
+# see also sec (simple event correlator)
+
+# install
+https://github.com/tstack/lnav/releases/download/v0.10.1/lnav-0.10.1-musl-64bit.zip
+
+# views
+?	View/leave the builtin message.
+q	Leave the current view or quit the program when in the log file view.
+Q	Return to the previous view/quit while matching the top times of the two views
+a	Restore the view that was previously popped with Q or Q
+A	Restore the view that was previously popped with Q or Q and match the top times of the views
+t	Switch to/from the text file view. The text file view is for any files that are not recognized as log files.
+T	Toggle display of “elapsed time” (time since log start or offset from prev mark).
+        msg rate colored sep btwn time and msg. red=>rate slowed, green=>sped up. “s/S” hotkeys to scan through the slow downs.
+i	View/leave histogram of messages v time. counts number of lines per time bucket.
+        bars layed out horizontally with colored segments repr diff log levels.
+        'Z' hotkey changes size of buckets (e.g. ten minutes, one hour, one day).
+I	Switch between log and hist views keeping time at the top of each view in sync.
+        For example, if top line in log view is “11:40”, 'I' will switch to the hist and scroll to “11:00” at the top
+v	Switch to/from the SQL result view.
+V	Switch btwn log and SQL view keeping top line in log view in sync with log_line col in SQL view.
+        For example, query selects for “log_idle_msecs” and “log_line”, move top of SQL view to a line,
+          'V' to switch to log view and move to the line number that was selected in the “log_line” column.
+p	Enable / disable disp of fields that log message parser knows about or discovered.
+        temporarily enabled when the ';' is pressed so that it is easier to write queries.
+P	Switch to/from the pretty-printed view of the displayed log or text files
+X	Close the current text file or log file.
+z or Z	Zoom in or out one step in the histogram view.
+TAB
+Sh-TAB In SQL view, cycle through graphed cols. Initially, all numbers are displayed in stacked graph.
+      TAB will change the display to only graph col1. Repeating TAB will cycle through the cols until they are all graphed again.
+C-l  	lofi mode (write lofi to stdout)
+C-w	Toggle word-wrapping.
+F2	Toggle mouse support.
+
+
+# query
+/<regexp>	Start regex search . search is live, so when there is a pause in typing, the currently running search will be canceled and a new one started. History is maintained for your searches so you can rerun them easily. Words that are currently displayed are also available for tab-completion, so you can easily search for values without needing to copy-and-paste the string. If there is an error encountered while trying to interpret the expression, the error will be displayed in red on the status line. While the search is active, the 'hits' field in the status line will be green, when finished it will revert to black.
+;<sql>	Execute SQL query. Most supported log file formats provide a sqlite virtual table backend that can be used in queries. See the SQL section .
+:<command>	Execute internal command.  History is also supported in this context as well as tab-completion for commands and some arguments. The result of the command replaces the command you typed.
+|	Execute an lnav script located in a format directory.
+C-]	Abort command-line entry started with /, : or ;.
+
+# commands
+# Commands
+e/E  		next/prev error
+spc/pgdn  	down page
+j/k    		down/up line
+g/G		top/bottom of log
+n/N	 	next/prev search hit
+s/S	 	next/prev slowdown
+d/D	 	back/fwd 1 d
+0/sh-0	 	next/prev day
+? 	 	help
+T	 	elapsed time btwn lines
+i/I	 	histogram
+v	 	sql results
+Tab/ShTab  	focus on config panel for editing filters and examining loaded file list.
+                In SQL result view, cycle cols to disp as bargraphs
+C-f	 	enable/disable filters
+/	 	search for RE
+;	 	open sql
+:	 	exec internal cmd
+p	 	show parser results / columns
+>/<             Move horiz to the next/previous search hit.
+o/O             Move fwd/back to the log message with a matching 'operation ID' (opid) field.
+u/U             Move fwd/back through any bookmarks added using 'm' key.  also jump to start of any log partitions created with 'partition-name'
+s/S             Move to next/prev "slow down" in log message rate.  slow down detected by measuring message rate changed over previous messages.
+{/}             Move to the prev/next loc in history.  When jumping to new loc in view, loc will be added to the history.
+filter-in <regex>	Only display log lines that match a regex.
+filter-out <regex>	Do not display log lines that match a regex.
+disable-filter <regex>	Disable the given filter.
+enable-filter <regex>	Enable the given filter.
+delete-filter <regex>	Delete the filter.
+set-min-log-level <level>	Only display log lines with the given log level or higher.
+hide-lines-before <abs-time|rel-time>	Hide lines before the given time.
+hide-lines-after <abs-time|rel-time>	Hide lines after the given time.
+show-lines-before-and-after	Show lines that were hidden by the “hide-lines” commands.
+
+# navigation
+goto         <line#|N%|abs-time|relative-time>	Go to line number, N % into file, given timestamp , or the relative time (e.g. “a minute ago”).
+relative-goto <line#|N%>	Move the current view up or down by the given amount.
+next-mark error|warning|search|user|file|partition	Move to the next bookmark of the given type in the current view.
+prev-mark error|warning|search|user|file|partition	Move to the previous bookmark of the given type in the current view.
+
+# Time
+adjust-log-time <dt>	Change the timestamps for a log file.
+unix-time <secs-or-dt>	Convert a unix-timestamp in seconds to a human-readable form or vice-versa.
+current-time		Print the current time in human-readable form and as a unix-timestamp.
+
+# display
+help	Display the built-in help text.
+disable-word-wrap	Disable word wrapping in the log and text file views.
+enable-word-wrap	Enable word wrapping in the log and text file views.
+highlight <regex>	Colorize text that matches the given regex.
+clear-highlight <regex>	Clear a previous highlight.
+spectrogram <numeric-field>	Generate a spectrogram for a numeric log message field or SQL result column. The spectrogram view displays the range of possible values of the field on the horizontal axis and time on the vertical axis. The horizontal axis is split into buckets where each bucket counts how many log messages contained the field with a value in that range. The buckets are colored based on the count in the bucket: green means low, yellow means medium, and red means high. The exact ranges for the colors is computed automatically and displayed in the middle of the top line of the view. The minimum and maximum values for the field are displayed in the top left and right sides of the view, respectively.
+switch-to-view <name>	Switch to the given view name (e.g. log, text, …)
+zoom-to <zoom-level>	Set the zoom level for the histogram view.
+redraw	Redraw the window to correct any corruption.
+
+# sql
+create-logline-table <table-name>	Create an SQL table using the top line of the log view as a template. See the Extracting Data section for more information.
+delete-logline-table <table-name>	Delete a table created by create-logline-table.
+create-search-table <table-name> [regex]	Create an SQL table that extracts information from logs using the provided regular expression or the last search that was done. Any captures in the expression will be used as columns in the SQL table. If the capture is named, that name will be used as the column name, otherwise the column name will be of the form “col_N”.
+delete-search-table <table-name>	Delete a table that was created with create-search-table.
+
+# misc
+echo [-n] <msg>	Display the given message in the command prompt. Useful for scripts to display messages to the user. The -n option leaves out the new line at the end of the message.
+eval <cmd>	Evaluate the given command or SQL query after performing environment variable substitution. The argument to eval must start with a colon, semi-colon, or pipe character to signify whether the argument is a command, SQL query, or a script to be executed, respectively.
+
+# config
+config <option>	Get the current value of a configuration option.
+config <option> <value>	Set the value of a configuration option.
+reset-config <option>	Reset a configuration option to the default.
+save-config	Save the current configuration to ~/.lnav/config.json.
+
+
+# Only include lines that look like:
+  #    Apr 29 00:31:56 example-centos5 dhclient: bound to 10.1.10.103 -- renewal in 9938 seconds.
+  :filter-in dhclient: bound to
+
+  # The log message parser will extract the IP address as col_0, so we
+  # select that and alias it to "dhcp_ip".
+  ;select distinct col_0 as dhcp_ip from logline;
+
+  # Finally, write the results of the query to stdout.
+  :write-csv-to -
+
+#  ;SELECT row_number() OVER (PARTITION BY ex_procname ORDER BY log_line) AS msg_num,ex_procname, log_body FROM
+
+# #2 To group log messages into five minute buckets and count them:
+   ;SELECT timeslice(log_time_msecs, '5m') AS slice, count(1) FROM lnav_example_log GROUP BY slice
+            slice          count(1)
+   2017-02-03 04:05:00.000│       2
+   2017-02-03 04:25:00.000│       1
+   2017-02-03 04:55:00.000│       1
+
+#3 To group log messages by those before 4:30am and after:
+   ;SELECT timeslice(log_time_msecs, 'before 4:30am') AS slice, count(1) FROM
+          lnav_example_log GROUP BY slice
+            slice          count(1)
+   <NULL>                 │       1
+   2017-02-03 00:00:00.000│       3
+
+
+# other views , I for histograms very useful, but these seem interesting also
+:spectrogram <f>
+:write_csv_to ...
+: summarize <f>
+
+# timestamp format
+try unix-time <secs-or-date>	Convert unix-timestamp in sec to human-readable form or vice-versa. BEWARE OF TIMEZONE DIFFERENCES.
+
+# sql col
+The columns available for the top log line in the view will automatically be displayed after pressing the semicolon (;) key. All contain at least :
+log_line        The line number in the file, starting at zero.
+log_part        partition name. change using UPDATE SQL or ':partition-name'. After setting, following log msgs will have same partition name until another name is set.
+log_time        The time of the log entry.
+log_idle_msecs  The amount of time, in milliseconds, between the current log message and the previous one.
+log_level       The log level (e.g. info, error, etc...).
+log_mark        The bookmark status for the line.  This column can be written to using an UPDATE query.
+log_path        The full path to the file.
+log_text        The raw line of text.  Note that this column is not included in the result of a 'select *', but it does exist.
+
+# queries
+;SELECT * FROM syslog_log WHERE log_hostname = \$HOSTNAME;
+
+# bookmarks
+m	Mark/unmark line at top of display; highlight w revvideo to show its user bookmark. U hotkey iterates through marks you have added.
+M	Mark/unmark all the lines between the top of the display and the last line marked/unmarked.
+J	Mark/unmark the next line after the previously marked line.
+K	Like J except it toggles the mark on the previous line.
+c	Copy the marked text to the X11 selection buffer or OS X clipboard.
+C	Clear all marked lines.
+
+# custom format
+see /Users/copeland/.lnav/formats/installed/rqclog.json
+lnav -i foo.json
+
+# new formats
+New log formats defined by placing JSON files in subdir of the /etc/lnav/formats and ~/.lnav/formats/
+The directories and files can be named anything you like, but the files must have the ‘.json’ suffix
+
+For plain-text log files, the easiest way is to create a  regex that recognizes log messages using https://regex101.com .
+When building the regular expression, use named captures for the structured parts of the log message.
+Any raw message text should be matched by a captured named “body”. Once you have a regex that matches the whole log message,
+you can use lnav’s “management CLI” to create a skeleton format file. The skeleton will be populated with the regex from
+the site and the test string, along with any unittests, will be added to the “samples” list.
+The “regex101 import” management command is used to create the skeleton and has the following form:
+
+$ lnav -m regex101 import <regex101-url> <format-name> [<regex-name>]
+
+If the import was successful, the path to the new format file should be printed out. The skeleton will most likely need
+some changes to make it fully functional. For example, the kind properties for captured values default to string, but
+you’ll want to change them to the appropriate type

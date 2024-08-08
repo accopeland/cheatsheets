@@ -1,0 +1,31 @@
+# description
+list hardware info
+
+# usage
+lshw
+
+# install
+
+# memory
+lshw -c memory
+
+# disk
+lshw -c storage
+
+# system
+lshw -class system
+
+# network
+lshw -class network
+
+# display
+lshw -class display
+
+# disk
+lshw -class disk
+
+# processor
+lshow -class processor
+
+# cpuid enable
+lshw -enable cpuid

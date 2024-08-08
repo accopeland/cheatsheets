@@ -1,0 +1,24 @@
+# description: linear algebra in a nutshell
+
+# docs / refs
+
+# linear dependence
+Thus, a set of vectors is linearly dependent if and only if one of them is zero or a linear combination of the others.
+
+# linear independence
+A sequence of vectors is linearly independent if and only if it does not contain the same vector twice and the set of its vectors is linearly independent.
+
+# LI geometry
+* \vec u and {\displaystyle {\vec {v}}}{\vec {v}} are independent and define the
+plane P.
+* \vec {u}}\vec u, {\displaystyle {\vec {v}}}{\vec{v}} and {\displaystyle {\vec {w}}}{\vec {w}} are dependent because all three
+are contained in the same plane.
+* {\vec {u}}\vec u and {\vec {j}}{\vec {j}} are dependent because they are parallel to each other.
+* {\vec {u}}\vec u , {\displaystyle {\vec {v}}}{\vec {v}} and {\vec {k}}\vec k are independent because
+{\vec {u}}\vec u and {\vec {v}}{\vec {v}} are independent of each other and  {\vec {k}}\vec k is not a linear combination of them or,
+equivalently, because they do not belong to a common plane. The three vectors define a three-dimensional space.
+* The vectors {\vec {o}}{\vec  o} (null vector, whose components are equal to zero) and {\vec {k}}\vec k are dependent since
+{\vec {o}}=0{\vec {k}}  {\vec {o}}=0{\vec {k}}
+
+* LI
+If there are more vectors than dimensions, the vectors are linearly dependent. This is illustrated in the example above of three vectors in

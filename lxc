@@ -1,0 +1,38 @@
+# description
+macpine / lxc / lxd linux containers on mac
+
+# docs
+https://beringresearch.github.io/macpine/lxd_macpine/
+
+# install
+brew install lxc
+brew install macpine
+alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
+alpine exec lxd "lxd init --auto"
+
+# run
+alpine exec lxd
+alpine exec lxd "lxc config set core.https_address 0.0.0.0"
+lxc launch ubuntu:20.04
+lxc remote switch lxd
+lxc remote add macpine 127.0.0.1 --accept-certificate --password root --port 8447
+
+# login / ssh
+alpine list
+alpine ssh  imaginary-master
+
+# start / stop
+alpine list
+alpine stop lxd
+alpine stop imaginary-master
+
+# info
+alpine info lxd
+alpine info imaginary-master
+
+# remote containers
+lxc remote list
+
+# images
+lxc image list
+lxc image list images:

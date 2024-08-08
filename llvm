@@ -1,0 +1,83 @@
+see also clang
+
+# description
+llvm
+
+# install  --
+# see https://github.com/appcypher/llvm-adventure/blob/master/Build%20LLVM%20on%20macOS.md
+# see https://clang.llvm.org/get_started.html
+Prerequisites: python, ninja, cmake
+git clone --depth=1 https://github.com/llvm/llvm-project.git
+cd llvm-project
+mkdir build && cd build
+cmake -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" ../llvm
+make
+
+# Error: preprocessor does not work (configure)
+# Fix: export CC="/usr/local/opt/llvm@15/bin/clang -E -Wno-deprecated"
+
+# test
+bin/llvm-7.0.1/bin/clang --target=wasm32 test.c -o test.wasm
+Visit llvm site for more information.
+
+# test 2
+#include <stdlib.h>
+#include <stdio.h>
+#include <omp.h>
+int main() {
+  #pragma omp parallel num_threads(4)
+  {
+    printf("Hello from thread %d, nthreads %d\n", omp_get_thread_num(), omp_get_num_threads());
+  }
+  return EXIT_SUCCESS;
+}
+$ LLVMBASE=`brew --prefix llvm`  # build and run
+$ $LLVMBASE/bin/clang -fopenmp -L$LLVMBASE/lib omptest.c -o omptest
+$ ./omptest
+Hello from thread 3, nthreads 4
+Hello from thread 0, nthreads 4
+Hello from thread 2, nthreads 4
+Hello from thread 1, nthreads 4
+
+#* ld: symbol(s) not found for architecture x86_64
+        check for global defs of CFLAGS, LDFLAGS, CC, CXX
+        # generally seems to be a problem with llvm / clang, so
+        CC=gcc make  # careful though since /usr/bin/gcc is ALSO clang!!
+
+# brew llvm llvm--13.0.0_2.catalina.bottle.tar.gz
+==> Caveats
+To use the bundled libc++ please add the following LDFLAGS:
+LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
+#
+llvm is keg-only, which means it was not symlinked into /usr/local,
+because macOS already provides this software and installing another version in
+parallel can cause all kinds of trouble.If you need to have llvm first in your
+PATH, run:
+#
+echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> /Users/copeland/.bash_profile
+For compilers to find llvm you may need to set:
+export LDFLAGS="-L/usr/local/opt/llvm/lib"
+export CPPFLAGS="-I/usr/local/opt/llvm/include"
+
+# llvm config
+/Users/copeland/.julia/conda/3/bin/llvm-config --cflags
+
+# build  command 20221022 -- see ~/.Rmakevars
+/usr/local/opt/llvm@13/bin/clang++ -I"/usr/local/Cellar/r/4.2.1_2/lib/R/include" -DNDEBUG -I./libuv-1.38.1/include -I. -pthread  -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include -I/usr/local/opt/xz/include -I/usr/local/include   -fPIC  -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -O2 -Wall -pedantic -Wconversion -Wno-sign-conversion -I/usr/local/opt/llvm/include -c unix/getmode.cc -o unix/getmode.o
+
+clang-13: warning: /usr/local/opt/llvm@13/bin/clang++: 'linker' input unused [-Wunused-command-line-argument]
+-I'/usr/local/lib/R/4.2/site-library/progress/include' -I'/usr/local/lib/R/4.2/site-library/cpp11/include' -I'/usr/local/lib/R/4.2/site-library/tzdb/include' -I/usr/local/opt/g
+
+# Error: clang compiler cannot create executables mac
+# Fix:
+
+# Error: compile errors -stdlib=c++ e.g. roxygen2, httpuv,...
+# this is a clang arg that comes from god knows where
+# Fix: cut/paste the sane part of the failed compile command from stdout then run it via:
+withr::with_makevars(c(PKG_CPPFLAGS="-std=gnu++11 -I/usr/local/Cellar/r/4.1.1_1/lib/R/include -DNDEBUG  -I/usr/local/lib/R/4.1/site-library/cpp11/include -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include -I/usr/local/opt/xz/include -I/usr/local/include -fPIC", {install.packages("roxygen2")}, assignment = "+="))
+withr::with_makevars(c(PKG_LDFLAGS=" -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/usr/local/Cellar/r/4.1.1_1/lib/R/lib -L/usr/local/opt/llvm@13/lib -o readxl.so RcppExports.o XlsWorkBook.o XlsWorkSheet.o XlsxWorkBook.o XlsxWorkSheet.o cran.o endian.o ole.o xls.o xlstool.o zip.o -L/usr/local/Cellar/r/4.1.1_1/lib/R/lib -lR -Wl,-framework -Wl,CoreFoundation",{install.packages("tidyverse")}, assignment= "+="))
+
+#  compile flang (https://releases.llvm.org/11.0.0/tools/flang/docs/ReleaseNotes.html)
+
+# build w cmake
+cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++)  ../llvm

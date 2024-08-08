@@ -1,0 +1,363 @@
+# install
+brew install lima # see also qemu
+
+# docs
+https://github.com/lima-vm/lima
+
+# start (default)
+limactl start
+
+# Hints for debugging other problems?"
+limactl --debug start # Inspect logs:
+$HOME/.lima/<INSTANCE>/serial.log
+/var/log/cloud-init-output.log (inside the guest)
+/var/log/cloud-init.log (inside the guest)
+Make sure that you aren't mixing up tabs and spaces in the YAML.
+
+# start custom . . .
+$ limactl start default.yaml
+
+# view the template list:
+$ limactl start --list-templates
+
+# create an instance "default" from a template "docker":
+$ limactl start --name=default template://docker
+
+# create an instance "default" from a local file:
+$ limactl start --name=default /usr/local/share/lima/examples/fedora.yaml
+
+# delete instance
+limactl delete
+limactl delete [--force] <INSTANCE>: delete the instance
+
+# change instance
+limactl edit
+limactl edit <INSTANCE>: edit the instance
+
+
+# Running containerd containers (compatible with Docker containers)
+$ lima nerdctl run -d --name nginx -p 127.0.0.1:8080:80 nginx:alpine    # nginx container
+$ curl -I http://localhost:8080  # test
+
+# aarch64 on intel/mac
+#
+# ===================================================================== #
+# BEGIN AARCH64 CONFIGURATION arch.yaml
+# ===================================================================== #
+# arch: "x86_64"
+# arch: "aarch64"
+#
+images:
+  - location: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+    arch: "x86_64"
+  - location: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"
+    arch: "aarch64"
+
+# Disable mounts and containerd, otherwise booting up may timeout if the host is slow
+mounts: []
+containerd:
+  system: false
+  user: false
+# ===================================================================== #
+# END AARCH64 CONFIGURATION arch.yaml
+# ===================================================================== #
+
+# run aarch64 env
+limactl start /tmp/aarch64.yaml
+limactl shell aarch64 # LIMA_INSTANCE=aarch64 lima uname -a
+
+# fast aarch64
+lima sudo systemctl start containerd
+lima sudo nerdctl run --privileged --rm tonistiigi/binfmt --install all
+lima nerdctl run --platform=amd64 --rm alpine uname -m    #x86_64
+$ lima nerdctl run --platform=arm64 --rm alpine uname -m  # aarch64
+
+# build and push other arch
+$ lima nerdctl build --platform=amd64,arm64 -t example.com/foo:latest .
+$ lima nerdctl push --all-platforms example.com/foo:latest
+
+# templates
+/usr/local/share/lima/examples/
+adavanced.yaml
+fedora.yaml
+almalinux-8.yaml
+almalinux-9.yaml
+almalinux.yaml
+alpine.yaml
+apptainer-rootful.yaml
+apptainer.yaml
+archlinux.yaml
+buildkit.yaml
+centos-stream-8.yaml
+centos-stream-9.yaml
+centos-stream.yaml
+debian.yaml
+default.yaml
+deprecated
+docker-rootful.yaml
+docker.yaml
+experimental
+faasd.yaml
+fedora.yaml
+k3s.yaml
+k8s.yaml
+nomad.yaml
+opensuse.yaml
+oraclelinux-8.yaml
+oraclelinux-9.yaml
+oraclelinux.yaml
+podman-rootful.yaml
+podman.yaml
+rocky-8.yaml
+rocky-9.yaml
+rocky.yaml
+ubuntu-lts.yaml
+ubuntu.yaml
+vmnet.yaml
+
+
+# custom M1 default config
+# ===================================================================== #
+# BASIC CONFIGURATION default.yaml
+# ===================================================================== #
+#
+# Arch: "default", "x86_64", "aarch64".
+# "default" corresponds to the host architecture.
+arch: "default"
+#
+# An image must support systemd and cloud-init.
+# Ubuntu and Fedora are known to work.
+# Default: none (must be specified)
+images:
+  # Try to use a local image first.
+  - location: "~/Downloads/hirsute-server-cloudimg-amd64.img"
+    arch: "x86_64"
+  - location: "~/Downloads/hirsute-server-cloudimg-arm64.img"
+    arch: "aarch64"
+#
+  # Download the file from the internet when the local file is missing.
+  # Hint: run `limactl prune` to invalidate the "current" cache
+  - location: "https://cloud-images.ubuntu.com/hirsute/current/hirsute-server-cloudimg-amd64.img"
+    arch: "x86_64"
+  - location: "https://cloud-images.ubuntu.com/hirsute/current/hirsute-server-cloudimg-arm64.img"
+    arch: "aarch64"
+#
+# CPUs: if you see performance issues, try limiting cpus to 1.
+# Default: 4
+cpus: 2
+#
+# Memory size
+# Default: "4GiB"
+memory: "4GiB"
+#
+# Disk size
+# Default: "100GiB"
+disk: "30GiB"
+#
+ssh:
+  # A localhost port of the host. Forwarded to port 22 of the guest.
+  # Currently, this port number has to be specified manually.
+  # Default: none
+  localPort: 60022
+  # Load ~/.ssh/*.pub in addition to $LIMA_HOME/_config/user.pub .
+  # This option is useful when you want to use other SSH-based
+  # applications such as rsync with the Lima instance.
+  # If you have an insecure key under ~/.ssh, do not use this option.
+  # Default: true
+  loadDotSSHPubKeys: false
+#
+# ===================================================================== #
+# ADVANCED CONFIGURATION
+# ===================================================================== #
+#
+containerd:
+  # Enable system-wide (aka rootful)  containerd and its dependencies (BuildKit, Stargz Snapshotter)
+  # Default: false
+  system: false
+  # Enable user-scoped (aka rootless) containerd and its dependencies
+  # Default: true
+  user: true
+#
+# ===================================================================== #
+# FURTHER ADVANCED CONFIGURATION
+# ===================================================================== #
+#
+firmware:
+  # Use legacy BIOS instead of UEFI.
+  # Default: false
+  legacyBIOS: false
+#
+video:
+  # QEMU display, e.g., "none", "cocoa", "sdl".
+  # As of QEMU v5.2, enabling this is known to have negative impact
+  # on performance on macOS hosts: https://gitlab.com/qemu-project/qemu/-/issues/334
+  # Default: "none"
+  display: "none"
+#
+network:
+  # The instance can get routable IP addresses from the vmnet framework using
+  # https://github.com/lima-vm/vde_vmnet. Both vde_switch and vde_vmnet
+  # daemons must be running before the instance is started. The interface type
+  # (host, shared, or bridged) is configured in vde_vmnet and not lima.
+  vde:
+    # vnl (virtual network locator) points to the vde_switch socket directory,
+    # optionally with vde:// prefix
+    # - vnl: "vde:///var/run/vde.ctl"
+    #   # VDE Switch port number (not TCP/UDP port number). Set to 65535 for PTP mode.
+    #   # Default: 0
+    #   switchPort: 0
+    #   # MAC address of the instance; lima will pick one based on the instance name,
+    #   # so DHCP assigned ip addresses should remain constant over instance restarts.
+    #   macAddress: ""
+    #   # Interface name, defaults to "vde0", "vde1", etc.
+    #   name: ""
+#
+# Port forwarding rules. Forwarding between ports 22 and ssh.localPort cannot be overridden.
+# Rules are checked sequentially until the first one matches.
+# portForwards:
+#   - guestPort: 443
+#     hostIP: "0.0.0.0" # overrides the default value "127.0.0.1"; allows privileged port forwarding
+#   # default: hostPort: 443 (same as guestPort)
+#   # default: guestIP: "127.0.0.1" (also matches bind addresses "0.0.0.0", "::", and "::1")
+#   # default: proto: "tcp" (only valid value right now)
+#   - guestPortRange: [4000, 4999]
+#     hostIP:  "0.0.0.0" # overrides the default value "127.0.0.1"
+#   # default: hostPortRange: [4000, 4999] (must specify same number of ports as guestPortRange)
+#   - guestPort: 80
+#     hostPort: 8080 # overrides the default value 80
+#   - guestIP: "127.0.0.2" # overrides the default value "127.0.0.1"
+#     hostIP: "127.0.0.2" # overrides the default value "127.0.0.1"
+#   # default: guestPortRange: [1024, 65535]
+#   # default: hostPortRange: [1024, 65535]
+#   - guestPort: 8888
+#     ignore: true (don't forward this port)
+#   # Lima internally appends this fallback rule at the end:
+#   - guestIP: "127.0.0.1"
+#     guestPortRange: [1024, 65535]
+#     hostIP: "127.0.0.1"
+#     hostPortRange: [1024, 65535]
+#   # Any port still not matched by a rule will not be forwarded (ignored)
+# ===================================================================== #
+# END OF TEMPLATE
+# ===================================================================== #
+
+# ===================================================================== #
+# START OF TEMPLATE docker.yaml
+# ===================================================================== #
+# lima docker yaml
+#
+# Example to use Docker instead of containerd & nerdctl
+# https://github.com/lima-vm/lima/tree/master/examples
+# $ limactl start ./docker.yaml
+# $ limactl shell docker docker run -it -v $HOME:$HOME --rm alpine
+#
+# To run `docker` on the host (assumes docker-cli is installed):
+# $ export DOCKER_HOST=$(limactl list docker --format 'unix://{{.Dir}}/sock/docker.sock')
+# $ docker ...
+#
+# This example requires Lima v0.8.0 or later
+images:
+# Try to use release-yyyyMMdd image if available. Note that release-yyyyMMdd will be removed after several months.
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20220420/ubuntu-22.04-server-cloudimg-amd64.img"
+  arch: "x86_64"
+  digest: "sha256:de5e632e17b8965f2baf4ea6d2b824788e154d9a65df4fd419ec4019898e15cd"
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20220420/ubuntu-22.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+  digest: "sha256:66224c7fed99ff5a5539eda406c87bbfefe8af6ff6b47d92df3187832b5b5d4f"
+# Fallback to the latest release image.
+# Hint: run `limactl prune` to invalidate the cache
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+  arch: "x86_64"
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+#
+mounts:
+- location: "~"
+- location: "/tmp/lima"
+  writable: true
+# containerd is managed by Docker, not by Lima, so the values are set to false here.
+containerd:
+  system: false
+  user: false
+provision:
+- mode: system
+  # This script defines the host.docker.internal hostname when hostResolver is disabled.
+  # It is also needed for lima 0.8.2 and earlier, which does not support hostResolver.hosts.
+  # Names defined in /etc/hosts inside the VM are not resolved inside containers when
+  # using the hostResolver; use hostResolver.hosts instead (requires lima 0.8.3 or later).
+  script: |
+    #!/bin/sh
+    sed -i 's/host.lima.internal.*/host.lima.internal host.docker.internal/' /etc/hosts
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    command -v docker >/dev/null 2>&1 && exit 0
+    export DEBIAN_FRONTEND=noninteractive
+    curl -fsSL https://get.docker.com | sh
+    # NOTE: you may remove the lines below, if you prefer to use rootful docker, not rootless
+    systemctl disable --now docker
+    apt-get install -y uidmap dbus-user-session
+- mode: user
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    systemctl --user start dbus
+    dockerd-rootless-setuptool.sh install
+    docker context use rootless
+probes:
+- script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    if ! timeout 30s bash -c "until command -v docker >/dev/null 2>&1; do sleep 3; done"; then
+      echo >&2 "docker is not installed yet"
+      exit 1
+    fi
+    if ! timeout 30s bash -c "until pgrep rootlesskit; do sleep 3; done"; then
+      echo >&2 "rootlesskit (used by rootless docker) is not running"
+      exit 1
+    fi
+  hint: See "/var/log/cloud-init-output.log". in the guest
+hostResolver:
+  # hostResolver.hosts requires lima 0.8.3 or later. Names defined here will also
+  # resolve inside containers, and not just inside the VM itself.
+  hosts:
+    host.docker.internal: host.lima.internal
+portForwards:
+- guestSocket: "/run/user/{{.UID}}/docker.sock"
+  hostSocket: "{{.Dir}}/sock/docker.sock"
+message: |
+  To run `docker` on the host (assumes docker-cli is installed), run the following commands:
+  ------
+  docker context create lima --docker "host=unix://{{.Dir}}/sock/docker.sock"
+  docker context use lima
+  docker run hello-world
+  ------
+# ===================================================================== #
+# END OF TEMPLATE
+# ===================================================================== #
+
+# podman --  Example Podman instead of containerd & nerdctl
+# see https://github.com/lima-vm/lima/tree/master/examples
+limactl start /usr/local/share/lima/examples/podman.yaml
+limactl shell podman podman run -it -v $HOME:$HOME --rm docker.io/library/alpine
+#
+# To run `podman` on the host (assumes podman-remote is installed):
+export CONTAINER_HOST=$(limactl list podman --format 'unix://{{.Dir}}/sock/podman.sock')
+podman --remote ...
+#
+# To run `docker` on the host (assumes docker-cli is installed):
+export DOCKER_HOST=$(limactl list podman --format 'unix://{{.Dir}}/sock/podman.sock')
+docker ...
+message: |
+  To run `podman` on the host (assumes podman-remote is installed), run the following commands:
+  ------
+  podman system connection add lima-{{.Name}} "unix://{{.Dir}}/sock/podman.sock"
+  podman system connection default lima-{{.Name}}
+  podman{{if eq .HostOS "linux"}} --remote{{end}} run quay.io/podman/hello
+  ------
+
+# Apptainer --  Example to use Apptainer instead of containerd & nerdctl
+# see https://github.com/lima-vm/lima/tree/master/examples
+limactl start /usr/local/share/lima/examples/apptainer.yaml
+limactl shell apptainer apptainer run -u -B $HOME:$HOME docker://alpine

@@ -1,0 +1,6 @@
+# CREATE large files
+dd if=/dev/RANDOM of=bigfile bs=1m count=1k
+dd of=bigassfile bs=1M count=0 seek=10000
+truncate -s 10G foo
+fallocate -s 5G bar
+mkfile 10G bigfile

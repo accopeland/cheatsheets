@@ -1,3 +1,4 @@
+
 # To view the differences between two files:
 diff -u <file-1> <file-2>
 
@@ -36,3 +37,15 @@ zo uncollapse
 dp     L->R (:diffp)
 do     R->L (:diffg)
 :diffu update
+
+# diff tools
+vimdiff
+gvimdiff - almost identical to vimdiff but uses Linux GUI for Vim, refer to vimdiff
+nvimdiff
+opendiff
+diffoscope
+meld
+xxdiff - requires x11
+kdiff3 - KDE ?
+kompare - KDE ?
+meld

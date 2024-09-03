@@ -43,11 +43,11 @@ $ spack gc
 
 # glossary
 roots - specs explicitly isted in the spack.yaml (not dependencies)
-variants -
+variants - build/compile options for a pkg e.g. r+X
 stack -
 environment - list of packages in a spack.yaml (lockfile)
 buildcache - OCI cache (tar)
-concretize -
+concretize - create install dag for pkg and all deps
 
 #--------------------
 # installation
@@ -458,7 +458,7 @@ $ spack extends YAML syntax to allow “::” to specify a key-value pair; When 
 #-------------------
 # externals
 #-------------------
-#  external (package.yaml)
+#  externals (packages.yaml)
 packages.yaml
   slurm:
     externals:
@@ -466,9 +466,9 @@ packages.yaml
       prefix: /usr
     buildable: false
 
-# find external binaries
+# find externals
 $ spack external find # automatically adds to packages.yaml
-$ spack config --scope defaults edit packages
+$ spack config [--scope defaults] edit packages
 
 # find external changes
 $ spack config blame packages
@@ -631,15 +631,28 @@ $ spack compiler add $(spack location -i gcc@8.3.0)
 # compiler add
 $ spack compiler add $(spack location -i gcc@8.3.0)
 
-#  customize how software is built 
+#  customize how software is built
 packages.yaml
 
 #----------------------
 # environments
 #----------------------
+# emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
+#  upgrade entire software stack in an environment and clean up old package versions, run the following:
+$ spack env activate myenv
+$ spack mark -i --all
+$ spack concretize --fresh --force
+$ spack install
+$ spack gc
 
 # environment - troubleshoot loading
 $ spack load --sh --only package llvm
+
+# to show content of env
+$ spack find # after activate myenv
+
+# to show what is out of date in an env
+$ spack find -c # after activate
 
 # environment from spack.yaml spack.lock --
 # Both create a new environment called my-project, but which one you choose to use depends on your needs:
@@ -1049,7 +1062,7 @@ class Mvapich2(Package):
 patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
 
 #----------------------
-# contributing 
+# contributing
 #----------------------
 https://spack.readthedocs.io/en/latest/contribution_guide.html#branching
 
@@ -1332,6 +1345,33 @@ options:
 #-------------------
 # build / create pkg
 #-------------------
+# makefile project
+customizations
+- env vars via setup_build_environment (see esmf)
+def setup_build_environment(self, env):
+    env.set("PREFIX", prefix)
+    env.set("BLASLIB", spec["blas"].libs.ld_flags)
+- command line args (see cloverleaf)
+build_targets = ["CC=cc"]
+If you do need access to the spec, you can create a property like so:
+@property
+def build_targets(self):
+    spec = self.spec
+
+    return [
+        "CC=cc",
+        f"BLASLIB={spec['blas'].libs.ld_flags}",
+    ]
+- edit makefile (see stream)
+def edit(self, spec, prefix):
+    makefile = FileFilter("Makefile")
+
+    makefile.filter(r"^\s*CC\s*=.*",  f"CC = {spack_cc}")
+    makefile.filter(r"^\s*CXX\s*=.*", f"CXX = {spack_cxx}")
+    makefile.filter(r"^\s*F77\s*=.*", f"F77 = {spack_f77}")
+    makefile.filter(r"^\s*FC\s*=.*",  f"FC = {spack_fc}")
+
+
 # golang / go
 $ spack create -t makefile ...cheat...
 
@@ -1664,13 +1704,6 @@ always
 fresh
 force
 
-# emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
-#  upgrade entire software stack in an environment and clean up old package versions, run the following:
-$ spack env activate myenv
-$ spack mark -i --all
-$ spack concretize --fresh --force
-$ spack install
-$ spack gc
 
 # git repo
 If a package contains both url() and git() attributes, Spack decides which to use based on the arguments to version()
@@ -1747,3 +1780,21 @@ index b60e570..a8acfb0 100644
 +
 +# install
 +install(TARGETS sshash)
+
+# Error: permission denied (on go pkg failure)
+# Fix: chmod -R 777 <pkgdir> && rm -rf <...>
+# or 
+# '-modcacherw'
+
+
+# rename binary 
+# alternate name
+# ???
+
+# Error: autoconf C compiler cannot produce  (ncftp)
+# Fix: CFLAGS=-Wno-implicit-in  or maybe --std=c++XX
+
+
+# Error: failed to concretize `py-polars@master` for the following reasons:
+# 1. Cannot satisfy 'py-polars@master'
+# Fix: Missing version; add version("master", branch="master")

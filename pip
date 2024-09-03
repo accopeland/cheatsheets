@@ -47,6 +47,9 @@ pip list --outdated --format=freeze | cut -d = -f 1 | xargs -n1 pip install -U
 # To install specific version of a package:
 pip install -I SomePackage1==1.1.0 'SomePackage2>=1.0.4'
 
+# to install development version
+pip install git+git://github.com/iterative/dvc
+
 # install locations / directories
 # -- By default 'pip --user' installs to one of the following locations:
 ~/.local/lib/python2.7/site-packages

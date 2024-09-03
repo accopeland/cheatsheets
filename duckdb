@@ -5,6 +5,16 @@ https://duckdb.org/docs/installation/
 brew install duckdb
 https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip
 
+# spack recipe
+100 deps; 
+broken py-ruamel-yaml-clib 
+- cflags -Wno-incompatible-pointer-types
+broken py-pygist2 
+- libcffi >= 1.16
+- libgit2 >= 1.18
+- git clone source ; make; find errors; fix source; git diff > avx2.patch
+- must use v0.10.x  (as of 8-28-2024 v1.0.0 broken)
+
 # doc
 https://duckdb.org/docs
 

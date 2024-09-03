@@ -31,3 +31,10 @@ git clone git://git.sv.gnu.org/autoconf-archive.git
 	  export CPPFLAGS="-I/usr/local/opt/libarchive/include"
 	#For pkg-config to find libarchive you may need to set:
 	  export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig"
+
+# cache
+config.cache
+
+# debugging
+see config.log
+rm config.cache &&  configure CFLAGS="-std... etc."

@@ -1,0 +1,27 @@
+# description
+Unified Communication X (mailing list - https://elist.ornl.gov/mailman/listinfo/ucx-group)
+
+# install
+https://github.com/openucx/ucx/
+spack install ucx +cma  +rc +ud +dc +mlx5_dv +ib_hw_tm +dm +cm
+
+# docs
+
+# deubugging
+https://ucx-py.readthedocs.io/en/latest/ucx-debug.html
+ibdev2netdev – check to ensure at least one IB controller is configured for IPoIB
+ucx_perftest should confirm InfiniBand bandwidth to be in the 10+ GB/s range
+Affinity information can be found in nvidia-smi topo -m
+
+# transports
+Infiniband
+Omni-Path
+RoCE
+Cray Gemini and Aries
+CUDA
+ROCm
+Shared Memory
+posix, sysv, cma, knem, and xpmem
+TCP/IP
+NOTE: UCX >= 1.12.0 requires rdma-core >= 28.0 or MLNX_OFED >= 5.0 for Infiniband and RoCE transports support.
+

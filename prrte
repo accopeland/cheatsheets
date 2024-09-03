@@ -1,0 +1,33 @@
+# description
+PMIx reference runtime environment
+
+# docs
+
+# install
+spack install prrte
+
+# deps
+? hwloc
+? libevent
+
+# test
+prte_info
+
+# prte_run
+--tune <file>
+--display [alloc|bindings|map|map_devel|top|cpus]
+--pmixmea <k> <v>
+--prefix
+--prtemca <k> <v>
+--mca mpi_show_mca params, btl_base_verbose, coll_base_verbose, btl_tcp_if_exclude, display bind|map|allocation|..., rmaps+default_mapping_policy, ...
+--rank-by {slot|mode|fill|span]
+--map-by [slot|hwthread|core|L{1-3}CACHE|numa|package|node|seq|PPR:N|bankfile|pe-list=G,b]
+
+# to run in allocation
+use srun
+-B sockets/node : cores/socket : thread/core
+-c cpus
+-n tasks
+--ntasks-per-node
+--N nodes
+-T threads

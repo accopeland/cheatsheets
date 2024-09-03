@@ -9,6 +9,9 @@ rustup-init
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update
 
+# spack install
+...
+
 # update
 rustup update
 
@@ -87,3 +90,6 @@ rustup default nightly
 # checksums
 wget https://static.rust-lang.org/dist/2019-02-16/channel-rust-nightly.toml
 
+# python3.11' './x.py' 'build' ...
+# Error: ProcessError: Command exited with status 1:
+# Fix: ???

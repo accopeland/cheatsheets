@@ -129,6 +129,33 @@ inner join seq_units s on seq_unit_id = rqc_seq_unit_id
 where sp_actual_product in ('Metagenome Standard Draft', 'Metagenome Minimal Draft')
 order by proposal_id
 
+# percent
+sum(if(qc.qc_state = 0,1,0))/count(qc.seq_unit_name) as pct_fail
+
+# percent change over time window
+select dt, grp, n_, if(@l = 0, 0, round(((n_ - @l) / @l) * 100,1)) "%chg",  @l := n_
+from (select @l := 0) x,
+     (select sam_receive_date as dt,
+     from_days(to_days(cast(lib_create_date as datetime)) - day(cast(lib_create_date as datetime)) + 1) grp, count(*) as n_
+     from air where lib_create_date >= (date_add(date('$F'), interval 7 hour)) group by grp) y
+
+# cast
+# from_days
+# interval
+
+# case
+max(case when stats_name='outputbases' then stats_value else null end) as filt_bases_out,
+
+
+# extract, rollup, grouping
+select extract(year from ap_created_date) y, extract(month from ap_created_date) m,
+        count(*) n, ap_in_prog_to_all_done_days, ap_all_done_to_complete_days
+        from dw.anal_proj_and_task_report
+        where ap_created_dt between '$F' and '$T'
+        -- group by rollup(y,m)
+        -- having grouping(extract(year from ap_created_date))=0 and grouping(extract(month from ap_created_date))=0
+        order by y,m
+
 # sql histogram
 select floor(datediff(sam_receive_date, sam_ship_approve_date)/30)*30 as app2rcv, count(*)
 

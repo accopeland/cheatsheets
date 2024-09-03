@@ -169,6 +169,11 @@ $ spack buildcache push --update-index /some/directory pkg
 $ spack mirror add my_cache /some/directory # in a different instance
 $ spack install pkg
 
+# binary mirror
+spack mirror add binary_mirror  https://binaries.spack.io/develop
+spack buildcache keys --install --trust
+spack buildcache list --allarch # list avail
+
 # spec location
 $SPACK_ROOT/var/spack/repos/builtin/packages/*/package.py
 
@@ -458,7 +463,7 @@ $ spack extends YAML syntax to allow “::” to specify a key-value pair; When 
 #-------------------
 # externals
 #-------------------
-#  externals (packages.yaml)
+#  external (package.yaml)
 packages.yaml
   slurm:
     externals:
@@ -1640,7 +1645,7 @@ $ spack edit pango
 # style
 $ spack style duc
 
-# install prebuilt tgz
+# install prebuilt binary from tarball
 class Vmatch(Package):
     """Vmatch is a versatile software tool for efficiently solving large scale
     sequence matching tasks"""
@@ -1704,6 +1709,13 @@ always
 fresh
 force
 
+# emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
+#  upgrade entire software stack in an environment and clean up old package versions, run the following:
+$ spack env activate myenv
+$ spack mark -i --all
+$ spack concretize --fresh --force
+$ spack install
+$ spack gc
 
 # git repo
 If a package contains both url() and git() attributes, Spack decides which to use based on the arguments to version()
@@ -1798,3 +1810,47 @@ index b60e570..a8acfb0 100644
 # Error: failed to concretize `py-polars@master` for the following reasons:
 # 1. Cannot satisfy 'py-polars@master'
 # Fix: Missing version; add version("master", branch="master")
+
+# Error: permission denied  '/clusterfs/jgi/groups/gentech/genome_analysis/spack-fork/spack/opt/spack/linux-rocky8-zen2/gcc-14.2.0/go-1.22.6-zjd5pmaor7xhpgd6f4xw27yo4bbffzea/bin/go' 'build' '-modcacherw' '-ldflags' '-s -w' '-o' 'cheat'
+# Fix: ??
+# no --Cheat(GoPackage)
+# no -- depends_on(go@1.14:)
+# no -- MakefilePackage
+
+# Error: bbcp fatal: unable to access 'https://www.slac.stanford.edu/~abh/bbcp/bbcp.git/': SSL certificate problem: unable to get local issuer certificate
+# Fix: spack -k install bbcp --verbose bbcp  cxxflags='-std=c++11'
+
+# go
+spack create -t go -> GoPackage
+
+# rust
+spack create -t cargo -> CargoPackage
+
+# java
+spack create -t package -> Package
+
+# maven
+spack create -t maven -> MavenPackage
+depends_on("java", type=("build", "run"))
+depends_on("maven", type="build")
+In the pom.xml file, you may see sections like:
+
+# Error: py-ruamel-yaml-clib: incompatible-pointer-types error
+# Fix: edit package.py -> -Wno-incomptatible-pointer-types (CFLAGS)
+
+
+# Error: NoDigestError: Attempt to check URLFetchStrategy with no digest.
+# Fix: --no-checksum ???
+
+# checksums / versions
+# By default, Spack will only install a tarball package if it has a checksum and that checksum matches.
+# You can override this with spack install --no-checksum.
+# Trust is established in different ways for different downloads:
+- tarball => the tarball is checksummed.
+- git => commit= are trusted implicitly when a hash is specified
+- tarball URL (untrusted) may be supplied without a checksum
+- git()  => specify a branch or tag instead of a hash
+
+# package name not executable name
+executables = ["^rustc$", "^cargo$"]
+>>>>>>> refs/remotes/origin/master

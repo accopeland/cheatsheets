@@ -1,3 +1,14 @@
+---
+syntax: yaml
+tags: [ cheat, utilities ]
+---
+# install cheat
+go install github.com/cheat/cheat@latest
+https://github.com/cheat/cheat.git
+
+# install cheatsheets
+https://github.com/accopeland/cheatsheets.git
+
 # show config location
 cheat --conf
 

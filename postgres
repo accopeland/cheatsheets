@@ -3,7 +3,7 @@
 # install
 brew install postgresql
 
-# postgres docs
+# docs
 https://www.postgresql.org/docs/11/sql-select.html
 
 # config
@@ -32,7 +32,7 @@ postgresql://other@localhost/otherdb?connect_timeout=10&application_name=myapp
 postgresql://localhost/mydb?user=other&password=secret
 
 
-# postgres using other schemas
+# using other schemas
 \db
 \dn
 \l
@@ -60,7 +60,7 @@ BEGIN ATOMIC;
 END;
 DROP FUNCTION a(int);
 
-# postgres using other schemas
+# using other schemas
 \db
 \dn
 \l
@@ -68,7 +68,7 @@ DROP FUNCTION a(int);
 # describe table
 \d+ claritylims.reagentlabel_ft
 
-# postgres good stuff- https://til.hashrocket.com/sql
+# good stuff- https://til.hashrocket.com/sql
 
 # connection info
 \c dbname username host port.
@@ -198,14 +198,17 @@ where constraint is:
 	{ NOT NULL | NULL | CHECK (expression) }
 
 
-# postgres create time series - interval , generate_series
-select d FROM generate_series('2020-02-01', '2020-04-05', '1 day'::interval) AS d
-select to_char(generate_series('2020-02-01', '2020-04-05', '1 week'::interval),'IYYY-IW') as w
-SELECT ts, row_number() over(order by ts) as row FROM generate_series('2022-01-01 00:00:00','2022-01-01 00:00:10',INTERVAL '1 second') ts;
-SELECT * from generate_series(1,10) a, generate_series(1,2) b;
-
 # postgres rollup
 dw <<< "select extract(year from sp_status_date) y, extract (month from sp_status_date) M, count(sp_status_date) ct from dw.all_inclusive_report where sp_status_date>'2021-03-01' group by rollup (extract( year from sp_status_date), extract (month from sp_status_date));"
+
+# rollup without subtotals -- grouping()
+ select extract(year from ap_created_date) y,
+        extract(month from ap_created_date) m,
+        count(*) ct, ap_in_prog_to_all_done_days, ap_all_done_to_complete_days
+        from dw.anal_proj_and_task_report
+        where ap_created_dt between '$F' and '$T'
+        group by rollup having grouping(y) = 0 and grouping(m) = 0  order by y,m
+
 
 # group by week (start)
 select count(*), date_trunc('week', request_time) from requests group by date_trunc('week', request_time) order by date_trunc desc ;
@@ -218,14 +221,14 @@ telegraf  / influxdb  - time series db; 100x faster than mongo ?
 # group by day
 see https://linuxhint.com/postgres-groupby-day/
 
-# postgres time calclulation
+# time calclulation
 select avg(extract(epoch from (lib_create_date-alq_create_date))/(24*60*60)) as d_avg from dw.all_inclusive_report where lib_create_date between '2018-01-01 00:00:00' and '2019-01-01 00:00:00'
 select count(lib_id) as nlib, extract(year from lib_create_date) as y, extract(month from lib_create_date) as m, avg(extract(epoch from (lib_create_date-alq_create_date))/(24*60*60)) as d_avg from dw.all_inclusive_report group by rollup (y,m) order by y,m
 
-# postgres extract year-mon
+# extract year-mon
 SELECT EXTRACT( YEAR_MONTH FROM `date` )
 
-# postgres useful user def fn
+# useful user def fn
 CREATE OR REPLACE FUNCTION random_between(low INT ,high INT) RETURNS INT AS
 $$
 BEGIN
@@ -405,13 +408,16 @@ select library_creation_sop_summary, ts_rank(to_tsvector(library_creation_sop_su
 from dw.rqc_library_sop , to_tsvector(library_creation_sop_summary) as doc, to_tsquery('DNA & illumina & \!itag') as query
 where query @@ doc order by rank desc
 
+# postgres create time series - interval , generate_series
+select d FROM generate_series('2020-02-01', '2020-04-05', '1 day'::interval) AS d
+select to_char(generate_series('2020-02-01', '2020-04-05', '1 week'::interval),'IYYY-IW') as w
+SELECT ts, row_number() over(order by ts) as row FROM generate_series('2022-01-01 00:00:00','2022-01-01 00:00:10',INTERVAL '1 second') ts;
+SELECT * from generate_series(1,10) a, generate_series(1,2) b;
+
 # timebins
-WITH counts AS (
-    SELECT date_bin('2.5 days'::interval, ts, '2023-02-13'::timestamp), count(*)
-    FROM quakes q
-    WHERE q.mag > 6
-    GROUP BY date_bin
-)
+select date_bin('2.5 day'::interval, at_status_date::timestamp, 'epoch') as b from dw.anal_proj_and_task_report limit 10 ;
+##
+WITH counts AS ( SELECT date_bin('2.5 days'::interval, ts, '2023-02-13'::timestamp), count(*) FROM quakes q WHERE q.mag > 6 GROUP BY date_bin)
 SELECT series, coalesce(counts.count, 0) AS count
 FROM generate_series('2023-02-13'::timestamp, '2023-03-14'::timestamp, '2.5 days'::interval) series
 LEFT JOIN counts

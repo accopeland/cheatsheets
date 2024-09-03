@@ -6,6 +6,14 @@ use system pmix (external in spack.yaml), and spack hwloc, libfabric, ucx, libev
 spack install openmpi +romio fabrics=ofi,ucx,cma,verbs schedulers=slurm ~mpi-fortran
 N.B. xpmem, knem not working/avail on dori
 
+# hwloc dep
+It is critically important that if an MPI application — or any of its dependencies — uses Hwloc, it uses the same Hwloc with which Open MPI was compiled.
+As of v5.0.x, Open MPI does not yet support the Hwloc v3.x series (which may not even be available at the time of Open MPI v5.0.x’s release). Hwloc v3.x is anticipated to break API and/or ABI compared to the Hwloc v2.x series.
+Open MPI will refuse to build if it finds an external Hwloc installation that is >= v3.0.0 on the assumption that other HPC applications and/or libraries may be using it. Such a configuration could lead to obscure and potentially confusing run-time failures of Open MPI applications.
+If Open MPI’s configure script aborts because it finds an Hwloc installation that is >= v3.0.0, you can either ensure that Open MPI finds a < v3.0.0 Hwloc installation (e.g., by changing the order of paths in LD_LIBRARY_PATH), or force the use of Open MPI’s bundled Hwloc via:
+shell$ ./configure --with-hwloc=internal ...
+
+
 # usage
 module use ...
 prterun [options] binary
@@ -22,28 +30,39 @@ prte_info
 ucx_info
 
 # IO info
-ompi_info --param io       ompio --level 9
-ompi_info --param fcoll    all --level 9
-ompi_info --param fs       all --level 9
-ompi_info --param fbtl     all --level 9
-ompi_info --param sharedfp all --level 9
+$ ompi_info --param io       ompio --level 9
+$ ompi_info --param fcoll    all --level 9
+$ ompi_info --param fs       all --level 9
+$ ompi_info --param fbtl     all --level 9
+$ ompi_info --param sharedfp all --level 9
 
 # PML : process management layer
 pmi4x
-srun --mpi=list
+$ srun --mpi=list
+
+# srun v mpirun
+https://github.com/open-mpi/ompi/issues/8878 (2021)
+either
+ - build OMPI against external HWLOC. This assumes that HWLOC didn't change any of the "flags" or functions for parsing the XML string - which wasn't true the last time SLURM/hwloc changed the format. So it is quite possible that there will still be problems even if you do build against the same library.
+-  quit using srun and use mpirun. This truly is the "correct" answer, and not just for this HWLOC problem. OMPI continues to grow in its use of information to support optimizations, and the Slurm support lags further and further behind. srun should only be used by people who just want to run something basic and don't really care about performance, or at least about optimizations introduced in recent OMPI generations. Unless/until something changes in the Slurm world such that they begin to keep up with things, your users will get better experiences by moving to mpirun.
+
+
+
 
 SLURM_MPI_TYPE
 mpirun --mca=...
 
 # spack build
-spack install openmpi schedulers=slurm fabric=ucx +pmi +singularity # atomics?
+$ spack install openmpi schedulers=slurm fabric=ucx +pmi +singularity # atomics?
+[+]  rhthgvt openmpi@4.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs~internal-hwloc~internal-libevent~internal-pmix~java~legacylaunchers~lustre~memchecker+mpi-fortran~openshmem~orterunprefix~romio+rsh~singularity~static+vt+wrapper-rpath build_system=autotools fabrics=none schedulers=none
+[+]  l5xoaji openmpi@5.0.3~atomics~cuda~gpfs~internal-hwloc~internal-libevent+internal-pmix~java~legacylaunchers~lustre~memchecker~mpi-fortran~openshmem~orterunprefix+romio+rsh~static+vt+wrapper-rpath build_system=autotools fabrics=cma,ofi,psm,psm2,ucx,verbs schedulers=slurm
 
 # depends on ucx
 ucx +cm,cma,dcrocm,ud,knem,xpmem,rc,dct,xrc,dm,ib_hw_tm,verbs
 openmpi fabrics=auto|ucx,verbs,cma
 
 # ucx
-ucx@1.13.1%gcc@12.2.0~assertions~backtrace_detail~cma~cuda~dc~debug+dm+examples~gdrcopy~ib_hw_tm~java~knem~logging~mlx5_dv+openmp+optimizations~parameter_checking+pic~rc~rdmacm~rocm~thread_multiple~ucg~ud+verbs~vfs~xpmem build_system=autotools libs=shared,static opt=3 patches=32fce32 simd=auto arch=linux-rocky8-zen2
+$ spack install ucx@1.13.1%gcc@12.2.0~assertions~backtrace_detail~cma~cuda~dc~debug+dm+examples~gdrcopy~ib_hw_tm~java~knem~logging~mlx5_dv+openmp+optimizations~parameter_checking+pic~rc~rdmacm~rocm~thread_multiple~ucg~ud+verbs~vfs~xpmem build_system=autotools libs=shared,static opt=3 patches=32fce32 simd=auto arch=linux-rocky8-zen2
 
 # slurm (>23.11) issues w openmpi
 https://github.com/open-mpi/ompi/issues/12471
@@ -52,7 +71,7 @@ https://github.com/open-mpi/ompi/issues/12471
 /clusterfs/jgi/groups/gentech/genome_analysis/rnd/rsegan/Software
 
 # spack
-[copeland@login25:/global/cfs/cdirs/jgiqaqc/TestData] spack install openmpi +atomics +gpfs +romio fabrics=ucx schedulers=auto
+$ spack install openmpi +atomics +gpfs +romio fabrics=ucx schedulers=auto
 
 # from slack
 #  spack install openmpi@4.0.7 schedulers=slurm +pmi  +legacylaunchers %gcc@12.1.0 ^pmix@4.1 ^libevent@2.0 ^hwloc@1.11.8 ^openssl@1.0.2k-fips ^munge@0.5.15 to install openmpi that worked for srun --mpi=pmix, srun --mpi=pmi2 and mpirun for a hello world mpi program
@@ -79,14 +98,14 @@ compare the performance with
 MPi jobs bound to specific cores (eg -R with affinity[core(1):distribute=pack]')
 MPI jobs bound to sockets alternating (eg --bind-to socket)
 MPI jobs bound to sockets contiguously (eg --bind-to socket --rank-by core or -R with affinity[core(1):cpubind=socket:distribute=balance)
-mpirun --map-by socket --bind-to socket --rank-by core
+$ mpirun --map-by socket --bind-to socket --rank-by core
 
 # performance tuning
-FI_LOG_LEVEL=debug mpirun osu_alltoall -m 16 -x 1000 -i 20000 > debug.out 2>&1
-prterun --verbose --map-by node:pe=8 -np 2 --mca smsc ^cma --display bind  hostname
+$ FI_LOG_LEVEL=debug mpirun osu_alltoall -m 16 -x 1000 -i 20000 > debug.out 2>&1
+$ prterun --verbose --map-by node:pe=8 -np 2 --mca smsc ^cma --display bind  hostname
 
 # pmi
-ls /usr/lib64/libpmi*
+$ ls /usr/lib64/libpmi*
 
 # c test
 # test_mpi.c
@@ -127,9 +146,9 @@ int main(int argc, char **argv){
         printf("Hello from proc %d of %d\n", myrank, numprc);
         MPI_Finalize();
 }
-> mpicc -o test_mpi_main test_mpi.c
-> srun -n 4 ./test_mpi_main
-> srun -n 4 --mpi=pmix ./test_mpi_main
+$ mpicc -o test_mpi_main test_mpi.c
+$ srun -n 4 ./test_mpi_main
+$ srun -n 4 --mpi=pmix ./test_mpi_main
 
 # fortran test
 # hello.f90
@@ -145,13 +164,13 @@ program hello
    print*, trim(hostname), rank, size
    call MPI_FINALIZE(ierror)
 end
-> mpif90 hello.f90
-> srun  --mpi=pmix -p rome -N5 -n40 --mem=0 a.out
+$ mpif90 hello.f90
+$ srun  --mpi=pmix -p rome -N5 -n40 --mem=0 a.out
 
 # mpicc -o test_mpi_main test_mpi.c
 
-srun -n 4 ./test_mpi_main
-srun -n 4 --mpi=pmix ./test_mpi_main
+$ srun -n 4 ./test_mpi_main
+$ srun -n 4 --mpi=pmix ./test_mpi_main
 Expect:
 [ec2-user@ip-172-31-82-82 openmpi]$ srun -n 4 --mpi=pmix ./test_mpi_main
 Hello from proc 1 of 4
@@ -160,11 +179,11 @@ Hello from proc 3 of 4
 Hello from proc 0 of 4
 
 # debugging
-ompi_info
-slurmd -C
+$ ompi_info
+$ slurmd -C
 
 # dori
-slurmd -C
+$ slurmd -C
 NodeName=n0030 CPUs=64 Boards=1 SocketsPerBoard=2 CoresPerSocket=32 ThreadsPerCore=1 RealMemory=515579  # compute
 NodeName=ln000 CPUs=32 Boards=1 SocketsPerBoard=1 CoresPerSocket=32 ThreadsPerCore=1 RealMemory=515849  # head
 
@@ -179,7 +198,7 @@ NodeName=ln000 CPUs=32 Boards=1 SocketsPerBoard=1 CoresPerSocket=32 ThreadsPerCo
 
 
 # run verbose
-SLURM_CPU_BIND=verbose,sockets OMPI_MCA_pmix_base_verbose=10  srun  --mem-bind=verbose,none --cpu-bind=verbose,none mpitest-rsegan
+$ SLURM_CPU_BIND=verbose,sockets OMPI_MCA_pmix_base_verbose=10  srun  --mem-bind=verbose,none --cpu-bind=verbose,none mpitest-rsegan
 
 # testing prte / salloc
 $ salloc -N 2
@@ -188,7 +207,7 @@ $ prun hostname
 $ pterm # terminate the DVM
 
 # run testing
-mpirun --verbose -n 8 --mca pml ob1 --mca btl self,vader ./test_mpi_main
+$ mpirun --verbose -n 8 --mca pml ob1 --mca btl self,vader ./test_mpi_main
 ##
 ln000.jgi:2431615 00100000000000000000000000000000
 Hello from proc 2 of 8
@@ -289,7 +308,7 @@ Hello from proc 0 of 8
 Hello from proc 4 of 8
 
 # test
-OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml_base_verbose 50 ./test_mpi_main
+$ OMPI_MCA_rmaps_base_oversubscribe=1 mpirun --verbose -n 8 --mca pml_base_verbose 50 ./test_mpi_main
 ln000.jgi:2431918 00000100000000000000000000000000
 Hello from proc 5 of 8
 ln000.jgi:2431915 00100000000000000000000000000000
@@ -308,7 +327,7 @@ ln000.jgi:2431920 00000001000000000000000000000000
 Hello from proc 7 of 8
 
 # test
-prterun -np 2 --map-by ppr:1:node:pe=16 true
+$ prterun -np 2 --map-by ppr:1:node:pe=16 true
 --------------------------------------------------------------------------
 Your job has requested more processes than the ppr for
 this topology can support:
@@ -319,16 +338,16 @@ this topology can support:
   PPR: 1:node
 
 # test
-prterun -np 1 --map-by ppr:1:node:pe=8 --mca smsc none hostname
+$ prterun -np 1 --map-by ppr:1:node:pe=8 --mca smsc none hostname
 ln000.jgi
 
 # test
-prterun -np 1 --mca smsc ^cma --display bind  hostname
+$ prterun -np 1 --mca smsc ^cma --display bind  hostname
 [ln000.jgi:2432511] Rank 0 bound to package[0][core:0]
 ln000.jgi
 
 # test
-prterun --personality ompi --display bind -n 4 --bind-to hwthread  hostname
+$ prterun --personality ompi --display bind -n 4 --bind-to hwthread  hostname
 [ln000.jgi:2433245] Rank 0 bound to package[0][core:0]
 [ln000.jgi:2433245] Rank 1 bound to package[0][core:1]
 [ln000.jgi:2433245] Rank 2 bound to package[0][core:2]
@@ -339,7 +358,7 @@ ln000.jgi
 ln000.jgi
 
 # test
-prterun --display map --map-by node -np 2 osu_bw -m $((1024 * 1024)):$((4 * 1024 * 1024)) D D
+$ prterun --display map --map-by node -np 2 osu_bw -m $((1024 * 1024)):$((4 * 1024 * 1024)) D D
 ========================   JOB MAP   ========================
 Data for JOB prterun-ln000-2433479@1 offset 0 Total slots allocated 32
     Mapping policy: BYNODE:NOOVERSUBSCRIBE  Ranking policy: NODE Binding policy: CORE:IF-SUPPORTED
@@ -358,7 +377,7 @@ Data for node: ln000    Num slots: 32   Max slots: 0    Num procs: 2
 
 
 # test
-prterun --map-by ppr:1 -np 2 --mca smsc ^cma --display bind  hostname
+$ prterun --map-by ppr:1 -np 2 --mca smsc ^cma --display bind  hostname
 --------------------------------------------------------------------------
 The mapping request contains a pattern that doesn't match
 the required syntax of #:object
@@ -369,7 +388,7 @@ Please check your request and try again.
 --------------------------------------------------------------------------
 
 # test
-prterun --np 2 --map-by node:pe=1 --display bind osu_bw
+$ prterun --np 2 --map-by node:pe=1 --display bind osu_bw
 [ln000.jgi:2433591] Rank 0 bound to package[0][core:0]
 [ln000.jgi:2433591] Rank 1 bound to package[0][core:1]
 # OSU MPI Bandwidth Test v7.3
@@ -435,7 +454,7 @@ OMPI_MCA_pmix_base_verbose=10 prterun --np 2 --map-by node:pe=1 --display bind  
 4194304              9855.71
 
 # test
-prterun -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_device_param
+$ prterun -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_device_param
 s_found 0 --mca btl_openib_allow_ib true hostname
 ln000.jgi
 ln000.jgi
@@ -447,7 +466,7 @@ ln000.jgi
 ln000.jgi
 
 # test
-prterun --verbose -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_de
+$ prterun --verbose -np 8 --mca btl vader,openib,self --bind-to core --mca opal_warn_on_missing_libcuda 0 --mca orte_base_help_aggregate 0 --mca btl_openib_warn_no_de
 vice_params_found 0 --mca btl_openib_allow_ib true ./test_mpi_main
 ln000.jgi:2434731 00001000000000000000000000000000
 Hello from proc 4 of 8
@@ -467,7 +486,7 @@ ln000.jgi:2434728 01000000000000000000000000000000
 Hello from proc 1 of 8
 
 # test
-mpirun -np 8 -x UCX_LOG_LEVEL=info --mca ras_base_verbose 10 --display bind  --bind-to package ./test_mpi_main
+$ mpirun -np 8 -x UCX_LOG_LEVEL=info --mca ras_base_verbose 10 --display bind  --bind-to package ./test_mpi_main
 [ln000.jgi:2434824] mca: base: component_find: searching NULL for ras components
 [ln000.jgi:2434824] mca: base: find_dyn_components: checking NULL for ras components
 [ln000.jgi:2434824] pmix:mca: base: components_register: registering framework ras components
@@ -553,7 +572,7 @@ Hello from proc 6 of 8
 
 # test
 #prterun -np 8 -x UCX_LOG_LEVEL=info --mca ras_base_verbose 10 --display bind  --bind-to socket --rank-by core  ./test_mpi_main
-prterun -np 8 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by span  ./test_mpi_main
+$ prterun -np 8 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by span  ./test_mpi_main
 [ln000.jgi:2435664] [prterun-ln000-2435664@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
 .2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
 [ln000.jgi:2435664] [prterun-ln000-2435664@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
@@ -576,7 +595,7 @@ Hello from proc 5 of 8
 
 #test
 #prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to socket --rank-by core  ./test_mpi_main # NO!
-prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by slot  ./test_mpi_main # YES!
+$ prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to package  --rank-by slot  ./test_mpi_main # YES!
 [ln000.jgi:2435825] [prterun-ln000-2435825@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
 .2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
 [ln000.jgi:2435825] [prterun-ln000-2435825@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
@@ -609,7 +628,7 @@ ln000.jgi:2435837 11111111111111111111111111111111
 ...
 
 # test
-prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to core  --rank-by slot  ./test_mpi_main
+$ prterun -np 16 --mca ras_base_verbose 1 --display bind  --bind-to core  --rank-by slot  ./test_mpi_main
 [ln000.jgi:2435979] [prterun-ln000-2435979@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
 .2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
 [ln000.jgi:2435979] [prterun-ln000-2435979@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
@@ -637,8 +656,8 @@ Hello from proc 5 of 16
 ....
 
 # test w/out fabric -- definitely worse
-prterun -np 16 --mca pml ob1 --mca btl tcp,self --hostfile ~/hosts  osu_bw
-prterun -n 2 --mca pml ob1 --mca btl tcp,self --mca ras_base_verbose 1 --display bind --bind-to package --rank-by span  osu_bw
+$ prterun -np 16 --mca pml ob1 --mca btl tcp,self --hostfile ~/hosts  osu_bw
+$ prterun -n 2 --mca pml ob1 --mca btl tcp,self --mca ras_base_verbose 1 --display bind --bind-to package --rank-by span  osu_bw
 [ln000.jgi:2462457] [prterun-ln000-2462457@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
 .2.0/openmpi-5.0.3-l5xoajihflaixcd6xr4av5o63ikkfqgv/etc/prte-default-hostfile for nodes
 [ln000.jgi:2462457] [prterun-ln000-2462457@0,0] hostfile: checking hostfile /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/opt/spack/linux-rocky8-zen2/gcc-12
@@ -679,7 +698,7 @@ prterun -n 2 --mca pml ob1 --mca btl tcp,self --mca ras_base_verbose 1 --display
 # PRRTE - PMIx Reference Runtime Environment
 
 # ucx devices
-ucx_info -d
+$ ucx_info -d
 
 # ucx info
 

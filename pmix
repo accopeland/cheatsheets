@@ -1,0 +1,12 @@
+# description
+
+# install
+spack install pmix +shared +opencl +pci +libxml2 +libudev
+
+# Error: conflict w /usr/lib64/libpmix.so (v ...) pthreads
+# Fix: spack external pmix
+
+# openmpi
+possibly could get internal pmix to work with openmpi if
+[e] hwloc
+[e] libevent

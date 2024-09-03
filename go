@@ -267,3 +267,7 @@ fast go linter
   make: *** [lint] Error 1
 #Fix: make setup
   GO111MODULE=off go get -u github.com/boyter/scc github.com/mgechev/revive
+
+# Error: .deepsource.toml permission denied
+# Fix: go@1.22: -modcacherw ...
+https://github.com/spack/spack/issues/44361

@@ -134,7 +134,15 @@ $ git log --pretty=email --patch-with-stat --reverse --full-index -- Admin\*.py 
 # To import commits from another repo:
 $ git --git-dir=../some_other_repo/.git format-patch -k -1 --stdout <commit SHA> | git am -3 -k
 
-# To view commits that will be pushed:
+# push operations -- bypass gitlab UI
+$ git push \
+        -o merge_request.create \
+        -o merge_request.target=dev \
+        -o merge_request.merge_when_pipeline_succeeds \
+        -o merge_request.remove_source_branch \
+        --set-upstream origin dev-patch1
+
+# To view push commits
 $ git log @{u}..
 
 # To view changes that are new on a feature branch:
@@ -144,8 +152,12 @@ $ git diff master...feature
 # To perform an interactive rebase for the prior 7 commits:
 $ git rebase -i @~7
 
-# To diff files WITHOUT considering them a part of git:
-# This can be used to diff files that are not in a git repo!
+# rebase show patch failures
+$ git rebase --show-current-patch # there is a REBASE_HEAD pseudo-ref that points to the conflicting commit, so you can do:
+$ git show REBASE_HEAD  # to view the commit, or:
+$ git rev-parse REBASE_HEAD # show sha
+
+# To diff files WITHOUT considering them a part of git  This can be used to diff files that are not in a git repo!
 $ git diff --no-index path/to/file/A path/to/file/B
 
 # To pull changes while overwriting any local commits:
@@ -228,13 +240,6 @@ $ git credential-manager configure
 # Error: warning: remote HEAD refers to nonexistent ref, unable to checkout
 Fix: git clone -b master <repo>
 
-# push operations -- bypass gitlab UI
-$ git push \
-        -o merge_request.create \
-        -o merge_request.target=dev \
-        -o merge_request.merge_when_pipeline_succeeds \
-        -o merge_request.remove_source_branch \
-        --set-upstream origin dev-patch1
 
 # forgot to create branch -- https://lostechies.com/derickbailey/2010/06/08/git-d-oh-i-meant-to-create-a-new-branch-first/
  git branch mytopicbranch
@@ -494,3 +499,12 @@ $ git submodule update --remote --merge  # Regularly synchronize submodules with
 
 # change remote
 $ git remote set-url origin https://github.com/accopeland/spack.git
+
+# what files will be pushed
+$ git diff --stat --cached origin/master
+
+# view code of files to be pushed
+$git diff [remote repo/branch]
+
+# To see full file paths of the files that will change, run:
+git diff --numstat [remote repo/branch]

@@ -1,7 +1,7 @@
 # description
 
 # install
-spack:  spack install -v  bbcp cxxflags='-std=c++11'
+spack:  spack install -v  bbcp cxxflags='-std=c++11' # might need spack -k if SSL broken
 
 # alternatives
 bbcp

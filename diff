@@ -37,6 +37,9 @@ zo uncollapse
 dp     L->R (:diffp)
 do     R->L (:diffg)
 :diffu update
+:diffg RE: get from REMOTE
+:diffg BA: get from BASE
+:diffg LO: get from LOCAL
 
 # diff tools
 vimdiff

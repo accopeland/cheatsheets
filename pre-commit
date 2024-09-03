@@ -51,7 +51,7 @@ git commit -m 'add pre-commit config file'
 
 # dry run
 pre-commit run trailing-whitespace [--files=...]
-bpre-commit run --all-files
+pre-commit run --all-files
 
 # bypassing
 1. Commit without running any pre-commit checks:

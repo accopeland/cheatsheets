@@ -1,0 +1,16 @@
+# description
+Notes on python venv
+
+# install
+default
+
+# create
+$ python -m venv env_name
+
+# prompt
+$ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+
+# pipenv
+$ pip install pipenv # pipx?
+$ pipenv shell
+

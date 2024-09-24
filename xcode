@@ -1,9 +1,53 @@
+# description
+Notes on xcode
+
+# install
+download xcode clt 10.14 from https://developer.apple.com/download/more/ and downgrade toolchain
+
+# docs
+
+# config
+
 # clean up Xcode bloat
-> cd /Applications/Xcode.app/Contents/Developer/Platforms/
-> sudo rm -rf AppleTV* Watch* iPhone*
+$ cd /Applications/Xcode.app/Contents/Developer/Platforms/
+$ sudo rm -rf AppleTV* Watch* iPhone*
 # OPTIONAL: save another half-gigabyte if not using SWIFT:
-> sudo rm -rf /Applications/Xcode.app/Contents/Developer/Toolchains/Swift_2.3.xctoolchain
+$ sudo rm -rf /Applications/Xcode.app/Contents/Developer/Toolchains/Swift_2.3.xctoolchain
 # OPTIONAL: save another 3.1GB by removing (not always this large, but can be)
-> rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/
+$ rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/
 # OPTIONAL: remove support for iPhone/iPad/etc simulators (up to another gigabyte or so)
-> rm -rf ~/Library/Developer/CoreSimulator/Devices/*
+$ rm -rf ~/Library/Developer/CoreSimulator/Devices/*
+
+# CLT info
+# see  /Library/Developer/CommandLineTools/usr/bin/
+$ pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
+$ sw_vers
+$ xcodebuild -version # requires Xcode not CLT
+
+# mac / xcode  : https://developer.apple.com/download/more/?=for%20Xcode
+see /Library/Developer/CommandLineTools
+$ xcrun --show-sdk-version
+$ xcode-select --reset
+
+# update xcode
+spotlight: xcode
+AppStore
+$ xcode-select --install
+$ m update list
+
+# Error: missing include file after xcode 11.3  from /usr/include
+# Fix:
+$ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/
+$ gcc --version
+Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/
+c++/4.2.1
+# maybe try
+export CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
+# or maybe
+export CFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+export CCFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+export CXXFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+export CPPFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+# Error:compile linker failure - ld x86_64
+# Fix: pkgutil --pkg-info=com.apple.pkg.CLTools_Executables # download 10.14 from https://developer.apple.com/download/more/ and downgrade toolchain

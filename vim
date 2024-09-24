@@ -198,8 +198,8 @@ call plug#end()    " Initialize plugin system
 
 # vim plugins
 pathogen
-black ?
 ctags / gtags
+unimpaired
 cucumber
 go / vim-go
 julia-vim

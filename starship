@@ -1,16 +1,16 @@
 # description
-rust configurable prompt
+fast configurable prompt written in rust
 
 # install
-brew install starship
-cargo install starship
+$ brew install starship
+$ cargo install starship
 
 # config
-starship config # view
+$ starship config # view
 
 # presets -- https://starship.rs/presets/#bracketed-segments
-starship preset gruvbox-rainbow -o ~/.config/starship.toml
-starship preset bracketed-segments -o ~/.config/starship.toml
+$ starship preset gruvbox-rainbow -o ~/.config/starship.toml
+$ starship preset bracketed-segments -o ~/.config/starship.toml
 
 # dori
 [possible values: bracketed-segments, nerd-font-symbols, no-empty-icons, no-nerd-font, no-runtime-versions, pastel-powerline, plain-text-symbols, pure-preset, tokyo-night]
@@ -21,3 +21,6 @@ starship_init
 
 # quit / exit
 starship_clean
+
+# uninstall
+sh -c 'rm "$(command -v 'starship')"' # Locate and delete the starship binary

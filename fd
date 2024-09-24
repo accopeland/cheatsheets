@@ -6,25 +6,25 @@ https://github.com/sharkdp/fd
 cargo install fd-find
 
 # Simple search:
-fd <search query>
+$ fd <search query>
 
 # Specifying the root directory for the search:
-fd <search query> <directory>
+$ fd <search query> <directory>
 
 # Searching for a particular file extension:
-fd -e <file extension> <search query>
+$ fd -e <file extension> <search query>
 
 # Searching for a particular file name:
-fd -g <file name>.<file extension>
+$ fd -g <file name>.<file extension>
 
 # Search for hidden and ignored files:
-fd -H <search query>
+$ fd -H <search query>
 
 # Excluding specific files or directories:
-fd -E <file or directories which should be excluded> <search query>
+$ fd -E <file or directories which should be excluded> <search query>
 
 # usage
-fd [OPTIONS] [--] [pattern] [path]...
+$ fd [OPTIONS] [--] [pattern] [path]...
     <pattern>
             the search pattern which is either a regular expression (default) or a glob pattern (if
             --glob is used). If no pattern has been specified, every entry is considered a match. If
@@ -50,28 +50,30 @@ fd [OPTIONS] [--] [pattern] [path]...
               'e' or 'empty':        empty files or directories
             This option can be specified more than once to include multiple file types. Searching
 
+# search for a dir containing string
+$ fd -F 5jxy -j 16 -1 -t dir  opt/spack/linux-rocky8-zen2
 # Only search for files:
-fd --type file …
-fd -tf …
+$ fd --type file …
+$ fd -tf …
 
 # performance
  strace -fc fd -j1 --no-ignore --hidden --exclude .git --type file --type symlink>/dev/null
 
 # Find both files and symlinks
-fd --type file --type symlink …
-fd -tf -tl …
+$ fd --type file --type symlink …
+$ fd -tf -tl …
 
 # Find executable files:
-fd --type executable
-fd -tx
+$ fd --type executable
+$ fd -tx
 
 # Find empty files:
-fd --type empty --type file
-fd -te -tf
+$ fd --type empty --type file
+$ fd -te -tf
 
 # Find empty directories:
-fd --type empty --type directory
-fd -te -td
+$ fd --type empty --type directory
+$ fd -te -td
 
 #    -e, --extension <ext>  (Additionally) filter search results by their file extension.
 
@@ -91,13 +93,13 @@ If you want to search for files without extension, you can use the regex '^[^.]+
             If no placeholder is present, an implicit "{}" at the end is assumed.
 
 # find all *.zip files and unzip them:
-fd -e zip -x unzip
+$ fd -e zip -x unzip
 
 # find *.h and *.cpp files and run "clang-format -i .." for each of them:
-fd -e h -e cpp -x clang-format -i
+$ fd -e h -e cpp -x clang-format -i
 
 # Convert all *.jpg files to *.png files:
-fd -e jpg -x convert {} {.}.png
+$ fd -e jpg -x convert {} {.}.png
 
 #    -X, --exec-batch <cmd>...
             Execute the given command once, with all search results as arguments.
@@ -109,10 +111,10 @@ fd -e jpg -x convert {} {.}.png
               '{/.}': basename without file extension
 
 # Find all test_*.py files and open them in your favorite editor:
-fd -g 'test_*.py' -X vim
+$ fd -g 'test_*.py' -X vim
 
 # Find all *.rs files and count the lines with "wc -l ...":
-fd -e rs -X wc -l
+$ fd -e rs -X wc -l
 
 #    -E, --exclude <pattern> Exclude files/directories that match the given glob pattern. This overrides any other
             ignore logic. Multiple exclude patterns can be specified.
@@ -158,4 +160,4 @@ fd -e rs -X wc -l
 
 
 # df -kh
-fd . --full-path /clusterfs/jgi/scratch/dsi/aa/dm_archive/sdm -X ls -l  | awk '{s+=$5}END{print s/(1024*1024*1024*1024)}'
+$ fd . --full-path /clusterfs/jgi/scratch/dsi/aa/dm_archive/sdm -X ls -l  | awk '{s+=$5}END{print s/(1024*1024*1024*1024)}'

@@ -942,6 +942,13 @@ depends_on("libelf@0.8+debug")  # variant or compiler flags:
 depends_on('libelf debug=True') # flags
 depends_on('libelf cppflags="-fPIC"') # flags
 
+# depends_on() version ranges -- https://spack.readthedocs.io/en/latest/packaging_guide.html#dependencies
+depends_on("python@2.4:2.6") # Version ranges are inclusive; @2.4:2.6 means >=2.4 & <=2.6.x
+to specify that a package works with any version of Python 3 (or higher), this would look like:
+depends_on("python@3:") # we leave out the upper bound.
+If you want to say that a package requires Python 2, you can similarly leave out the lower bound:
+depends_on("python@:2") # Notice that we didn’t use @:3. Version ranges are inclusive, so @:3 means “up to and including any 3.x version”.
+
 # when()
 def setup(self):
   # do nothing in the default case
@@ -1857,6 +1864,7 @@ In the pom.xml file, you may see sections like:
 
 # package name not executable name
 executables = ["^rustc$", "^cargo$"]
+<<<<<<< HEAD
 >>>>>>> refs/remotes/origin/master
 
 # package 'with' blocks
@@ -1865,3 +1873,25 @@ with default_args(type="build"):
   depends_on("py-setuptools")
 with when("@3.7:"):
   depends_on(...)
+||||||| a2c2fc2
+>>>>>>> refs/remotes/origin/master
+=======
+
+# Error: rust virtual manifest error
+# Fix: override CargoBuilder::build_directory
+class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path, "cli")
+
+# Error: rust virtual manifest
+# Fix: this does not work since Cargo does not allow repeated options
+class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
+  @property
+  def build_args(self):
+      return ["--root", "out", "--path", "cli", "--verbose"]
+
+# Debugging -- output in log files
+llnl.util import tty
+tty.warn(...)
+>>>>>>> refs/remotes/origin/master

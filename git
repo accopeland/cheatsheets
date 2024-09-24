@@ -1,6 +1,48 @@
 ---
 tags: [ vcs ]
 ---
+
+# : branch separator for push to remote
+# a:b a=local b=remote
+$ git push origin a:b # push my local branch 'a' to server as 'b'
+
+# upstream @{u} -- shorthand for @{upstream}
+$ git merge @{u} # same as 'git merge origin/master'
+
+# @{n}
+# (previous) commit/branch  reference
+$ git show HEAD@{2.months.ago}
+$ git show HEAD@{3} # HEAD~3 ?
+
+# ~  first parent
+HEAD^ === HEAD~
+HEAD^^^ === HEAD~3
+
+# to show second parent of (great grandparent) of commit
+$ git show HEAD~3^2
+
+# double dot
+# a .. b  -- range of commits reachable from 'a' but not from 'b'
+$ git log master..expt # show what's in expt that's not in master
+$ git log expt..master # commits in master not in (reachable from) expt
+
+# see what you will push to remote
+$ git log origin/master..HEAD
+
+# ^  parent
+$ git show HEAD^ # show parent of HEAD (ie previous commit)
+$ git show d921970^2 # show parent of parent of d92....
+$ git show HEAD^^^
+
+# --not
+$ git log refA refB --not refC
+$ git log refA refB ^refC # see all commite reachable from refA or refB but NOT from refC
+
+# triple dot
+# a...b
+specify all commits that are reachable by either 'a' or 'b' but NOT by both of them
+$ git log master..expt # show what's in master or expt but not any common references
+
 # To set your identity:
 $ git config --global user.name <name>
 $ git config --global user.email <email>
@@ -149,6 +191,7 @@ $ git log @{u}..
 # To view changes that are new on a feature branch:
 $ git log -p feature --not master # 'feature' is a <path>
 $ git diff master...feature
+$ git diff develop...acc-pkg -- var/spack/repos/builtin/packages # just my new packages
 
 # log symmetric difference -- useful for merges
 "<commit1>...<commit2>" # symmetric difference between two commits
@@ -212,6 +255,18 @@ $ git remote prune $(git remote | tr '\n' ' ')
 $ git show :/cool
 
 # undo -- see https://github.blog/2015-06-08-how-to-undo-almost-anything-with-git/
+
+# undo reset --hard
+$ git reset HEAD{1}
+or
+$ git reflog # find last good commit
+$ git reset <lastgoodhash>
+# ex:
+#$ git reflog
+##3f6db14 HEAD@{0}: HEAD~: updating HEAD # ie HEAD 0 positions ago (the current position) is 3f6db14; it was obtained by resetting to HEAD~.
+##d27924e HEAD@{1}: checkout: moving from d27924e0fe16776f0d0f1ee2933a0334a4787b4c # HEAD 1 position ago (the state before the reset) is d27924e.
+##[...]
+##$ git reset d27924e
 
 # To undo parts of last commit in a specific file:
 $ git checkout -p HEAD^ -- /path/to/file
@@ -373,6 +428,31 @@ $ git checkout <COMMIT_HASH>~<NUMBER> -- <RELATIVE_PATH_TO_FILE>
 # restoring a file from a certain commit
 $ git checkout <COMMIT_HASH> -- <RELATIVE_PATH_TO_FILE>
 
+# show unstaged files
+$ git diff --name-only
+$ git status --porcelain
+$ git ls-files ...
+
+# show staged
+$ git diff --name-only --staged
+
+# show staged files with unstaged changes
+$ git status -s | awk '/MM / {print $2}'
+
+# show untracked files
+$ git ls-files -o
+
+# show tracked files with unstaged changes
+$ git diff --name-only
+$ git ls-files . -m.
+
+# show untracked but not ignored files
+$ git ls-files . --exclude-standard --others
+$ git status --porcelain --untracked-files
+
+Put them together to get all files which are not ignored and are untracked or have unstaged changes.
+
+git ls-files . --exclude-standard --others -m
 # creating a diff file from unstaged changes for a specific folder
 $ git diff -- <RELATIVE_PATH_TO_FOLDER> changes.diff
 
@@ -487,7 +567,8 @@ $ git --no-pager <...>
 $ git for-each-ref --format="%(committerdate) %09 %(refname) %09 %(authorname)"
 
 # deleting remote branch
-$ git push origin :<BRANCH_NAME>
+$ git push origin :<BRANCH_NAME> # old form
+$ git push --delete origin
 
 # deleting remote branch localy
 $ git branch -r -D <BRANCH_NAME>
@@ -513,6 +594,8 @@ $ git branch --contains <COMMIT>
 # find branch containing file
 $ git log --all -m --find-object `git hash-object that/file`
 
+# find commit containing file
+$ git log -- full/path/to/file
 
 # updating from a forked repository
 $ git remote add upstream https://github.com/Microsoft/TypeScript.git
@@ -577,3 +660,28 @@ $ git archive --format=tar --prefix=docs/ HEAD:Doc/ > v1.4.0-docs.tar # tar curr
 
 # to create a tarball of my changed files
 $ git archive --format=tar HEAD $(git diff --name-only develop...acc-dev -- var/spack/repos/builtin/packages) > /tmp/accopeland/acc-dev.2.pkg.tar
+
+# create tarball of files in  a commit
+git diff-tree -r --no-commit-id --name-only --diff-filter=ACMRT $commit_id | tar -czf file.tgz -T -
+
+# create tarball of changed files
+# see https://tosbourn.com/using-git-to-create-an-archive-of-changed-files/
+$ git archive -o update.zip HEAD $(git diff --name-only HEAD^)
+$ git archive -o patch.zip a9359f9 $(git diff --name-only a9359f9^..a9359f9)
+
+# Deleting a remote branch
+git push origin --delete <branch>  # Git version 1.7.0 or newer
+git push origin -d <branch>        # Shorter version (Git 1.7.0 or newer)
+git push origin :<branch>          # Git versions older than 1.7.0
+
+# Deleting a local branch
+git branch --delete <branch>
+git branch -d <branch> # Shorter version
+git branch -D <branch> # Force-delete un-merged branches
+
+# Deleting a local remote-tracking branch
+git branch --delete --remotes <remote>/<branch>
+git branch -dr <remote>/<branch> # Shorter
+
+git fetch <remote> --prune # Delete multiple obsolete remote-tracking branches
+git fetch <remote> -p      # Shorter

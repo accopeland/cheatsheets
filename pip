@@ -73,6 +73,11 @@ or
 pip3 install pipreqs
 pipreqs <PRJ>
 
+# dependencies e.g. for spack development
+$ spack load py-pip
+$ pip list
+$ pip install --dry-run --ignore-installed --prefix=/tmp/accopeland/foo dvc-ssh # or other spec
+
 # python / pip
 python -m venv venv
 source venv/bin/activate

@@ -206,6 +206,7 @@ call plug#end()    " Initialize plugin system
 
 # vim plugins
 ctags / gtags
+unimpaired
 cucumber
 go / vim-go
 julia-vim

@@ -1,5 +1,5 @@
 # description
-rust configurable prompt
+fast configurable prompt written in rust
 
 # install
 $ brew install starship
@@ -42,3 +42,6 @@ style = "fg:#58A6FF"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
+
+# uninstall
+sh -c 'rm "$(command -v 'starship')"' # Locate and delete the starship binary

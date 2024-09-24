@@ -287,3 +287,18 @@ EXPLAIN ANALYZE SELECT name FROM students JOIN exams USING (sid) WHERE name LIKE
 select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date" as dt date."$date" as dt,
 open."$numberDecimal" as op, close."$numberDecimal" as cls, dividend."$numberDecimal" as div ,
 split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;
+
+# macro(v1.1)
+D create or replace macro my_summarize(table_name) as table
+  select
+  unnest([*columns('alias_.*')]) as column_name,
+  unnest([*columns('min_.*')]) as min_value,
+  unnest([*columns('max_.*')]) as max_value
+  from (
+  select any_value(alias(columns(*))) as "alias_\0",
+  min(columns(*))::varchar as "min_\0",
+  max(columns(*))::varchar as "max_\0"
+  from query_table(table_name::varchar));
+D select * from my_summarize('https://blobs.duckdb.org/data/ontime.parquet') limit 4;
+
+

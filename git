@@ -67,7 +67,8 @@ $ git reset --hard <remote>/<branch>
 $ git update-ref -d HEAD
 
 # To remove untracked files:
-$ git clean -f -d
+$ git clean -n -f -d # dry run first
+$ git clean -f -d # must have -f to actually rm anything
 
 # To remove untracked and ignored files:
 $ git clean -f -d -x
@@ -146,8 +147,12 @@ $ git push \
 $ git log @{u}..
 
 # To view changes that are new on a feature branch:
-$ git log -p feature --not master
+$ git log -p feature --not master # 'feature' is a <path>
 $ git diff master...feature
+
+# log symmetric difference -- useful for merges
+"<commit1>...<commit2>" # symmetric difference between two commits
+$ git log A B --not $(git merge-base --all A B) # same as '$ git log A...B'
 
 # To perform an interactive rebase for the prior 7 commits:
 $ git rebase -i @~7
@@ -156,6 +161,17 @@ $ git rebase -i @~7
 $ git rebase --show-current-patch # there is a REBASE_HEAD pseudo-ref that points to the conflicting commit, so you can do:
 $ git show REBASE_HEAD  # to view the commit, or:
 $ git rev-parse REBASE_HEAD # show sha
+
+# rebase -- where am i
+$ git status
+$ git rebase --edit-todo
+
+# diff details
+# see also 'git ls-files -u'
+$ git show :1:file > file.common
+$ git show :2:file > file.ours
+$ git show :3:file > file.theirs
+
 
 # To diff files WITHOUT considering them a part of git  This can be used to diff files that are not in a git repo!
 $ git diff --no-index path/to/file/A path/to/file/B
@@ -219,7 +235,7 @@ $ git tag -s v1.5 -m 'my signed 1.5 tag'
 # Sign a commit:
 $ git commit -a -S -m 'Signed commit'
 
-# check any signatures it finds and list them in its output:
+# to list signatures
 $ git log --pretty="format:%h %G? %aN %s"
 
 # Defined the key to use for signing commits:
@@ -281,8 +297,32 @@ edit as needed
 $ git diff what/ever/is/messed/up
 $ git merge
 
+# merge - always use 'our' changes
+$ git merge -s ours <branch>
+
+# merge individual files and use 'our' version
+$ git merge-file --ours <filetomerge>
+
+# rerere
+# ...
+
 # mergetool
 $ git mergetool
+
+# merge vimdiff - https://gist.github.com/karenyyng/f19ff75c60f18b4b8149
+$ git config --global merge.conflictstyle diff3
+$ git config --global merge.tool vimdiff
+$ git config --global diff.tool vimdiff
+$ git config --global mergetool.vimdiff.layout="(LOCAL,BASE,REMOTE)/MERGED"
+$ git mergetool
+]c  # next change
+[c # prev change
+:diffg [LO|BA|RE]
+...
+:wqa  # when done
+
+# to show sha of branch
+$ git rev-parse <branch>
 
 # https://gist.github.com/5310/d46b4d7fd69741a118717d28f2d9d789
 # name of the current banch and nothing else (for automation)
@@ -307,6 +347,9 @@ $ git diff --dirstat master
 
 # undo last just made commit
 $ git reset HEAD~
+
+# undo an undo
+$ git reset HEAD@{1}
 
 # list last 20 hashes in reverse
 $ git log --format="%p..%h %cd %<(17)%an %s" --date=format:"%a %m/%d %H:%M" --reverse -n 20
@@ -411,6 +454,10 @@ C:\Users\Bykov\.gitconfig
     cmd = \"C:/Program Files (x86)/Meld/Meld.exe\" \"$LOCAL\" \"$REMOTE\"
     path = C:/Program Files (x86)/Meld/Meld.exe
 
+# show full diff of what would happen if merging two branches
+$ git diff master...branch
+$ git diff master # NB Wrong! this will be wrong if master has moved forward since creating 'branch'
+
 # viewing differences between current and other branch
 $ git difftool -d BRANCH_NAME
 
@@ -460,8 +507,12 @@ $ git branch -r
 # list all local branches
 $ git branch -l
 
-# find to which branch a given commit belongs
+# find branch containing commit
 $ git branch --contains <COMMIT>
+
+# find branch containing file
+$ git log --all -m --find-object `git hash-object that/file`
+
 
 # updating from a forked repository
 $ git remote add upstream https://github.com/Microsoft/TypeScript.git
@@ -504,7 +555,25 @@ $ git remote set-url origin https://github.com/accopeland/spack.git
 $ git diff --stat --cached origin/master
 
 # view code of files to be pushed
-$git diff [remote repo/branch]
+$ git diff [remote repo/branch]
 
 # To see full file paths of the files that will change, run:
 git diff --numstat [remote repo/branch]
+
+# to trace function changes over time
+git log -L :<fun>:<path>
+
+# to tell git that .py (.rs,.go, etc.) files should use python regexp for diff
+# modify .gitattributes
+; source of authlib/.gitattributes
+*.py diff=python
+
+# to recover deleted branch
+$ git reflog # find the sha1 of the commit that was on the top of your deleted branch, then
+$ git checkout -b <branch> <sha1>
+
+# archive
+$ git archive --format=tar --prefix=docs/ HEAD:Doc/ > v1.4.0-docs.tar # tar current head’s Doc/ dir into v1.4.0-docs.tar, with the prefix docs/
+
+# to create a tarball of my changed files
+$ git archive --format=tar HEAD $(git diff --name-only develop...acc-dev -- var/spack/repos/builtin/packages) > /tmp/accopeland/acc-dev.2.pkg.tar

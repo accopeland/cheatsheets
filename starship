@@ -2,22 +2,43 @@
 rust configurable prompt
 
 # install
-brew install starship
-cargo install starship
+$ brew install starship
+$ cargo install starship
 
 # config
-starship config # view
+$ starship config # view
 
 # presets -- https://starship.rs/presets/#bracketed-segments
-starship preset gruvbox-rainbow -o ~/.config/starship.toml
-starship preset bracketed-segments -o ~/.config/starship.toml
+$ starship preset gruvbox-rainbow -o ~/.config/starship.toml
+$ starship preset bracketed-segments -o ~/.config/starship.toml
 
 # dori
-[possible values: bracketed-segments, nerd-font-symbols, no-empty-icons, no-nerd-font, no-runtime-versions, pastel-powerline, plain-text-symbols, pure-preset, tokyo-night]
-starship preset tokyo-night -o ~/.config/starship.toml
+options:
+bracketed-segments,
+nerd-font-symbols,
+no-empty-icons,
+no-nerd-font,
+no-runtime-versions,
+pastel-powerline,
+plain-text-symbols,
+pure-preset,
+tokyo-night
+
+# presets
+$ starship preset tokyo-night -o ~/.config/starship.toml
 
 # use
-starship_init
+$ starship_init
 
 # quit / exit
-starship_clean
+$ starship_clean
+
+# env
+???
+
+# directory truncation
+[directory]
+style = "fg:#58A6FF"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"

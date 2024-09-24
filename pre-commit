@@ -2,9 +2,9 @@
 Run series of checks before git commit on staged files and rollback if any checks fail
 
 # install
-pipx install pre-commit
-brew install pre-commit
-pip install pre-commit
+$ pipx install pre-commit
+$ brew install pre-commit
+$ pip install pre-commit
 #conda install -c conda-forge pre-commit
 
 # automatically enable on repos
@@ -14,7 +14,7 @@ pre-commit init-templatedir ~/.git-template
 ##Then when you clone any repo with a .pre-commit-config.yaml file, pre-commit hooks will be autoenabled.
 
 # update
-pre-commit autoupdate [options]
+$ pre-commit autoupdate [options]
 Auto-update pre-commit config to the latest repos' versions.
 Options:
 --bleeding-edge: update to the bleeding edge of the default branch instead of the latest tagged version (the default behaviour).
@@ -50,14 +50,12 @@ git add .pre-commit-config.yaml
 git commit -m 'add pre-commit config file'
 
 # dry run
-pre-commit run trailing-whitespace [--files=...]
-pre-commit run --all-files
+$ pre-commit run trailing-whitespace [--files=...]
+$ pre-commit run --all-files
 
 # bypassing
-1. Commit without running any pre-commit checks:
-	git commit --no-verify
-2. Commit without running a subset of pre-commit checks:
-	SKIP=flake8,trailing-whitespace git commit
+$ git commit --no-verify  #1. Commit without running any pre-commit checks:
+$ SKIP=flake8,trailing-whitespace git commit #2. Commit without running a subset of pre-commit checks:
 
 # config example
 repos:
@@ -94,9 +92,7 @@ post-rewrite
 manual
 
 # fixing errors
-pre-commit run --verbose
-Note any files with 'fixes'
-Run vim + Stripwhitespace
-git add <files>
-recheck:pre-commit run --verbose
-git commit -m "..."
+$ pre-commit run --verbose #Note files with 'fixes',  vim :Stripwhitespace
+$ git add <files> # !!!
+$ pre-commit run --verbose # recheck
+$ git commit -m "..."

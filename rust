@@ -10,7 +10,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update
 
 # spack install
-...
+must manually update rust-bootstrap and make sure it installs properly
+see below for how to find sha256 checksums you'll need
+must specify version manually e.g.
+spack install --verbose rust@1.81
+
+# spack install errors
+x.py errors seems to be due to having an invalid (too old) bootstrap
+looks like to compile 1.N bootstrap 1.(N-1) is required
 
 # update
 rustup update
@@ -85,11 +92,27 @@ rustup default nightly
 # bootstrap -- bootstrap version matched to specific rust version
 # how to figure this out ?
 # https://github.com/rust-lang/rust/blob/master/RELEASES.md
-# see source code ?
+# see src/stage0.txt
+
+
+# bump bootstrap compiler
+./x.py run src/tools/bump-stage0
 
 # checksums
+wget https://static.rust-lang.org/dist/rust-1.79.0-x86_64-unknown-linux-gnu.tar.gz.sha256
+
+# checksums
+wget https://static.rust-lang.org/dist/channel-rust-1.80.0.toml
 wget https://static.rust-lang.org/dist/2019-02-16/channel-rust-nightly.toml
 
 # python3.11' './x.py' 'build' ...
 # Error: ProcessError: Command exited with status 1:
 # Fix: ???
+
+# python3.12' './x.py' 'build' ...
+# Error: ProcessError: Command exited with status 1:
+# Fix: ???
+
+# Error: found a virtual manifest at ... instead of a package manifest
+# Fix: cargo install pkg_rs/foo (see https://stackoverflow.com/questions/61189179/found-a-virtual-manifest-at-path-instead-of-a-package-manifest)
+$ cargo install --path cli  --root /tmp/accopeland/jj --verbose

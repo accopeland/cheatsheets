@@ -642,6 +642,10 @@ packages.yaml
 #----------------------
 # environments
 #----------------------
+# to find environment location and contents
+$ ls $SPACK_ROOT/var/spack/environments
+$ ls ~/spack/var/spack/environments/<envname>/.spack-env/view #symlink
+
 # emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
 #  upgrade entire software stack in an environment and clean up old package versions, run the following:
 $ spack env activate myenv
@@ -1854,3 +1858,10 @@ In the pom.xml file, you may see sections like:
 # package name not executable name
 executables = ["^rustc$", "^cargo$"]
 >>>>>>> refs/remotes/origin/master
+
+# package 'with' blocks
+with default_args(type="build"):
+  depends_on("py-setuptools@45:", when="@1.1:")
+  depends_on("py-setuptools")
+with when("@3.7:"):
+  depends_on(...)

@@ -1,0 +1,54 @@
+# description
+network utililty
+
+# install 
+brew install netcat
+spack install nmap (ncat)
+
+# doc
+
+# Use netcat to listen for incoming TCP connections on port 3000:
+This instance of netcat is considered a "listener" and is now waiting for a connection.
+nc -l -p 3000 #Note: old versions of netcat consider using -l and -p incorrect usage e.g. this would work instead for old versions of netcat nc -l 3000
+
+# Use netcat to establish a TCP connection (run in a new terminal window so as to not conflict with listening netcat instance):
+nc localhost 3000 #You've set up both ends of the TCP connection. type into one terminal and hit <Enter>, you see what you typed in the other window. 
+
+# to send HTTP request 
+#  need two terminal windows again
+nc -l -p 3000 # In the first we'll again be listening on port 3000:
+curl http://127.0.0.1:3000/ # in other use curl to send HTTP request to localhost:3000 
+Now in the listening netcat terminal window type the following, then <Enter> and then stop the netcat instance w <Ctrl-c> to see the HTML response 
+
+<h1>hello world</h1>
+If you try this from both the terminal and from a proper browser request, you'll notice a slight difference between sending a curl request and sending a HTTP request from your browser:
+
+curl request:
+
+GET / HTTP/1.1
+User-Agent: curl/7.37.1
+Host: 127.0.0.1:3000
+Accept: */*
+browser request:
+
+GET / HTTP/1.1
+Host: 127.0.0.1:3000
+Connection: keep-alive
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36
+DNT: 1
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en-US,en;q=0.8
+
+# You can turn netcat into a temporary webserver (you'll need a index.html file):
+nc -l -p 8888 < index.html
+Then hit http://127.0.0.1:8888/index.html in your web browser
+Note: use a loop for have netcat server indefinitely
+while true; do nc -l -p 8888 < index.html; done
+
+# You can stream files from a listener to a client with netcat:
+Listener:
+nc -v -w 30 -l -p 8080 < some-file.txt
+Client:
+nc -v -w 2 127.0.0.1 8080 > stream-content.txt

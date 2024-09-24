@@ -182,11 +182,17 @@ ctrl-p
 # before the cursor:
 nmap <F2> "= system("uuidgen")[:-2]<C-M>P
 
-# plugin vim-plug
-# run in vim with :PlugInstall
-# default install location for plugins:  '~/.vim/plugged'
-#curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-##
+# plugin vim-plug (https://github.com/junegunn/vim-plug)
+Add new plugins to .vimrc
+vim :PlugInstall
+
+# plugin vim-plug default install location
+~/.vim/plugged
+
+# install vim-plug
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# vim-plug .vimrc mods
 call plug#begin()
 Plug 'junegunn/vim-easy-align'
 Plug 'https://github.com/junegunn/vim-github-dashboard.git'
@@ -194,11 +200,11 @@ Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
 Plug 'fatih/vim-go', { 'tag': '*' }  " Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
 Plug '~/my-prototype-plugin'
 Plug 'flazz/vim-colorschemes' # add  to .vimrc
+Plug 'tpope/vim-sensible'
+Plug 'tpope/vim-unimpaired'
 call plug#end()    " Initialize plugin system
 
 # vim plugins
-pathogen
-black ?
 ctags / gtags
 cucumber
 go / vim-go

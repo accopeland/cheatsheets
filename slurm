@@ -341,3 +341,38 @@ packages:
 > --with-pm=slurm \
 > --with-pmix=/home/user/bin/pmix_4.1.2/ \
 > --with-pmi=pmix
+
+# topology
+https://slurm.schedmd.com/topology.conf.html
+SwitchName=ibsw20 Nodes=compute[046-057,060-061] # reqd form
+# ibnetdiscover -- see infiniband
+ibnetdiscover | awk -v FS='[#"]' '
+    BEGIN{c=0}
+    $1~/Switch/     {c++; j=0; split($5,arr,"[;:]" );      sw[c,0]=arr[2] }
+    $1~/\[[0-9]+\]/ && $2~/^H-/ { j++; split($5,arr," " ); sw[c,j]=arr[1] }
+    END {
+            # print("final count of switches=" c)
+            for (i=1; i<=c; i++) {
+                printf( "SwitchName=s" i, sw[i,0] )     # show switch number.
+                split("", out , ":" )             # delete array "out".
+                split("", indices , ":" )         # delete array "indices".
+                j=0
+                while (sw[i,++j]) {               # for all array elements.
+                    if (out[sw[i,j]]++ < 1) {     # Is it a new value?
+                        indices[sw[i,j]]=j        # add to array "indices".
+                    }
+                }
+                n=asorti(indices)                 # sort the keys of indices
+                # printf( "%s ", sw[i,0] )
+                printf ( " Nodes=" )
+                for (k=1; k<n; k++) {            # all values for a switch.
+                    printf( "%s,", indices[k] )
+                }
+                printf( "%s\n", indices[n] )
+            }
+    } ' | sed -r '/Nodes=$/d' | awk '{sub(/[0-9]+/, ++i)}1; END{printf( "SwitchName=s%s Switches=s[1-%s]\n", NR+1, NR )}'
+
+
+# Error: "*** An error occurred in MPI_Init \n*** on a NULL communicator"
+# Fix: ???
+

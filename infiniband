@@ -1,5 +1,5 @@
 # description
-Infiniband notes
+Notes on infiniband, esp for perlmutter and dori
 
 # docs
 https://indico.cern.ch/event/218156/attachments/351726/490091/9_OFED_SW_stack.pdf
@@ -17,6 +17,31 @@ $ /usr/bin/ib_read_lat
 $ /usr/bin/ib_send_bw
 $ /usr/bin/ib_send_lat
 
+# docs
+https://indico.cern.ch/event/218156/attachments/351726/490091/9_OFED_SW_stack.pdf
+https://christian.kuelker.info/en_US/Quick-Guide/DevOps/Network/infiniband.html
+https://docs.nvidia.com/networking/display/mlnxofedv461000/infiniband+fabric+utilities
+
+# install
+kernel mods
+lots of nvidia diag s/w
+https://developer.nvidia.com/networking/infiniband-software
+https://www.mellanox.com/downloads/ofed/MLNX_OFED-24.07-0.6.1.0/MLNX_OFED_SRC-24.07-0.6.1.0.tgz
+
+# The State of InfiniBand 2022
+In 2022, InfiniBand will operate at a signaling rate of 100 Gbps and an
+effective throughput of 200 Gbps for a single link and up to 1200 Gbps for 12
+links. This is a leap from 2018’s High Data Rate (HDR) technology, which
+offered a 50 Gbps signaling rate and up to 600 Gbps throughput with 12 links.
+   InfiniBand uses a duplex link system, with most systems using a 4-link/lane
+connector known as QSFP. NDR technology, to be introduced in 2022, will allow
+the use of 8x links with NDR switch ports using OSFP (Octal Small Form Factor
+Pluggable) connectors and can be used with active copper and fiber optic
+cables.
+   InfiniBand continues to provide Remote Direct Memory Access (RDMA)
+capabilities, resulting in low CPU overhead, and uses a switched fabric
+topology where all transfers begin and end at a channel adapter.
+
 # kernel modules
 $ lsmod |grep ib
 
@@ -29,17 +54,22 @@ $ mstconfig -d 04:00.0 q
 # device info
 $ ibv_devinfo
 
-# ibstat
+# ibstat -  query basic status of InfiniBand device(s)
 $ ibstat
 
 # interface
 $ ip link show ib0
 
-# RoCE (RXE)
-# t RDMA over Converged Ethernet (RoCE),
+# ibstatus - query basic status of InfiniBand device(s)
+$ ibstatus
+
+# interface
+$ ip link show ib0
+
+# RoCE (RXE) - software RDMA over Converged Ethernet (RoCE),
 rxe_cfg
 
-# rdma
+# rdma - rdma tool
 $ rdma link show
 
 # list available RDMA devices
@@ -54,8 +84,8 @@ $ ibswitches
 # iblinkinfo --  show device names, Port GUIDs, number of virtual lanes, signal transfer rates, state, physical state, connections
 $ iblinkinfo
 
-# ibdiagnet
 # ibdiagnet is distributed as part of ibutils2 package which is part of MLNX_OFED
+$ iblinkinfo
 
 # diagnose subnet -- show potential problems on your subnet. You can run it without options.
 # -lw <1x|4x|12x> specifies expected link width (virtual lanes) for adapter; checks if it is running as intended.
@@ -100,11 +130,27 @@ $ dmesg | grep -Ei "Mellanox|InfiniBand|QLogic|Voltaire"
 
 # debug: does kernel see it
 $ ls -l /sys/class/infiniband
+$ cat  /sys/class/infiniband/mlx5_0/ports/1/state #mlx5_0 mlx5_1
 
 # debug: check rate
 $ cat /sys/class/infiniband/<kernel module>/ports/<port number>/rate
 
 # perfquery
+$ ./perfquery           # read local port's performance counters
+$ ./perfquery 32 1              # read performance counters from lid 32, port 1
+$ ./perfquery -x 33 1   # read extended performance counters from lid 32, port 1
+$ ./perfquery -a 32             # read performance counters from lid 32, all ports
+$ ./perfquery -r 32 1   # read performance counters and reset
+$ ./perfquery -x -r 32 1        # read extended performance counters and reset
+$ ./perfquery -R 0x20 1 # reset performance counters of port 1 only
+$ ./perfquery -x -R 0x20 1      # reset extended performance counters of port 1 only
+$ ./perfquery -R -a 32  # reset performance counters of all ports
+$ ./perfquery -R 32 2 0x0fff    # reset only error counters of port 2
+$ ./perfquery -R 32 2 0xf000    # reset only non-error counters of port 2
+$ ./perfquery -a 32 1-10        # read performance counters from lid 32, port 1-10, aggregate output
+$ ./perfquery -l 32 1-10        # read performance counters from lid 32, port 1-10, output each port
+$ ./perfquery -a 32 1,4,8       # read performance counters from lid 32, port 1, 4, and 8, aggregate output
+$ ./perfquery -l 32 1,4,8       # read performance counters from lid 32, port 1, 4, and 8, output each port
 
 # mode
 $ cat   /sys/class/net/ib0/mode
@@ -203,3 +249,141 @@ $ qperf -v -i mlx4_0:1 192.0.2.1 rc_bi_bw
 
 # display the RC streaming one-way bandwidth:
 $ qperf -v -i mlx4_0:1 192.0.2.1 rc_bw
+
+# infiniband perftest
+ib_atomic_bw - client/server Calculates BW of RDMA Atomic transactions between a pair of machines
+ib_atomic_lat - client/server Calculates latency of RDMA Atomic transaction of message_size between a pair of machines
+ib_read_bw - client/server Calculates BW of RDMA read between a pair of machines. Read available only in RC connection mode
+ib_read_lat - client/server Calculates latency of RDMA read operation of message_size between a pair of machines. perform a ping pong benchmark
+ib_send_bw - client/server Calculates BW of SEND between a pair of machines. supports Bidirectional (simul send/rcv), change of MTU size, tx size, number of iteration, message size,etc
+ib_send_lat - client/server Calculates latency of sending packet in message_size between a pair of machines. perform a ping pong benchmark
+ib_write_bw - client/server Calculates BW of RDMA write between pair of machines.supports features such as Bidirectional, etc.
+ib_write_lat - client/server Calculates the latency of RDMA write operation of message_size between a pair of machines.
+raw_ethernet_bw - client/server Calculates the BW of SEND between a pair of machines.
+raw_ethernet_lat - client/server Calculates the latency of sending a packet in message_size between a pair of machines. ping pong benchmark on which you send packet only if you receive one
+
+# infinibandn perftest Native Ethernet
+$ raw_ethernet_burst_lat
+
+# perf udp
+$ sockperf server -i 11.4.3.3 # on server
+$ sockperf ping-pong -t 4 -i 11.4.3.3 # on client
+
+# ibdev2netdev
+ibdev2netdev is one of the most useful scripts in MLNX_OFED package as it maps the adapter port to the net device.
+http://www.mellanox.com/downloads/ofed/MLNX_OFED-3.4-2.0.0.0/MLNX_OFED_LINUX-3.4-2.0.0.0-rhel7.2-x86_64.tgz
+
+# mlnx_perf
+# determine interface using
+$ mlnx_perf -i ib0 -t 1 -c 5
+
+
+# commands
+mst
+ib2ib_setup - Generate files required  for preparing the network to work with IB Router
+ibacm - address and route resolution services for InfiniBand
+ib_acme -test and configuration utility for the IB ACM
+ibaddr - query InfiniBand address(es)
+ibcongest - Analyze congestion for traffic schedule in a "schedule-file" or use automatically generated schedule of all-to-all-shift.
+ibdev2netdev -  one of the most useful scripts in MLNX_OFED package as it maps the adapter port to the net device.
+ibdiagnet -  InfiniBand Fabric Diagnostic Tool; a basic tool for InfiniBand fabric discovery, error detection and diagnostic
+ibfindnodesusing.pl -    find a list of nodes which are routed through switch:port
+ibidsverify.pl
+ibhosts -show InfiniBand host nodes in topology
+ibinfo - wrap some useful commands
+ibnetdiscover - performs IB subnet discovery and outputs a human readable topology file.
+ibnodes - either walks the IB subnet topology or uses an already saved topology file and extracts the IB nodes (CAs and switches).
+ibping -
+ibportstate - query port state and port physical state of an IB port
+ibccquery (8) - query congestion control settings/info
+ibqueryerrors -
+ibroute -
+ibrouters -
+ibsim -
+ibsim-run -
+ibsrpdm -
+ibsysstat -
+ibtopodiff -
+ibtracert -
+ibv_asyncwatch -
+ibv_rc_pingpong - Run a simple ping-pong test over InfiniBand via the reliable connected (RC) transport.
+ibv_srq_pingpong -
+ibv_uc_pingpong -
+ibv_ud_pingpong -
+ibv_xsrq_pingpong -
+
+# ib2slurm
+
+# slurm topology file
+see 'slurm'
+https://github.com/LLNL/ibtopo
+
+# diag perlmutter
+$ /sbin/lspci -v | grep Mellan
+23:00.0 Infiniband controller: Mellanox Technologies MT28908 Family [ConnectX-6]
+        Subsystem: Mellanox Technologies Device 0074
+23:00.1 Infiniband controller: Mellanox Technologies MT28908 Family [ConnectX-6]
+        Subsystem: Mellanox Technologies Device 0074
+$ lsmod | grep mlx
+mlx5_ib               458752  0
+ib_uverbs             151552  13 rdma_ucm,mlx5_ib
+ib_core               450560  8 rdma_cm,ib_ipoib,iw_cm,ib_umad,rdma_ucm,ib_uverbs,mlx5_ib,ib_cm
+mlx5_core            2093056  1 mlx5_ib
+psample                20480  1 mlx5_core
+mlxdevm               176128  1 mlx5_core
+mlx_compat             24576  15 rdma_cm,ib_ipoib,mlxdevm,rpcrdma,xprtrdma,iw_cm,svcrdma,ib_iser,ib_umad,ib_core,rdma_ucm,ib_uverbs,mlx5_ib,ib_cm,mlx5_core
+tls                   106496  2 bonding,mlx5_core
+mlxfw                  32768  1 mlx5_core
+
+# find guid
+$ ibstat -p
+
+# subnet manager -- SM = Subnet Manager
+vim /etc/default/opensm
+
+# host adapter info
+$ ibstat
+
+# extended hosts on network
+$ ibhosts
+
+# check switches
+# see also /sys/class/infiniband/DEVICE_NAME
+$ ibswitches
+$ iblinkinfo
+
+# ifconfig
+$ ifconfig -a |grep ib
+
+# troubleshooting
+$ mkdir libdiagnet
+$ cd libdiagnet
+$ ibdiagnet -ls 10 -lw 4x -vlr > ibdiagnet.out
+
+# link test
+Usage: mpilinktest options
+with the following optional options (default values in parenthesis):
+  [-i <iterations>]         number of pingpong iterations               (3)
+  [-I <iterations>]         number of warmup pingpong iterations        (0)
+  [-s <size>]               message size in Bytes                  (131072)
+  [-k <size>]               message size in KBytes                   (128k)
+  [-M 0|1]                  randomized processor numbers                (0)
+  [-S 0|1]                  do serialized test                         (no)
+  [-Y 0|1]                  parallel(1) or serial(0) I/O for protocol   (1)
+  [-Z <num>]                test top <num> slowest pairs again     (ntasks)
+  [-V ]                     show version
+
+# pingpong
+Usage: pingponganalysis options <insionfn>
+with the following optional options (default values in parenthesis):
+  [-a]                   generate accesspattern file (PPM)
+  [-A]                   generate accesspattern file (ASCII)
+  [-b]                   generate bandwidthpattern file (PPM)
+  [-B]                   generate badlink list (ASCII)
+  [-l] <minbw>           min. bandwidth, conection below will be reported  (def. 1 MB/s)
+  [-L] <maxbw>           max. bandwidth, conection above will be reported  (def. 10000 MB/s)
+  [-p]                   generate postscript report
+  [-v]                   verbose mode
+  [-V]                   print version
+
+>>>>>>> 300eb6d (updates from dori)

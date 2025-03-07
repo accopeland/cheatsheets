@@ -419,7 +419,6 @@ Tl;e'  <infile
 Above sed collects input in pattern space until it has enough to successfully pass the substitution Test and stop branching back to the the :label. When it does, it executes nl with input represented as a <<here-document for all of the rest of its pattern-space.
 
 The workflow is like this:
-
 /^@@.*start$/!b
 if an ^entire line$ does !not /match/ the above pattern, then it is branched out of the script and autoprinted - so from this point on we are only working with a series of lines which began with the pattern.
 s//nl <<\\@@/
@@ -431,9 +430,7 @@ this s///ubstitution can only be successful after a start is encountered and onl
 Tl
 the Test command branches to a label (if provided) if a successful substitution has not occurred since the last time an input line was pulled into pattern space (as I do w/ N). This means that each time a \newline is appended to pattern space which does not match your end delimiter, the Test command fails and branches back to the :label, which results in sed pulling in the Next line and looping until successful.
 e
-
 When the substitution for the end match is successful and the script does not branch back for a failed Test, sed will execute a command that looks like this:
-
 nl <<\\@@\nline X\nline Y\nline Z\n@@$
 
 # printf v echo -- https://unix.stackexchange.com/questions/65803/why-is-printf-better-than-echo/65819#65819
@@ -441,7 +438,6 @@ if the first argument matches the ^-([eEn]*|-|-help|-version)$ extended regexp o
 printf, on the other hand, is more reliable, at least when it's limited to the basic usage of echo.
 $ printf '%s\n' "$var" # Will output the content of $var followed by a newline character regardless of what character it may contain.
 $ printf '%s' "$var" # Will output it without the trailing newline character.
-
 
 # seek fd
 There are many commands out there that can only deal with seekable files, but when that's the case, that's generally not for the files open on their stdin.
@@ -458,7 +454,6 @@ declare -a A=("$@")
     mapfile -t -O ${#A[@]} A; set -- "${A[@]}"; \
 }
 echo "$@"
-#
 #Example use :
 $ ./script.sh arg1 arg2 arg3
 > arg1 arg2 arg3
@@ -491,3 +486,9 @@ Note that both x and y must be of the same type (integer or letter).
 When the increment is supplied, it is used as the difference between each term.  The default increment is 1 or -1 as appropriate.
 
 $ {a..z}
+
+# optarg / getopt (not getopts)
+getopt -n test  -o '' -a -l xmx:,xms:,Xmx:,Xms:, -- --Xmx 2g && echo "OPTERR=$OPTERR OPTIND=$OPTIND OPTARG=$OPTARG"
+
+# getopts -- short opt only
+builtin

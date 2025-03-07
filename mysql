@@ -5,6 +5,9 @@ tags: [ database ]
 mysql -h <host> -u <username> -p
 mysql --user=rqc_read --database=rqc  --port=3306 --host=128.55.210.74 -p
 
+# connection aliases
+~/.mycnf
+
 # Run query from command line
 mysql --defaults-group-suffix=aws -e 'select 1 from dual;'
 

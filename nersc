@@ -21,6 +21,7 @@ Core 1 has logical CPUs of 1 and 129, and so on. When OMP_PLACES is set to
 "cores", each OpenMP thread binds to one core; And when OMP_PLACES is set to
 "threads", each OpenMP thread binds to one logical CPU.
 
+# numactl ...
 $ numactl -H
 
 # salloc
@@ -48,3 +49,144 @@ see /global/cscratch1/ovis/csv
 
 # ldms
 https://software.nersc.gov/ldms/nersc-ldms-validation
+
+# topo
+$ nvidia-smi topo -m
+
+# perlmutter mpi broke
+mpiexec - does nt  work
+mpirun - doesnt work
+
+# perlmutter mpi
+spack load mpich
+mpiexec.hydra ... # works
+#
+srun - does work but (1) need salloc first (2) don't specify any shape
+ex: PMIX_MCA_psec=^munge srun --mpi=pmix  mpilinktest -I 10 -i 5 -s 1
+
+# perlmutter slurm config
+/run/slurm/conf/slurm.conf # also sacctmgr show config
+
+# error:  btl_tcp_endpoint.c:785:mca_btl_tcp_endpoint_start_connect] bind on local address (10.100.60.230:0) failed: Address already in use (98)
+# fix:  Slingshot NICs means you cannot use UCX - must use libfabric. However, I believe OMPI does support Slingshot operations - in fact, last I checked OMPI v5 is running on Perlmutter
+
+# interfaces
+$ ip -4 -f inet addr show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: nmn0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    altname enp195s0
+    inet 10.100.108.32/22 brd 10.100.111.255 scope global nmn0
+       valid_lft forever preferred_lft forever
+3: hsn0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9000 qdisc mq state UP group default qlen 10000
+    altname enp194s0
+    inet 10.249.41.248/16 brd 10.249.255.255 scope global hsn0
+       valid_lft forever preferred_lft forever
+    inet 128.55.84.128/19 brd 128.55.95.255 scope global hsn0:chn
+       valid_lft forever preferred_lft forever
+4: hsn1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9000 qdisc mq state UP group default qlen 10000
+    altname enp129s0
+    inet 10.249.41.232/16 brd 10.249.255.255 scope global hsn1
+       valid_lft forever preferred_lft forever
+5: hsn2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9000 qdisc mq state UP group default qlen 10000
+    altname enp66s0
+    inet 10.249.41.231/16 brd 10.249.255.255 scope global hsn2
+       valid_lft forever preferred_lft forever
+6: hsn3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9000 qdisc mq state UP group default qlen 10000
+    altname enp1s0
+    altname ens3
+    inet 10.249.41.247/16 brd 10.249.255.255 scope global hsn3
+       valid_lft forever preferred_lft forever
+
+# perlmutter
+## GPU cabinet
+- 4 NUMA domains
+- 4 Nvidia A100 GPUs per node
+- 40 GB High-BW-Memory per GPU
+- GPUs linked with NVLink-3
+- 1 AMD EPYC 7763 CPU 64 core CPU
+- 256 GB DRAM
+- 4 Slingshot-11 (200 Gbps) Network cards per node
+- A GPU cabinet has 8 chassis,
+- Each GPU chassis has 8 compute blades and 4 switch blades.
+- A GPU blade contains 2 GPU-accelerated nodes.
+- GPU-accelerated compute cabinets have Slingshot 11 interconnect fabric with HPE Cray's proprietary Cassini NICs.
+- Each GPU-accelerated compute node is connected to 4 NICs.
+- GPU cabinets contain one Dragonfly group per cabinet, with 32 switch blades, making a total of 24 groups.
+## CPU cabinet
+- 8 NUMA domains
+- 128 core : 2 Socket AMD EPYC 7763 CPU 64 CPU core/socket
+- 512 GB DRAM
+- 1 Slingshot-11 (200 Gbps) Network card per node
+- A CPU-only cabinet has 8 chassis
+- Each CPU chassis has  8 compute blades and 2 switch blades.
+- A CPU-only blade contains 4 CPU nodes.
+- Each CPU-only compute node is connected to 1 NIC.
+- CPU-only cabinets contain one Dragonfly group per cabinet.
+- CPU compute cabinets have Slingshot 11 interconnect fabric with Cassini NICs.
+## Interconnect
+The network has a 3-hop dragonfly topology.
+- There is no backplane in the chassis to provide the network connections
+between the compute blades. Network connections are achieved by having the
+switch blades at the rear of the cabinet, providing the interconnection between
+the compute blades in the in the front side.
+- A full all-to-all electrical network is provided within each group. All
+switches in a switch group are directly connected to all other switches in the
+group.
+-- Copper Level 0 (L0) cables connect nodes to network switches. L0 cables
+carry two links and are split to provide two single link node connections. L0
+links are called "host links" or "edge links".
+-- Copper Level 1 (L1) cables are used to interconnect the switches within a
+group. The 16-switch groups are internally interconnected with two cables (four
+links) per switch pair. L1 links are called "group links" or "local links".
+- Optical Level 2 (L2) cables interconnect groups within a subsystem (e.g., the
+compute subsystem consisting of compute nodes). L2 links are called "global
+links". Each optical cable carries two links per direction.
+- L2 cables also interconnect subsystems - there are 3 subsystem on a HPE Cray EX
+system, each with its own dragonfly interconnect topology: compute, IO, and
+service subsystems.
+## NIC
+- PCIe 4.0 connection to nodes
+- 200G (25 GB/s) bandwidth
+- 1x NIC per node for CPU partition
+- 4x NICs per node for GPU partition Node
+## GPU
+- Single AMD EPYC 7763 (Milan) CPU
+- 64 cores per CPU
+- Four NVIDIA A100 (Ampere) GPUs
+- PCIe 4.0 GPU-CPU connection
+- PCIe 4.0 NIC-CPU connection
+- 4 HPE Slingshot 11 NICs
+- 256 GB of DDR4 DRAM
+- 204.8 GB/s CPU memory bandwidth
+- 1555 GB/s GPU memory bandwidth per 40GB HBM2 GPU and 2039 GB/s GPU memory bandwidth per 80GB HBM2e GPU
+- 4 third generation NVLink connections between each pair of GPUs
+- 25 GB/s/direction for each link
+- Data type	GPU TFLOPS: FP32	19.5
+# Perlmutter CPU nodes
+- 2x AMD EPYC 7763 (Milan) CPUs
+- 64 cores per CPU
+- AVX2 instruction set
+- 512 GB of DDR4 memory total
+- 204.8 GB/s memory bandwidth per CPU
+- 1x HPE Slingshot 11 NIC
+- PCIe 4.0 NIC-CPU connection
+- 39.2 GFlops per core
+- 2.51 TFlops per socket
+- 4 NUMA domains per socket (NPS=4)
+## Login nodes
+- 2x AMD EPYC 7713 (Milan) CPUs
+- 512 GB of memory in total
+- 1x NVIDIA A100 GPU with 40 GiB of memory
+- Two NICs connected via PCIe 4.0
+- 960 GB of local SSD scratch
+- 1 NUMA node per socket (NPS=1)
+## perlmutter Storage¶
+The Perlmutter Scratch File System is an all-flash file system. It has
+- 35 PB of disk space,
+- aggregate bandwidth of >5 TB/sec,
+- 4 million IOPS (4 KiB random).
+- 16 MDS (metadata servers),
+- 274 I/O servers called OSSs, and
+- 3,792 dual-ported NVMe SSDs.

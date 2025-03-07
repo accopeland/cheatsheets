@@ -1,0 +1,44 @@
+# description
+fpsync is a powerful migration tool used to boost migration of several PB of data and tested by organizations such as UCI, Intel and Amazon.
+In addition to being very fast (as transfers start during FS crawling and are parallelized), fpsync is able to resume or replay synchronization "runs"
+(see options -r and -R) and presents an overall progress status. It also has a small memory footprint compared to rsync itself when migrating
+filesystems with a big number of files.
+
+fpsync is shell script that wraps fpart and rsync, cpio, pax or tar to launch synchronization jobs in parallel, using  GNU Parallel to schedule transfers,
+fpsync provides its own -embedded- scheduler. It can execute several synchronization processes locally or launch them on several nodes (workers) through SSH.
+
+# dependencies
+fpart, rsync/cpio/pax/tar, a POSIX shell, sudo and ssh.
+
+# install
+spack install fpart
+# docs
+http://www.fpart.org/fpsync/
+
+# fpsync usage
+$ fpsync -n 4 -f 1000 -s $((100 * 1024 * 1024)) /data/src/ /data/dst/  #will synchronize /data/src/ to /data/dst/ using 4 local workers, each xfer <=1000 files and 100MB/job.
+$ fpsync -n 8 -f 1000 -s $((100 * 1024 * 1024)) -w login@machine1 -w login@machine2 -d /mnt/nfs/fpsync /data/src/ /data/dst/ #  as above but use 8 concurrent sync jobs on two machines
+#(machine1 and machine2). Those machines must both be able to access /data/src/ and /data/dst/, as well as /mnt/nfs/fpsync, which is fpsync's shared working directory.
+
+# fpart
+UNIX tool that splits a list of directories and file trees into N partitions, trying to produce partitions
+with the same size and number of files. It can also produce partitions with a given number of files or of a
+limited size. Fpart uses a bin packing algorithm to optimize space utilization amongst partitions.
+
+# fpart usage
+$ fpart -n 3 -o var-parts /var
+$ ls var-parts*
+var-parts.1 var-parts.2 var-parts.3
+$ head -n 2 var-parts.1
+/var/some/file1
+/var/some/file2
+
+# fpart for copying -- explained
+# max 10000 files/partition
+# exclude .snapshot .zfs
+# use /tmp/part.out to write out partition
+# use parallel-sem to schedule max 3 jobs at a time
+# use rsync to actually copy
+$ cd /data/src
+$ fpart -L -f 10000 -x '.snapshot' -x '.zfs' -zz -o /tmp/part.out -W '/usr/local/bin/sem -j 3 "/usr/local/bin/rsync -av \
+  --files-from=${FPART_PARTFILENAME}  /data/src/ /data/dest/"' .

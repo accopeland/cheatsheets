@@ -15,7 +15,47 @@ containers-registries.d
 containers-storage.conf
 
 # inspect -- without downloading image
-podman run --rm quay.io/skopeo/stable inspect --creds $USER:$PASSWORD docker://$IMAGE
+$ skopeo inspect docker://library.jgi.doe.gov:5050/qaqc/docker/bbtools:39.01
+{
+    "Name": "library.jgi.doe.gov:5050/qaqc/docker/bbtools",
+    "Digest": "sha256:da9a4e08aed0f33884beb241dc22ca490e9e2618a72664fc71fbcf2ae05aff74",
+    "RepoTags": [
+        "39.01"
+    ],
+    "Created": "2022-10-06T19:02:39.431232661Z",
+    "DockerVersion": "20.10.13",
+    "Labels": {
+        "org.label-schema.build-date": "20210915",
+        "org.label-schema.license": "GPLv2",
+        "org.label-schema.name": "CentOS Base Image",
+        "org.label-schema.schema-version": "1.0",
+        "org.label-schema.vendor": "CentOS"
+    },
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Layers": [
+        "sha256:a1d0c75327776413fa0db9ed3adcdbadedc95a662eb1d360dad82bb913f8a1d1",
+        "sha256:ebb3d665d4383ee890d8902578510fe231036b8fb1573cd6a3ee43283415d14f",
+        "sha256:75a382cb60b4d6d64c319d40e7a220486c42a0d52f922c4f4b155bd159c3a3d1",
+        "sha256:13c780a220bdefa6197c337353134c8526f2c322d5f03a2a1664ac6bdf33b573",
+        "sha256:0cd6bda4da7e44e31a46ff5ea5292b1e1b3e9c98d16f8609a15d6cbf0d1bd4bf",
+        "sha256:af3e7469f1a70bbbb388eea0faac3d8b25d6b339f7d8880e65b238b1fe4a5e35",
+        "sha256:5a4449482795f799b516dbfbdc4ea295a2c25451fc88ea97fab529c8ab87d1b5",
+        "sha256:901df5b69bb281986548c8c9834943d0183cc4a6b118dc0555abeed8788dafe1"
+    ],
+    "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin/:/bbmap/",
+        "BBV=39.01",
+        "SAMV=1.15",
+        "SAMBAMBAV=0.8.1",
+        "BBTOOLS_VERSION=39.01",
+        "SAMTOOLS_VERSION=1.15"
+    ]
+}
+$ skopeo inspect docker://library.jgi.doe.gov:5050/user-support-analysis/rna-count/rnacount
+
+# inspect via podman
+$ podman run --rm quay.io/skopeo/stable inspect --creds $USER:$PASSWORD docker://$IMAGE
 
 # copy
 Skopeo and sibling projects all share same local container-image storage.

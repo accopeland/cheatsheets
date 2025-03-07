@@ -124,3 +124,9 @@ $ cargo install --path cli  --root /tmp/accopeland/jj --verbose
 
 # Error: does not contain a Cargo.toml file. --path must point to a directory containing a Cargo.toml file
 # Fix:
+
+# Error: error: no packages found with binaries or examples
+# Fix: ???
+
+# Error: (building 1.85.0) Unexpected rustc version: 1.84.0, we should use 1.80.x/1.81.0 to build source with 1.81.0
+# Fix: ???

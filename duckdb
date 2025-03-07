@@ -2,7 +2,7 @@
 
 # install
 https://duckdb.org/docs/installation/
-brew install duckdb
+$ brew install duckdb
 https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip
 
 # spack recipe
@@ -128,6 +128,7 @@ INSERT INTO my_table VALUES (42);
 PREPARE select_from_table AS SELECT * FROM query_table($1);
 EXECUTE select_from_table('my_table');
 
+$ brew install youplot
 
 # csv -> duckdb
 D SELECT * FROM read_csv_auto('test.csv', delim='|', header=True, columns={'FlightDate': 'DATE', 'UniqueCarrier': 'VARCHAR', 'OriginCityName': 'VARCHAR'});
@@ -206,7 +207,7 @@ $ duckdb DD "describe ga0436458_proteins__per_residue__point01"
 # join
 D select a.contig,a.product,b.product from ga0436458_functional_annotation a join ga0436458_ppr b on ( a.contig=b.contig ) ;
 
-# extension
+# show extension
 D select * from duckdb_extensions;
 
 # create secret -- stored unencrypted binary format in the ~/.duckdb/stored_secrets
@@ -361,6 +362,9 @@ also
 D select a.* from generate_series(1,10,2) as a(a) ;
 D select unnest(generate_series(1,10,2)) r;
 
+# lag -- previous value
+SELECT event_time, event_type, user_id, event_time - LAG(event_time) OVER (PARTITION BY user_id ORDER BY event_time) AS time_lapse FROM  user_activity
+
 # reuse window
 D select datetrunc('d', to_timestamp(atime)) as d, sum(size) over cumsum as sum_s from T
 D>window cumsum as (partition by d order by atime, size rows between unbounded preceding and current row)
@@ -467,6 +471,10 @@ LEFT JOIN LATERAL (
     FROM t
   ) get_interfaces ON TRUE
 WHERE get_interface_name.hostname = get_interfaces.hostname
+
+# install extension
+INSTALL ⟨custom_extension⟩ FROM 'https://my-custom-extension-repository';
+## installed in ~/.duckdb/extensions/⟨duckdb_version⟩/⟨platform_name⟩/
 
 # json querying
 D select reports[2]['organism']['organism_name'] as org, reports[1]['accession'] as acc, reports[1]['assembly_info']['assembly_method'] as m from t;
@@ -576,7 +584,6 @@ https://github.com/tidyverse/duckplyr
 # R factors
 # see https://duckdb.org/2021/11/26/duck-enum.html
 
-
 # show databases
 D pragma database_list ;
 
@@ -608,3 +615,28 @@ https://duckdb.org/docs/sql/functions/aggregates.html
 
 # entropy
 entropy() -- log2
+
+# exon -- fastq
+???
+
+# extensions
+SELECT extension_name, installed, description
+FROM duckdb_extensions();
+
+# extensions
+# see https://github.com/duckdb/community-extensions
+faiss - vector similarity search
+arrow
+prql - pipelined query language
+spatial
+fasql | exon
+iceberg
+aws
+fts
+httpfs
+
+# build extension from git repo
+$ git clone https://github.com/ajzo90/duckdb-extension-xxhash.git
+$ cd duckdb-extension-xxhash/
+$ git submodule update --init --recursive
+$ make

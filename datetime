@@ -21,7 +21,7 @@ jq ´strptime("%Y-%m-%dT%H:%M:%SZ")|mktime´
 
 # postgres
 function dw_ct0() { local F=${1:?"dt_created"} ; local T=${2:-"$(date +"%Y-%m-%d")"};
-date_format(sdm_seq_complete_date ,"%Y-%m-%d") as dt_seq_end,
+select date_format(sdm_seq_complete_date ,"%Y-%m-%d") as dt_seq_end,
 where sam_ship_approve_date >= (date_add(date('$F'), interval 7 hour))
 and sam_receive_date is not null and sam_ship_approve_date is not null" ;
 

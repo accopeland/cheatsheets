@@ -3,6 +3,7 @@ tags: [ database ]
 ---
 # To connect to a database:
 mysql -h <host> -u <username> -p
+mysql --user=rqc_read --database=rqc  --port=3306 --host=128.55.210.74 -p
 
 # Run query from command line
 mysql --defaults-group-suffix=aws -e 'select 1 from dual;'
@@ -136,6 +137,28 @@ OPTIONALLY ENCLOSED BY '"'
 ESCAPED BY ''
 LINES TERMINATED BY 'n';
 
+# duckdb mysql
+D install mysql ;
+D load mysql ;
+D CREATE TABLE duckdb_table AS FROM mysqlscanner.mysql_table;
+D create secret (
+  type mysql,
+  host '127.0.0.1' ,
+  port '3306' ,
+  database rqc,
+  user '',
+  password ''
+  );
+┌─────────┐
+│ Success │
+│ boolean │
+├─────────┤
+│ true    │
+└─────────┘
+D attach 'database=rqc' as mysql_rqc (type mysql) ;
+D show all tables ;
+D SELECT * FROM mysql_query('mysql_rqc', 'SELECT * FROM air LIMIT 3');
+
 # .my.cnf
 # see https://dev.mysql.com/doc/refman/8.0/en/option-files.html
 mysql --defaults-group-suffix=scidbro ...
@@ -178,5 +201,54 @@ use       (\u) Use another database. Takes database name as argument.
 charset   (\C) Switch to another charset. Might be needed for processing binlog with multi-byte charsets.
 warnings  (\W) Show warnings after every statement.
 nowarning (\w) Don't show warnings after every statement.
+transpose (\G) one column output
 
+# via file
+rqc < file.sql > output.txt
 
+# average
+avg()
+
+# math functions
+ROUND()	Round the argument.
+TRUNCATE()	Truncate to specified number of decimal places.
+ABS()	Return the absolute value.
+FLOOR()	Return the largest integer value <= argument. not applied to BIGINT values. The input value is returned.
+CEIL()	Return smallest integer >= argument. not for BIGINT. The input value is returned. CEIL() is a synonym for CEILING().
+CEILING()	 ""
+CRC32()	Compute a cyclic redundancy check value.
+MOD()	Return the remainder.
+PI()	Return the value of pi
+RAND()	Return a random floating-point value.
+SIGN()	Return the sign of the argument.
+POW()	Return the argument raised to the specified power
+POWER()	Return the argument raised to the specified power.
+EXP()	Raise to the power of.
+SQRT()	Return the square root of the argument.
+LN()	Return the natural logarithm of the argument.
+LOG()	Return the natural logarithm of the first argument.
+LOG10()	Return the base-10 logarithm of the argument.
+LOG2()	Return the base-2 logarithm of the argument.
+
+# trig
+DEGREES()	Convert radians to degrees.
+RADIANS()	Return argument converted to radians.
+COS()	Return the cosine.
+COT()	Return the cotangent.
+SIN()	Return the sine of the argument.
+TAN()	Return the tangent of the argument.
+ACOS()	Return the arc cosine.
+ASIN()	Return the arc sine.
+ATAN()	Return the arc tangent.
+ATAN2(), ATAN()	Return the arc tangent of the two arguments
+
+# median
+# ## data
+CREATE TABLE scores ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), score INT );
+INSERT INTO scores (name, score) VALUES ('Jack', 2), ('Susan', 1), ('Steve', 3), ('Fany', 8), ('Dan', 7), ('Molly', 5);
+## median
+SET @row_index := -1;
+SELECT AVG(subq.score) as median_value FROM
+  ( SELECT @row_index:=@row_index + 1 AS row_index, score
+    FROM scores ORDER BY score ) AS subq
+WHERE subq.row_index IN (FLOOR(@row_index / 2), CEIL(@row_index / 2));

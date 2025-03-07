@@ -14,6 +14,9 @@ brew install podman
 # version
 $podman --version
 
+# code.jgi.doe.gov -- https://docs.jgi.doe.gov/spaces/infra/pages/139069932/How+to+Build+and+Push+a+Docker+Image+in+Gitlab+code.jgi.doe.gov+-+without+CI+CD
+#
+
 # lima startup
 limactl start /usr/local/share/lima/examples/podman.yaml
 limactl start podman # if running

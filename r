@@ -87,6 +87,9 @@ configure: WARNING: you cannot build PDF versions of vignettes and help pages
 # Error: missing Intrinsic.h (X11)
 # Fix: -I/opt/X11/include  (from xquartz ???)
 
+# Error: No version available
+# Fix: options(repos='http://cran.rstudio.com/') in ~/.Rprofile
+
 # Error: general X11 errors (X11)
 # Fix:  brew install xquartz ?
 # Notes: Installing R from the master branch using the --with-tcl-tk-x11 option should install an X11 based version of tcl-tk. While I'm not completely sure, it may still be necessary to have xquartz installed. Sometimes xquartz gets messed up with OS updates and needs to be reinstalled. Try reinstalling xquartz, cairo-x11, and tcl-tk-x11 and then recompile R.
@@ -458,6 +461,20 @@ Removed 6014 rows containing missing values (`geom_point()`).
 # dplyr table summary
 d %>% group_by(protocol,input) %>% summarise(n=n(),m=mean(raw0,na.rm=T),v=var(raw0,na.rm=T))
 
+# drop cols
+> bd_sans_NA_cols <- bd[, !map_lgl(bd, ~ all(is.na(.))), drop = FALSE]
+# or
+> not_all_na <- function(x) {!all(is.na(x))}
+> sample_hist2 |>  select_if(not_all_na)
+#
+> df %>%  purrr::discard(~all(is.na(.x))) %>%  purrr::map_df(~.x)
+#
+> janitor::remove_empty(df)
+#
+> for (nm in names(df))
+    if(all(is.na(df[[nm]])))
+      df[[nm]] <- NULL
+
 # countr
 n()
 count()
@@ -479,7 +496,7 @@ dplyr::cume_dist()
 
 # dplyr / tidy read csv :
 library("readr")
-read_csv("f.csv", col_tyes=...)
+read_csv("f.csv", col_types=...)
 col_types
 c = character
 i = integer
@@ -526,6 +543,9 @@ install.packages("readxl")
 # only the binary install worked; grab tarball then unpack into /Users/copeland/Library/R/3.2
 library(readxl)
 d=read_excel("/Users/copeland/Work/klail//RQC_metrics.xlsx",sheet="Sheet1")
+
+# is.na
+> for (n in names(sample_hist2)) cat(n, " ", all(is.na(sample_hist2[n])), "\n")
 
 # excel sheets
 list_paths <- list.files(path = "~/six_to/spreadsheets",pattern = ".xlsx",full.names = TRUE)
@@ -623,12 +643,6 @@ etc.
 
 #  stat_summary(..)
 
-#   tibble ggplot
-ggplot(tibble(x = c(-8, 8)), aes(x)) + stat_function(fun=dnorm) + stat_function( fun=dcauchy, geom="point", n=75 )
-
-#  tibble
-tibble::glimpse(chic)
-
 #  pivot table
 pivot(subset(d16,Machine %in% c("cori","cori2","cori knl","cori haswell")), sum, Util, c(Machine,Day)) %>% head()
 
@@ -658,7 +672,6 @@ dplyr::rollmean()
 tibbletime::rollify()
 airquality <- airquality %>%  group_by(Month) %>%  mutate(rec = 1) %>%  mutate(rollavg = cumsum(Wind)/cumsum(rec)) %>%  select(-rec)
 RcppRoll::roll_mean
-
 
 #  tables
 briatte/ggtable
@@ -822,6 +835,10 @@ sudo ARCHFLAGS="-arch x86_64"
 #  package not available errors
 remotes::install_github("bupaverse/pm4py@dev")
 see also devtools
+
+# change repo
+install.packages("ggplot2", repos="https://cran.rstudio.com/")
+
 
 #  config
 R CMD config --all
@@ -1023,6 +1040,7 @@ ggridges 	- geom_density_ridges
 ggTimeSeries - calendar_heatmap https://exts.ggplot2.tidyverse.org/ggTimeSeries.html
 ggrepel
 ggsankey
+- ggalluvial
 https://davidhodge931.github.io/ggblanket/
 
 #  ggplot extensions, see
@@ -1206,17 +1224,17 @@ ggplot(data=pb,aes(x=n_contigs)) + stat_ecdf(geom="smooth") + labs(x="Contigs",y
 dplyr::cume_dist()
 
 #  cumulative plot by factor
-set.seed(123)
-x <- data.frame(A=replicate(200,sample(c("a","b","c"),1)),X=rnorm(200))
-iilibrary(plyr)
-df <- ddply(x,.(A),transform,len=length(X))
-ggplot(df,aes(x=X,color=A)) + geom_step(aes(len=len,y=..y.. * len),stat="ecdf")
+> set.seed(123)
+> x <- data.frame(A=replicate(200,sample(c("a","b","c"),1)),X=rnorm(200))
+> library(plyr)
+> df <- ddply(x,.(A),transform,len=length(X))
+> ggplot(df,aes(x=X,color=A)) + geom_step(aes(len=len,y=..y.. * len),stat="ecdf")
 #	df <- data.frame(x = c(rnorm(100, 0, 3), rnorm(100, 0, 10)),
-g = gl(2, 100))
-ggplot(df, aes(x, colour = g)) + stat_ecdf()
+> g = gl(2, 100))
+> ggplot(df, aes(x, colour = g)) + stat_ecdf()
 #
-qplot(unique(mydata), ecdf(mydata)(unique(mydata))*length(mydata), geom='step')
-qplot(data=ac417.dt[, .SD[length>100][,sum(length)/asm_len],by=lib],x=lib,y=V1)
+> qplot(unique(mydata), ecdf(mydata)(unique(mydata))*length(mydata), geom='step')
+> qplot(data=ac417.dt[, .SD[length>100][,sum(length)/asm_len],by=lib],x=lib,y=V1)
 
 #   summarizing data frames
 plyr - ok but quirky and slow
@@ -1345,20 +1363,6 @@ str_extract(x, pat) or str_match(x, (a).*(b))
 str()
 class()
 glimpse() #  a better str() ?
-
-#  cumulative plot by factor
-set.seed(123)
-x <- data.frame(A=replicate(200,sample(c("a","b","c"),1)),X=rnorm(200))
-iilibrary(plyr)
-df <- ddply(x,.(A),transform,len=length(X))
-ggplot(df,aes(x=X,color=A)) + geom_step(aes(len=len,y=..y.. * len),stat="ecdf")
-#	df <- data.frame(x = c(rnorm(100, 0, 3), rnorm(100, 0, 10)),
-g = gl(2, 100))
-ggplot(df, aes(x, colour = g)) + stat_ecdf()
-#
-qplot(unique(mydata), ecdf(mydata)(unique(mydata))*length(mydata), geom='step')
-#
-qplot(data=ac417.dt[, .SD[length>100][,sum(length)/asm_len],by=lib],x=lib,y=V1)
 
 # Error: <libintl.h> not found
 # Fix: brew install gettext
@@ -1632,6 +1636,40 @@ install.packages("correlationfunnel")
 library("correlationfunnel)
 customer_churn_tbl %>% select(-customerID) %>% mutate(TotalCharges = ifelse(is.na(TotalCharges), MonthlyCharges, TotalCharges)) %>% binarize(n_bins = 5, thresh_infreq = 0.01, name_infreq = "OTHER", one_hot = TRUE) %>% correlate(Churn__Yes) %>% plot_correlation_funnel()
 
+# alternate devtools install
+> pak::pak("business-science/correlationfunnel")
+
+# correlation funnel
+library(psych)
+library(ggplot2)
+library(dplyr)
+data(mtcars)  # Sample data
+cor_matrix <- cor(mtcars) # Calculate the correlation matrix
+cor_results <- corr.test(mtcars)  # Get the correlation coefficients and their confidence intervals
+cor_df <- as.data.frame(cor_results$r)  # Extract correlation coefficients and p-values
+p_values <- as.data.frame(cor_results$p)
+cor_long <- cor_df %>%  # Melt the data frame to long format
+  rownames_to_column(var = "variable1") %>%
+  pivot_longer(-variable1, names_to = "variable2", values_to = "correlation") %>%
+  mutate(p_value = as.vector(p_values[as.numeric(factor(variable1)), as.numeric(factor(variable2))])) %>%
+  mutate(significant = p_value < 0.05)  # Add significance indicator
+ggplot(cor_long, aes(x = variable2, y = correlation)) +
+  geom_point(aes(color = significant), size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_errorbar(aes(ymin = correlation - 0.1, ymax = correlation + 0.1), width = 0.2) +  # Example error bars
+  coord_flip() +
+  labs(title = "Correlation Funnel Plot",
+       x = "Variables",
+       y = "Correlation Coefficient",
+       color = "Significant") +
+  theme_minimal()
+
+# correlation time series
+1. convert datetime to number with as.numeric
+2. use some ID as a proxy for the datetime col
+df2 %>% group_by(ID) %>%  summarise(r_interp = cor(skinTemp, roomTempInterp, use="pairwise.complete.obs"), r_roll = cor(skinTemp, roomTempRoll, use="pairwise.complete.obs"))
+
+
 # time deltas
 # data from DW query (see qctools::dw_ct())
 df = readr::read_csv("_data/Days-delta.csv")
@@ -1661,3 +1699,187 @@ tidyr::drop_na:  df |> tidyr::drop_na()
 na.omit(df)
 df[complete.cases(df), ]
 df[matrixStats::rowSums2(is.na(df)) < dim(df)[2]*1e-2, ]  ## allow 1% missings per row
+
+# duckdb
+> library(duckdb)
+> library(duckplyr)
+> con = dbConnect(duckdb(dbdir="./STATS"))
+> dbGetQuery(con, "select count(*) from rpq")
+  count_star()
+1      1399080
+
+# duckdb factors / enums
+??
+
+# convert chr to factor in dataframe
+new = as.data.frame(old, stringsAsFactors=TRUE)
+
+# parallel coordinates plot  / parallelaxes
+> install.packages("GGally")
+> library(GGally)
+ggparcoord(mtcars,
+           columns = c(1,3:6,9,10),
+           groupColumn = 2,
+           alphaLines=0.7,
+           boxplot = TRUE
+           ) +
+  xlab("Car Features") +
+  ylab("Count") +
+  theme(axis.text.x = element_text(angle=45, vjust = 1, hjust=1)) +
+  facet_wrap(~cyl, nrow = 2)
+
+# fix ggparcoord linewidth, alpha,
+> ggparcoord(data=rpq, columns = c(7:10,11:13), order="allClass", groupColumn="sam",  mapping = aes(alpha=0.2 , linewidth = .1)) + ggplot2::scale_linewidth_identity()
+
+# parallel coords
+> library(ggparallel)
+> library(parcoords)
+> ggparallel(vars = list("cyl", "gear", "carb"), data = mtcars)
+library(d3r)
+parcoords(mtcars,
+          brushMode = "1D-axes",
+          alpha=0.5,
+          reorderable = T,
+          withD3 = TRUE,
+          color = list(
+            colorScale = "scaleOrdinal",
+            colorBy = "cyl",
+            colorScheme = c("blue","green")
+            )
+          )
+
+# correlation plots -- https://corrr.tidymodels.org
+library("corrr")
+x <- datasets::mtcars %>% correlate() %>%    # Create correlation data frame (cor_df)
+       focus(-cyl, -vs, mirror = TRUE) %>%  # Focus on cor_df without 'cyl' and 'vs'
+       rearrange() %>%  # rearrange by correlations
+       shave() # Shave off the upper triangle for a clean result
+fashion(x)
+#>   term  mpg drat   am gear qsec carb   hp   wt disp
+#> 1  mpg
+#> 2 drat  .68
+#> 3   am  .60  .71
+#> 4 gear  .48  .70  .79
+#> 5 qsec  .42  .09 -.23 -.21
+#> 6 carb -.55 -.09  .06  .27 -.66
+#> 7   hp -.78 -.45 -.24 -.13 -.71  .75
+#> 8   wt -.87 -.71 -.69 -.58 -.17  .43  .66
+#> 9 disp -.85 -.71 -.59 -.56 -.43  .39  .79  .89
+rplot(x)
+
+# correlation plots -- network_plot
+library("corrr")
+datasets::airquality %>%
+  correlate() %>%
+  network_plot(min_cor = .2)
+
+# ggvis -- vega like plots
+# no good way to save output
+> air_summary |> ggvis(~approx_unique, ~column_name) |> layer_points(fill=~null_percentage)
+
+# ggvis axis font
+> ... add_axis("x", title = "Weight", ticks = 40,
+  properties = axis_props(
+    labels = list(
+      fill = "steelblue",
+      angle = 50,
+      fontSize = 14,
+      align = "left",
+      baseline = "middle",
+      dx = 3
+    ),
+    ticks = list(stroke = "red"),
+    majorTicks = list(strokeWidth = 2),
+    grid = list(stroke = "red"),
+    title = list(fontSize = 16),
+    axis = list(stroke = "#333",
+    strokeWidth = 1.5)
+  )
+)
+>
+
+# ggplot reorder
+> air_summary |> filter(approx_unique<300000) |> ggplot( aes(y=reorder(column_name,approx_unique), x=approx_unique)) + geom_point(size=1.3) + theme(axis.text.y=element_text(size=5))
+
+# ggplot reorder -- need factors
+> library_stock = read_csv("library_stock.summary.csv",col_types="ffffnnnnnnnn")
+> ggplot(arrange(library_stock, -approx_unique, null_percentage),aes(y=column_name, x=approx_unique, color=null_percentage)) + geom_point(size=1.3) + theme(axis.text.y=element_text(size=5))
+
+# ggvis
+library(ggvis)
+
+# vegalite
+> library(vegalite)
+> vegalite(viewport_height=500) |> add_data(air_summary) |> encode_x("approx_unique", "quantitative") |> encode_y("column_name","nominal",sort=sort_def("approx_unique"))   |>  mark_point()
+
+# loops
+> for (n in names(df)) {  print(n) }
+
+# entropy -- https://rpubs.com/philjet/shannonentropy
+> entropy <- function(target) {
+  freq <- table(target)/length(target)
+  # vectorize
+  vec <- as.data.frame(freq)[,2]
+  #drop 0 to avoid NaN resulting from log2
+  vec<-vec[vec>0]
+  #compute entropy
+  -sum(vec * log2(vec))
+}
+
+# library(entropy) | library(eHDPrep)
+
+# information gain
+library(FSelector)
+
+# information gain
+> IG_numeric<-function(data, feature, target, bins=4) {  #returns IG for numerical variables.
+  data<-data[!is.na(data$feature),]  #Strip out rows where feature is NA
+  e0<-entropy(data$target)  #compute entropy for the parent
+  data$cat<-cut(data$feature, breaks=bins, labels=c(1:bins))
+  dd_data <- data %>% group_by(cat) %>% summarise(e=entropy(get(target)), n=length(get(target)),min=min(get(feature)),max=max(get(feature))) #use dplyr to compute e and p for each value of the feature
+  dd_data$p<-dd_data$n/nrow(data)  #calculate p for each value of feature
+  IG<-e0-sum(dd_data$p*dd_data$e)  #compute IG
+  return(IG)
+}
+> IG_numeric(iris, "Sepal.Length", "Species", bins=5)
+
+# information gain categorical var
+> IG_cat<-function(data,feature,target){ #returns IG for categorical variables.
+  data<-data[!is.na(data$feature),]   #Strip out rows where feature is NA
+  dd_data <- data %>% group_by_at(feature) %>% summarise(e=entropy(get(target)), n=length(get(target)) ) #use dplyr to compute e and p for each value of the feature
+  e0<-entropy(data$target)  #compute entropy for the parent
+  dd_data$p<-dd_data$n/nrow(data)  #calculate p for each value of feature
+  IG<-e0-sum(dd_data$p*dd_data$e)  #compute IG
+  return(IG)
+}
+> IG_cat(airquality, "Month", "Temp")
+
+# mutual information
+> library(mutinfo)
+> library(FNN)
+
+# roll join
+setDT(df1) # Convert data frames to data tables
+setDT(df2)
+setkey(df1, ID, time)  # Make ID and time key columns in both data frames (for joining)
+setkey(df2, ID, time)
+df2 = df1[df2, roll="nearest"] # Rolling join roomTemp to nearest time value of skinTemp
+names(df2)[grep("roomTemp", names(df2))] = "roomTempRoll" # Rename rolling joined room temperature column
+
+# approx -- see https://stackoverflow.com/questions/42273886/how-to-perform-correlation-between-time-series-of-unequal-frequencies
+# Add interpolated room temperature by ID
+df2$roomTempInterp = unique(df2$ID) %>% map_df(~ approx(df1$time[df1$ID==.x], df1$roomTemp[df1$ID==.x], xout=df2$time[df2$ID==.x]), .id="ID") %>% .$y
+# Plot so we can see what the rolling joined roomtemp and interpolated roomtemp look like, we facet by ID so we can see the imputed temperature separately for each ID.
+ggplot(melt(df2, id.var=c("ID", "time")), aes(time, value, colour=variable)) +  geom_line(size=0.7) +  geom_point(data=df1, aes(time, roomTemp), colour="black") +  facet_grid(ID ~ .)
+
+# gg tools -- https://exts.ggplot2.tidyverse.org/gallery/
+gganimate
+ggcorrplot  -- correlation
+ggHoriPlot  -- horizontal plots
+ggthemes
+ggridge  -- ridge plots
+ggQC -- QC
+ggExtra --
+xmrr  -- SPC xmrr plots
+ggpcp  -- PCA
+patchwork -- plot layout made easy

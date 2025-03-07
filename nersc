@@ -1,5 +1,50 @@
+# description
+
+# see also
+outages
+
 # pi-toolbox
 https://my.nersc.gov/pitools/index.php
 
 # data management
 https://my.nersc.gov/data-mgt.php
+
+# perlmutter
+Each node contains 2 sockets, each containing an AMD EPYC 7763 processor. Each
+processor has 64 physical cores, and each core has 2 hardware threads (logical
+CPUs). Each processor has 4 NUMA domains. For details, see Perlmutter
+architecture.
+
+Socket 1 has physical cores 0 to 63, and socket 2 has physical cores 64 to 127.
+Core 0 has 2 hardware threads, with the logical CPUs numbered as 0 and 128;
+Core 1 has logical CPUs of 1 and 129, and so on. When OMP_PLACES is set to
+"cores", each OpenMP thread binds to one core; And when OMP_PLACES is set to
+"threads", each OpenMP thread binds to one logical CPU.
+
+$ numactl -H
+
+# salloc
+$ salloc -A m342 -t 00:10:00 --partition debug -C cpu -v -N 4 --ntasks-per-core 2 --ntasks-per-node 128 -J N4.tpc2.tp
+n128  # worked
+
+# architecture
+#Partition	nodes	CPU							GPU									NIC
+GPU					1536	1xAMD-EPYC7763	4xNVIDIA-A100(40GB)	4xHPE-Slingshot-11
+GPU					256		1xAMD-EPYC7763	4xNVIDIA-A100(80GB)	4xHPE-Slingshot-11
+CPU					3072	2xAMD-EPYC7763	none								1xHPE-Slingshot 11
+Login			 	 40		2xAMD-EPYC7713	1xNVIDIA-A100(40GB)	none
+
+#System Performance
+#Partition	Type	AggPeak(PFLOPS)	AggMem(TB)
+GPU					CPU					4.5					448
+GPU					GPU					69.5
+GPU					tensor:			140					328
+CPU					CPU					15.4				1536
+
+# performance
+ovis
+ldms
+see /global/cscratch1/ovis/csv
+
+# ldms
+https://software.nersc.gov/ldms/nersc-ldms-validation

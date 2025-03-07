@@ -129,3 +129,31 @@ paste - - < libs.files  | parallel --colsep '\t' --dry-run "reformat.sh in1={1} 
 # parallel file copy
 /global/homes/c/copeland/local/bin/fpsync
 regan@genepool11:~regan/mpi$ TMPDIR=/tmp $(which mpirun) --host localhost,gpint100,gpint101 /bin/bash -lc "./BroadcastCopyMPI /tmp/send"
+
+# heredoc
+$ parallel "mysql -A -h 127.0.0.1 -D rqc <<EOQ
+select {}
+from dual
+EOQ
+> " ::: 1 2
+ex:
+    parallel "rqc <<EOQ
+        select l.library_name as lib, s.seq_unit_name as su_name,rqs.rqc_status_name as status
+        from seq_units s,rqc_status rqs,library_info l
+        where l.library_name='{}'
+        and l.library_id=s.rqc_library_id
+        and s.rqc_status_id=rqs.rqc_status_id
+EOQ
+" ::: ${@:?"lib"} ;
+
+# heredoc and bash function
+# needed to modify .my.cnf so default is scidbro because we cannot pass --defaults-group-suffix=scidbro arg through parallel
+$ rqc (){    mysql -A -h 127.0.0.1 "$@"; }
+$ export -f rqc
+$ parallel "rqc <<EOQ | uniq
+select {}
+from dual
+EOQ
+" ::: 1 2
+1
+2

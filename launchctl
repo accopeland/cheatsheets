@@ -1,5 +1,36 @@
 # description - system daemon for macos
 
+# docs
+https://developer.apple.com/documentation/servicemanagement
+
+# notes
+https://developer.apple.com/library/archive/technotes/tn2083/_index.html
+https://launchd.info
+
+# config
+User Agents	~/Library/LaunchAgents	Currently logged in user
+Global Agents	/Library/LaunchAgents	Currently logged in user
+Global Daemons	/Library/LaunchDaemons	root or the user specified with the key UserName
+System Agents	/System/Library/LaunchAgents	Currently logged in user
+System Daemons	/System/Library/LaunchDaemons	root or the user specified with the key UserName
+
+
+# lint
+$ plutil -lint ~/Library/LaunchAgents/socks5-dori.plist
+
+# deubg
+$ tail -F /var/log/system.log | grep "com.apple.launchd.peruser.`id -u`\["
+$ launchctl list | grep socks
+
+# start
+$ launchctl bootstrap user/`id -u` ${1:?"plist in ~/Library/LaunchAgents/"}
+
+# stop -- need name from plist file
+$ launchctl stop  ~/Library/LaunchAgents/socks5-dori.plist
+$ launchctl remove local.socks5.dori
+$ launchctl remove local.socks5.dtn
+$ launchctl remove socks5-dori
+
 # usage
 Usage: launchctl <subcommand> ... | help [subcommand]
 
@@ -10,7 +41,7 @@ system/[service-name]
 Targets the system-wide domain or service within. Root privileges are required
 to make modifications.
 
-user/<uid>/[service-name]
+*user/<uid>/[service-name]
 Targets the user domain or service within. A process running as the target user
 may make modifications. Root may modify any user's domain. User domains do not
 exist on iOS.
@@ -79,3 +110,5 @@ to be the per-user domain for that current user.
 	variant         Prints the launchd variant.
 	version         Prints the launchd version.
 	help            Prints the usage for a given subcommand.
+
+#

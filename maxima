@@ -1,0 +1,77 @@
+# description
+computer algebra system in lisp
+
+# docs
+
+# install
+brew install maxima
+spack install wxmaxima # new formula - works?
+
+# ode
+https://www.scotchildress.com/wxmaxima/SolvingDifferentialEquations/SolvingDifferentialEquations.html
+
+#
+
+# source
+Maxima 5.47.0 https://maxima.sourceforge.io
+using Lisp SBCL 2.4.9
+
+# diffeq example
+$ maxima
+The function bug_report() provides bug reporting information.
+(%i1) 1 + 1
+;
+(%o1)                                  2
+(%i2) diffeq: 'diff(x^2) + 2;
+                                       2
+(%o2)                             del(x ) + 2
+(%i3) solve(diffeq);
+                                      2
+(%o3)                           [del(x ) = - 2]
+(%i4) de: 'diff(u,t) -u -exp(-t);
+                                du         - t
+(%o4)                           -- - u - %e
+                                dt
+(%i5) gsoln: ode2(de,u,t);
+                                        - 2 t
+                                      %e         t
+(%o5)                       u = (%c - -------) %e
+                                         2
+(%i6) psoln: ic1(gsoln, t=2, u=-0.1 );
+rat: replaced -0.1 by -1/10 = -0.1
+                           - t - 4     2        2 t       4
+                         %e        ((%e  - 5) %e    + 5 %e )
+(%o6)              u = - -----------------------------------
+                                         10
+(%o7)
+(%i10) psoln: ic1(gsoln, t=2, u=-0.1 ), ratprint:false;
+                           - t - 4     2        2 t       4
+                         %e        ((%e  - 5) %e    + 5 %e )
+(%o10)             u = - -----------------------------------
+                                         10
+(%i11) rhs(psoln), t=2, ratsimp;
+                                       1
+(%o11)                               - --
+                                       10
+(%i13) rhs(psoln), t=2;
+                            - 6     2        4       4
+                          %e    ((%e  - 5) %e  + 5 %e )
+(%o13)                  - -----------------------------
+                                       10
+(%i14) us: rhs(psoln);
+                         - t - 4     2        2 t       4
+                       %e        ((%e  - 5) %e    + 5 %e )
+(%o14)               - -----------------------------------
+                                       10
+(%i15) plot2d(us,[t,0,7]);
+(%i17) eqn : 'diff(u(t), t) - exp(-t) -u(t) = 0;
+                         d                    - t
+(%o17)                   -- (u(t)) - u(t) - %e    = 0
+                         dt
+(%i18)  gsoln : desolve(eqn,u(t));
+                                              t     - t
+                               (2 u(0) + 1) %e    %e
+(%o18)                  u(t) = ---------------- - -----
+                                      2             2
+
+#

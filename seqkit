@@ -104,4 +104,6 @@ Compression level:
                                         automatically detect by the first sequence) (default "auto")
   -j, --threads int                     number of CPUs. can also set with environment variable
                                         SEQKIT_THREADS) (default 4)
-
+# subseq
+$ seqkit subseq -r 1:4 /Users/copeland/BaseSpace/DATA/40k.fasta # first 4bp
+$ seqkit subseq -r -4:-1 /Users/copeland/BaseSpace/DATA/40k.fasta # last 4bp

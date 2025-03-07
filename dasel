@@ -2,6 +2,11 @@
 Data selector.  Allows you to query and modify data structures using selector strings.
 Replacement for yq, jq. Works with json, yaml, toml, xml, csv. No runtime dependencies.
 
+# see also
+duckdb
+fx
+jiq
+
 # install
 brew install dasel
 
@@ -27,3 +32,7 @@ create
 linux/mac/windows
 docker support
 faster than jq/yq
+
+# nested structures
+$ dasel -w csv -f /Users/tom/tmp/dasel/287/data.json '.data.search.nodes.all().comments.nodes.all().mapOf(number,parent(3).number,title,parent(3).title,author,parent(3).author.login,createdAt,parent(3).createdAt,commentAuthor,author.login,commentText,bodyText,commentTime,createdAt).merge()'
+$ cat t.taxonid.stats.json  | dasel -w csv -r json .'all().reports.[1].mapOf(acc,accession,b,assembly_info.assembly_name,c,assembly_info.assembly_level)'

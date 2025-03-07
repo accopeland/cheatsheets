@@ -58,3 +58,5 @@ rg -cH <name>
 
 # regex
 https://docs.rs/regex/1.10.3/regex/#syntax
+
+# path

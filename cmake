@@ -36,6 +36,7 @@ cmake -DCMAKE_INSTALL_PREFIX -DCMAKE_BUILD_TYPE (debug,release,..) -DCMAKE_BUILD
 
 # gui
 ccmake
+cmake-gui ?
 
 # cmake find scripts e.g.
 /house/groupdirs/QAQC/Packages/QCTools/ShortReads/Aligners/seqan/seqan-trunk/util/cmake/cuda/FindCUDA.cmake
@@ -191,3 +192,7 @@ add_test(NAME example_test COMMAND example)
 # env vars
 CMAKE_C_COMPILER
 CMAKE_CXX_COMPILER
+
+# missing header files
+# e.g. in /Library/Developer/CommandLineTools/SDKs/MacOSX15.1.sdk/usr/include/c++/v1
+# -D ????

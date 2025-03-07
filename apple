@@ -19,3 +19,9 @@ mdutil – manage the metadata stores used by Spotlight
 
 # realtime fs data
 fs_usage – report system calls and page faults related to filesystem activity in real-time
+
+# cmd-v not working
+check keyboard is US (not DV)
+
+# keys wrong
+check keyboard is US

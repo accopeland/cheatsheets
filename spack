@@ -34,12 +34,18 @@ https://spack-tutorial.readthedocs.io/en/latest/tutorial_developer_workflows.htm
 # update ?
 git pull origin releases/latest
 
+# spack update / git rebase w fork
+# ???
+
 # update
 something similar using spack mark (see https://spack.readthedocs.io/en/latest/basic_usage.html#marking-packages-explicit-or-implicit).
 $ spack mark -i -a
 $ spack install pkgtokeep1
 $ spack install pkgtokeep2
 $ spack gc
+
+# redeploy
+bwrap --dev-bind / / --bind /new/spack/path /old/spack/path
 
 # glossary
 roots - specs explicitly isted in the spack.yaml (not dependencies)
@@ -106,8 +112,6 @@ $ spack config get config
 #-------------------
 # package
 #-------------------
-# spack install error
-Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
 
 # install debugging
 $ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
@@ -1285,6 +1289,7 @@ When using buildcaches across machines, the install path may be different from t
 To address this problem, spack automatically relocates all paths in binaries and scripts to the new location on install.
 However, if binaries are built in a short path, and installed to a longer path, there may insufficient space in the binary to encode the new path leading to an install failure.
 A source build is always an option , but to reduce the likelihood of this happening, it is highly recommended to add padding to the install root during the build, as specified in the config.yaml
+# confg.yaml
  config:
    install_tree:
      root: /opt/spack
@@ -1484,139 +1489,6 @@ $ git checkout -b temporarybranch 190a1bf5238279a53b85fdad9e1b3f2a44689ae9
 # unit test
 $ spack unit-test -k hide_implicits [/path/to/testfile]
 
-#--------------------
-# debugging
-#-------------------
-# Error: "Error: Spec version is not concrete"
-means you forgot to include a version on some tool you added to packages.yaml : externals
-
-# Error: module: not found
-# Fix: make sure MODULEPATH is correct
-
-# Error: C compiler .../gcc-12.2.0-be6eu2n/bin/gcc does not exist, or does not run correctly. The compiler gcc@=12.2.0 will not be used during concretization.
-# Fix: ???
-
-# Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
-# Fix: spack clean -a ???
-
-#Error: AttributeError: module 'spack.pkg.builtin.pycoverm-git' has no attribute 'PycovermGit'
-# Fix: spack clean -m
-
-# Error: timeout error on install
-# Fix: spack clean -f
-
-# Error: autoreconf failures: missing macros
-# Fix:
-  depends_on("autoconf", type="build")
-  depends_on("automake", type="build")
-  depends_on("libtool", type="build")
-  depends_on("autoconf-archive", type="build")
-  def setup_dependent_build_environment(self, env, dependent_spec):
-    """Adds the ACLOCAL path for autotools."""
-    env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
-
-# Error: module load fails due to short name missing -- spack modules have very long names and 'spack' is needed to alias them
-# Fix: if you do not know the name of the specific numpy module you wish to load, run
-$ spack module lmod loads
-
-# Error: zero length files
-# Fix: ???
-$ spack install --overwrite <spec>
-$ spack -d uninstall /xnoykzf  ## --debug (-d)
-$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
-
-# Error: "Error: Spec version is not concrete"
-- means you forgot to include a version on some tool you added to packages.yaml : externals
-
-# Error: corrupted database
-# Fix: reindex
-$ spack reindex
-
-# Error: spack modules lmod refresh --delete-tree -y
-==> Error: Command module spack.cmd.modules (/clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/lib/spack/spack/cmd/modules/__init__.py) must define function 'modules'.
-# Fix: 'module' not 'modules'
-
-
-# Error:  Warning: some module files could not be written (on spack module lmod refresh --delete-tree -y)
-# Fix: ???
-#
-
-# config debugging
-$ spack config --scope defaults blame modules
-$ spack config --scope defaults blame
-
-# install debugging
-$ spack setup <foo>
-
-# install debugging
-$ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
-$ spack cd gzip
-$ spack build-env gzip %gcc@12.2.0 -- bash  ## rerun configure with whatever changes
-# see https://github.com/Alexpux/MINGW-packages/commit/2e8da32042344c704e62cf8a5147502e3946ea0f
-# see https://github.com/msys2/MINGW-packages/issues/326
-"""
-In file included from /usr/include/string.h:633,
-                 from ./string.h:41,
-                 from /tmp/accopeland/spack-stage/spack-stage-gzip-1.12-rd5atkxcbgfn7zwxly3o7usbft6w7xw6/spack-src/lib/basename-lgpl.c:25:
-./string.h:1091:1: error: expected identifier or '(' before '__extension__'
- 1091 | _GL_FUNCDECL_SYS (strndup, char *,
-      | ^~~~~~~~~~~~~~~~
-"""
-## workaround for compiling by hand -- needs patch() to get spack working? See wget/gnulib.patch for inspiration
-CFLAGS+=" -DGNULIB_PORTCHECK=1" CXXFLAGS+=" -DGNULIB_PORTCHECK=1" ./configure
-make
-
-# Error: spack style produces "==> Error: 'NoneType' object is not callable"
-# Fix: nuke the bootstrap directory: rm -rf ~/.spack/bootstrap
-
-# Error: "Error: Spec version is not concrete"
-- means you forgot to include a version on some tool you added to packages.yaml : externals
-
-# Error: zero length files
-# Fix: ???
-$ spack install --overwrite <spec>
-$ spack -d uninstall /xnoykzf  ## --debug (-d)
-$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
-
-# Error: corrupted database
-# Fix: reindex
-$ spack reindex
-
-# redeploy
-bwrap --dev-bind / / --bind /new/spack/path /old/spack/path
-
-# Error: cannot detect libc from gcc@=12.2.0. The compiler will not be used during concretization.
-# See: https://github.com/spack/spack/issues/44177
-# Fix?: https://github.com/spack/spack/pull/44182
-
-# Error: gcc-runtime
-# Fix:
-$ spack mirror add develop-developer-tools-manylinux2014 https://binaries.spack.io/develop/developer-tools-manylinux2014
-$ spack buildcache keys --install --trust
-
-# Error: ==> Error: /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/modules.yaml:9: ['mpi'] is not of type 'object'
-# Fix: look for typos in keywords e.g. 'heirarchy' instead of 'hierarchy'
-
-
-
-# troubleshooting
-# Error: init hang
-# Fix: rm -rf ~/.spack/cray ~/.spack/cache
-
-#Error:  If spack install <package>@<version>%<compiler> prints error :==> Error: 'str' object has no attribute 'get'
-# Fix: rm -rf ~/.spack
-
-# Error: misc unresolveable errors
-# Fix: delete all spack dirs
-rm -rf your_path_to/spack-install # delete spack-install folder
-rm -rf your_path_to/spack-stages  # delete spack-stages folder
-rm -rf your_path_to/modules       # delete modules folder
-rm -rf ~/.spack/cache             # delete cache folder
-
-# Error: 2.1 (2023-01-15) Problems with Python 3.6
-Python 3.6 is now deprecated for running Spack and support for 3.6, 3.7 and earlier will be removed in the next few months.
-# Fix: export SPACK_PYTHON=/usr/bin/python3.8
-
 # package prefs --https://spack.readthedocs.io/en/latest/build_settings.html#assigning-package-attributes
 packages.yaml
 packages:
@@ -1804,13 +1676,56 @@ index b60e570..a8acfb0 100644
 +# install
 +install(TARGETS sshash)
 
+# go
+spack create -t go -> GoPackage
+
+# rust
+spack create -t cargo -> CargoPackage
+
+# java
+spack create -t package -> Package
+
+# maven
+spack create -t maven -> MavenPackage
+depends_on("java", type=("build", "run"))
+depends_on("maven", type="build")
+In the pom.xml file, you may see sections like:
+
+# checksums / versions
+# By default, Spack will only install a tarball package if it has a checksum and that checksum matches.
+# You can override this with spack install --no-checksum.
+# Trust is established in different ways for different downloads:
+- tarball => the tarball is checksummed.
+- git => commit= are trusted implicitly when a hash is specified
+- tarball URL (untrusted) may be supplied without a checksum
+- git()  => specify a branch or tag instead of a hash
+
+# package name not executable name
+executables = ["^rustc$", "^cargo$"]
+
+# edit all instances of file.txt in package tree (see ea-utils, openmessaging-benchmark)
+with working_dir(self.build.directory):
+  #...
+  for f in next(os.walk(os.getcwd()))[2]:
+    filter_file("/usr/bin/perl", spec["perl"].prefix.bin.perl,f)
+
+#--------------------
+# debugging
+#-------------------
+# Debugging -- output in log files
+llnl.util import tty
+tty.warn(...)
+
+# spack install error
+Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
+
 # Error: permission denied (on go pkg failure)
 # Fix: chmod -R 777 <pkgdir> && rm -rf <...>
-# or 
+# or
 # '-modcacherw'
 
 
-# rename binary 
+# rename binary
 # alternate name
 # ???
 
@@ -1831,27 +1746,29 @@ index b60e570..a8acfb0 100644
 # Error: bbcp fatal: unable to access 'https://www.slac.stanford.edu/~abh/bbcp/bbcp.git/': SSL certificate problem: unable to get local issuer certificate
 # Fix: spack -k install bbcp --verbose bbcp  cxxflags='-std=c++11'
 
-# go
-spack create -t go -> GoPackage
 
-# rust
-spack create -t cargo -> CargoPackage
+# Error: configure.ac:47: You should run autoupdate.
+# Fix: force autoreconf, setup_dependent_build_environment() to fix ACLOCAL_PATH
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal) # Adds ACLOCAL path for autotools
 
-# java
-spack create -t package -> Package
-
-# maven
-spack create -t maven -> MavenPackage
-depends_on("java", type=("build", "run"))
-depends_on("maven", type="build")
-In the pom.xml file, you may see sections like:
+    def autoreconf(self, spec, prefix):
+        sh = which("sh")
+        sh("./autogen.sh")
+        autoreconf("--install","--verbose","--force")
 
 # Error: py-ruamel-yaml-clib: incompatible-pointer-types error
 # Fix: edit package.py -> -Wno-incomptatible-pointer-types (CFLAGS)
 
-
 # Error: NoDigestError: Attempt to check URLFetchStrategy with no digest.
 # Fix: --no-checksum ???
+
+# package 'with' blocks
+with default_args(type="build"):
+  depends_on("py-setuptools@45:", when="@1.1:")
+  depends_on("py-setuptools")
+with when("@3.7:"):
+  depends_on(...)
 
 # checksums / versions
 # By default, Spack will only install a tarball package if it has a checksum and that checksum matches.
@@ -1864,18 +1781,6 @@ In the pom.xml file, you may see sections like:
 
 # package name not executable name
 executables = ["^rustc$", "^cargo$"]
-<<<<<<< HEAD
->>>>>>> refs/remotes/origin/master
-
-# package 'with' blocks
-with default_args(type="build"):
-  depends_on("py-setuptools@45:", when="@1.1:")
-  depends_on("py-setuptools")
-with when("@3.7:"):
-  depends_on(...)
-||||||| a2c2fc2
->>>>>>> refs/remotes/origin/master
-=======
 
 # Error: rust virtual manifest error
 # Fix: override CargoBuilder::build_directory
@@ -1894,4 +1799,147 @@ class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
 # Debugging -- output in log files
 llnl.util import tty
 tty.warn(...)
->>>>>>> refs/remotes/origin/master
+
+# Error: "Error: Spec version is not concrete"
+means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: module: not found
+# Fix: make sure MODULEPATH is correct
+
+# Error: C compiler .../gcc-12.2.0-be6eu2n/bin/gcc does not exist, or does not run correctly. The compiler gcc@=12.2.0 will not be used during concretization.
+# Fix: ???
+
+# Error: Failed to install zlib due to AttributeError: 'NoneType' object has no attribute 'replace'
+# Fix: spack clean -a ???
+
+#Error: AttributeError: module 'spack.pkg.builtin.pycoverm-git' has no attribute 'PycovermGit'
+# Fix: spack clean -m
+
+# Error: timeout error on install
+# Fix: spack clean -f
+
+# Error: autoreconf failures: missing macros
+# Fix:
+  depends_on("autoconf", type="build")
+  depends_on("automake", type="build")
+  depends_on("libtool", type="build")
+  depends_on("autoconf-archive", type="build")
+  def setup_dependent_build_environment(self, env, dependent_spec):
+    """Adds the ACLOCAL path for autotools."""
+    env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
+
+# Error: module load fails due to short name missing -- spack modules have very long names and 'spack' is needed to alias them
+# Fix: if you do not know the name of the specific numpy module you wish to load, run
+$ spack module lmod loads
+
+# Error: zero length files
+# Fix: ???
+$ spack install --overwrite <spec>
+$ spack -d uninstall /xnoykzf  ## --debug (-d)
+$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
+
+# Error: "Error: Spec version is not concrete"
+- means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: corrupted database
+# Fix: reindex
+$ spack reindex
+
+# Error: spack modules lmod refresh --delete-tree -y
+==> Error: Command module spack.cmd.modules (/clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/lib/spack/spack/cmd/modules/__init__.py) must define function 'modules'.
+# Fix: 'module' not 'modules'
+
+# Error:  Warning: some module files could not be written (on spack module lmod refresh --delete-tree -y)
+# Fix: ???
+
+# config debugging
+$ spack config --scope defaults blame modules
+$ spack config --scope defaults blame
+
+# install debugging
+$ spack setup <foo>
+
+# install debugging
+$ spack install --overwrite --test root --show-log-on-error -j 1 --verbose  -y bzip2
+$ spack cd gzip
+$ spack build-env gzip %gcc@12.2.0 -- bash  ## rerun configure with whatever changes
+# see https://github.com/Alexpux/MINGW-packages/commit/2e8da32042344c704e62cf8a5147502e3946ea0f
+# see https://github.com/msys2/MINGW-packages/issues/326
+"""
+In file included from /usr/include/string.h:633,
+                 from ./string.h:41,
+                 from /tmp/accopeland/spack-stage/spack-stage-gzip-1.12-rd5atkxcbgfn7zwxly3o7usbft6w7xw6/spack-src/lib/basename-lgpl.c:25:
+./string.h:1091:1: error: expected identifier or '(' before '__extension__'
+ 1091 | _GL_FUNCDECL_SYS (strndup, char *,
+      | ^~~~~~~~~~~~~~~~
+"""
+## workaround for compiling by hand -- needs patch() to get spack working? See wget/gnulib.patch for inspiration
+CFLAGS+=" -DGNULIB_PORTCHECK=1" CXXFLAGS+=" -DGNULIB_PORTCHECK=1" ./configure
+make
+
+# Error: spack style produces "==> Error: 'NoneType' object is not callable"
+# Fix: nuke the bootstrap directory: rm -rf ~/.spack/bootstrap
+
+# Error: "Error: Spec version is not concrete"
+- means you forgot to include a version on some tool you added to packages.yaml : externals
+
+# Error: zero length files
+# Fix: ???
+$ spack install --overwrite <spec>
+$ spack -d uninstall /xnoykzf  ## --debug (-d)
+$ spack --disable-locks -d uninstall /hash  # --disable-locks (-L)
+
+# Error: corrupted database
+# Fix: reindex
+$ spack reindex
+
+# Error: cannot detect libc from gcc@=12.2.0. The compiler will not be used during concretization.
+# See: https://github.com/spack/spack/issues/44177
+# Fix?: https://github.com/spack/spack/pull/44182
+
+# Error: gcc-runtime
+# Fix:
+$ spack mirror add develop-developer-tools-manylinux2014 https://binaries.spack.io/develop/developer-tools-manylinux2014
+$ spack buildcache keys --install --trust
+
+# Error: ==> Error: /clusterfs/jgi/groups/gentech/genome_analysis/spack-acc/etc/spack/modules.yaml:9: ['mpi'] is not of type 'object'
+# Fix: look for typos in keywords e.g. 'heirarchy' instead of 'hierarchy'
+
+# Error: init hang
+# Fix: rm -rf ~/.spack/cray ~/.spack/cache
+
+#Error:  If spack install <package>@<version>%<compiler> prints error :==> Error: 'str' object has no attribute 'get'
+# Fix: rm -rf ~/.spack
+
+# Error: misc unresolveable errors
+# Fix: delete all spack dirs
+rm -rf your_path_to/spack-install # delete spack-install folder
+rm -rf your_path_to/spack-stages  # delete spack-stages folder
+rm -rf your_path_to/modules       # delete modules folder
+rm -rf ~/.spack/cache             # delete cache folder
+
+# Error: 2.1 (2023-01-15) Problems with Python 3.6
+Python 3.6 is now deprecated for running Spack and support for 3.6, 3.7 and earlier will be removed in the next few months.
+# Fix: export SPACK_PYTHON=/usr/bin/python3.8
+
+# Error: `pkg.m4' is missing or not found by aclocal.
+# Fix:
+
+# Error:  Cannot select a single "node_os" for package "glibc"
+# Fix: something w glibc?
+
+# Error: Error: failed to concretize `glibc` for the following reasons:
+     1. glibc compiler '%gcc@12.3.0' incompatible with 'os=rhel9'
+# Fix: spack clean -a   (maybe spack compiler find)
+[copeland@dtn02:~] spack spec zlib-ng
+==> Error: failed to concretize `zlib-ng` for the following reasons:
+     1. Cannot select a single "node_os" for package "glibc"
+[copeland@dtn02:~] spack clean -a
+==> Removing all temporary build stages
+==> Removing cached downloads
+==> Removing install failure marks
+==> Removing cached information on repositories
+==> Removing python cache files
+# maybe not needed
+[copeland@dtn02:~] spack compiler find
+>>>>>>> d0a5183 (minor fixes)

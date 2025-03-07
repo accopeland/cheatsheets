@@ -11,6 +11,9 @@ $ fd <search query>
 # Specifying the root directory for the search:
 $ fd <search query> <directory>
 
+# Search other than cwd and return only matching filename:
+$ fd --max-depth 1 --base-directory /global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/20241031_LH00223_0095_A22FLHCLT4/InterOp bin
+
 # Searching for a particular file extension:
 $ fd -e <file extension> <search query>
 

@@ -8,7 +8,6 @@ notes on modal text editor vim
 #  fix ^M line ending in vim
 :set ff=unix
 
-
 # File management
 
 :e              reload file
@@ -286,11 +285,18 @@ let g:better_whitespace_operator='_s'
 let g:strip_whitespace_on_save = 1
 ##For exceptions of all see g:better_whitespace_filetypes_blacklist.
 
-" Removes trailing spaces
+# Remove empty lines
+:g/^$/d
+:v/./d
+
+# Removes trailing spaces
 function TrimWhiteSpace()
   %s/\s*$//
   ''
 endfunction
+
+# Over a range defined by marks a and b, operate on each line containing pattern. The operation is to replace each pattern2 with string.
+:'a,'bg/pattern/s/pattern2/string/gi
 
 # make
 :make
@@ -315,3 +321,26 @@ or
 # delete bash func
 da{
 /function dn
+
+# regex -- second col uppercase word enquote
+:%s@\([A-Z][a-z]\+\)@"\1@c
+
+# grep highlight color
+see :h hl-CurSearch
+highlight Search term=reverse ctermbg=3 ctermfg=0 guibg=Gold2
+
+# highlight quickfix
+highlight QuickFixLine cterm=bold gui=bold
+
+# highlight opts
+highlight=8:SpecialKey,~:EndOfBuffer,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,y:CurSearch,m:MoreMsg,M:ModeMsg,n:LineNr,a:LineNrAbove,b:LineNrBelow,N:CursorLineNr,G:CursorLineSign,O:CursorLineFold,r:Question,s:StatusLin e,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn,A:DiffAdd,C:DiffChange,D:DiffDelete,T:DiffText,>:SignColumn,-:Conceal,B:SpellBad,P:SpellCap,R:SpellRare,L:SpellLocal,+:Pmenu,=:Pm enuSel,x:PmenuSbar,X:PmenuThumb,*:TabLine,#:TabLineSel,_:TabLineFill,!:CursorColumn,.:CursorLine,o:ColorColumn,q:QuickFixLine,z:StatusLineTerm,Z:StatusLineTermNC
+
+# delete current bash function
+dv/^}
+V}kx
+
+# plugins / packages
+vundle
+bundle
+tox
+plugged

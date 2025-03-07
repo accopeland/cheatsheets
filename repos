@@ -1,3 +1,35 @@
+# Deprecated
+https://bitbucket.org/berkeleylab/jgi-sdm-kbase
+https://bitbucket.org/berkeleylab/jgi-jrm
+https://code.jgi.doe.gov/qaqc/autoqc-data # autoqc thresholds
+https://code.jgi.doe.gov/qaqc/autoqc # autoqc code
+https://foster505@bitbucket.org/berkeleylab/jgi-mga.git # Brian's MG assembly jgi_mga_meta_rqc.py
+https://bitbucket.org/berkeleylab/jgi-mga
+https://bitbucket.org/berkeleylab/jgi-mt/
+https://bitbucket.org/berkeleylab/jgi-meta/
+https://bitbucket.org/berkeleylab/jgi-ml
+git@bitbucket.org:wandreopoulos/rnaseq_microbe.git
+https://bitbucket.org/account/user/berkeleylab/projects/JGIUS
+https://bitbucket.org/berkeleylab/jgi-rqc # rqc (/global/dna/projectdirs/PI/rqc/prod/ )
+https://bitbucket.org/berkeleylab/jgi-rqc-autoqc # stephans code rqc autoqc
+https://bitbucket.org/berkeleylab/jgi-rqc-autoqc-data # stephans code rqc-autoqc-data
+https://bitbucket.org/berkeleylab/jgi-qaqc
+https://bitbucket.org/berkeleylab/jgi-gaag
+https://bitbucket.org/berkeleylab/jgi-bbtools
+jigsaw -
+https://bitbucket.org/berkeleylab/jgi-auto-qc  # Michael's autoqc code
+https://bitbucket.org/berkeleylab/jgi_itagger # itagger
+https://accopeland@bitbucket.org/berkeleylab/jgi-rqc-autoqc-data.git # autoqc
+
+# GA/Bryce
+https:/code.jgi.doe.gov/qaqc/ga-qc
+https://code.jgi.doe.gov/qaqc/ga-rs
+https://code.jgi.doe.gov/qaqc/ga-web
+https://code.jgi.doe.gov/qaqc/ga-autoqc
+https://code.jgi.doe.gov/qaqc/ga-tools
+https://code.jgi.doe.gov/qaqc/ga-docker
+https://code.jgi.doe.gov/qaqc/ga-finalizer
+https://code.jgi.doe.gov/qaqc/ga-microbe_asm
 
 #GAA:
 https://code.jgi.doe.gov/gaa
@@ -7,13 +39,6 @@ https://code.jgi.doe.gov/gaa/jgi_meta_wdl_set.git
 WDL  https://code.jgi.doe.gov/BFoster/jgi_meta_wdl
 MG/MT https://code.jgi.doe.gov/BFoster/jgi_meta
 MG 5.0 annotation https://code.jgi.doe.gov/official-jgi-workflows/jgi-wdl-pipelines/img-omics.git -b master
-Deprecated
-https://foster505@bitbucket.org/berkeleylab/jgi-mga.git # Brian's MG assembly jgi_mga_meta_rqc.py
-https://bitbucket.org/berkeleylab/jgi-mga
-https://bitbucket.org/berkeleylab/jgi-mt/
-https://bitbucket.org/berkeleylab/jgi-meta/
-https://bitbucket.org/berkeleylab/jgi-ml
-git@bitbucket.org:wandreopoulos/rnaseq_microbe.git
 
 #USA
 https://code.jgi.doe.gov/user-support-analysis
@@ -26,8 +51,6 @@ https://code.jgi.doe.gov/user-support-analysis/jgi-exome
 https://code.jgi.doe.gov/user-support-analysis/drop-seq
 https://code.jgi.doe.gov/user-support-analysis/dap-seq
 https://code.jgi.doe.gov/user-support-analysis/chip-seq
-Deprecated?
-https://bitbucket.org/account/user/berkeleylab/projects/JGIUS
 
 #QAQC: https://code.jgi.doe.gov/qaqc
 
@@ -38,33 +61,70 @@ https://code.jgi.doe.gov/qaqc/thresher (qc tool)
 https://code.jgi.doe.gov/qaqc/ga-web (GA website: https://ga.jgi.lbl.gov)
 https://code.jgi.doe.gov/qaqc/rqc-finalizer
 
+# PPS -- https://docs.jgi.doe.gov/display/PPS/Repositories
+https://bitbucket.org/berkeleylab/couch-file
+https://bitbucket.org/berkeleylab/jgi-clarity-scripts/
+https:/bitbucket.org/berkeleylab/jgi_pps_clarity-client.git
+https://bitbucket.org/berkeleylab/jgi-clarity/
+https://bitbucket.org/berkeleylab/jgi-claritytestframework/src/develop/
+https://bitbucket.org/berkeleylab/jgi-data-generator-ui
+https://bitbucket.org/berkeleylab/jgi-pacbio-dashboard
+# curl http://ws-access.jgi.doe.gov/pps-pacbio-dashboard | python -m json.tool
+https://bitbucket.org/berkeleylab/jgi-pacbio-dashboard/
+https://bitbucket.org/berkeleylab/jgi-pacbio-reports/
+https://bitbucket.org/berkeleylab/jgi-pps-benchling-api-manager
+https://bitbucket.org/berkeleylab/jgi-pps-clarity-benchling-messaging
+https://bitbucket.org/berkeleylab/jgi-pps-data-engine-building-blocks
+https://bitbucket.org/berkeleylab/jgi-pps-excel-framework
+https://bitbucket.org/berkeleylab/jgi-pps-library-index/src/master/
+https://bitbucket.org/berkeleylab/jgi-pps-pooling-framework
+https://bitbucket.org/berkeleylab/jgi-pps-springboot
+https://bitbucket.org/berkeleylab/jgi-pps-utils
+https://bitbucket.org/berkeleylab/jgi-sample-maker/
+https://bitbucket.org/berkeleylab/jgi-sequencing-project/
+http://clarityprd1.jgi.doe.gov:57867/actuator/mappings |json_pp|grep predicate|grep -v actuator|grep -v error
+https://bitbucket.org/berkeleylab/jgi-sow-item/
+http://clarityprd1.jgi.doe.gov:60966/actuator/mappings
+https://bitbucket.org/berkeleylab/jgi_pps_clarity-node-manager
+https://bitbucket.org/berkeleylab/pps-dap-seq	pps-dap-seq
+https://bitbucket.org/berkeleylab/pps-dap-seq-libs
+https://bitbucket.org/berkeleylab/pps-dap-seq-schema/
+https://bitbucket.org/berkeleylab/singlecell
+https://singlecell.jgi.doe.gov/
+https://singlecell-dev.jgi.doe.gov/
+https://bitbucket.org/dnscott/dap-seq-backup
+https://bitbucket.org/dnscott/elastic	useful
+https://bitbucket.org/dnscott/pps-consul-cfg
+https://bitbucket.org/dnscott/pps-nginx-conf
+https://bitbucket.org/dnscott/pps-nginx-static
+https://bitbucket.org/tlpaley/jgi-fungal-clustering/src/master/
+https://code.jgi.doe.gov/pps/reports/jgi-pps-update-udfs
+https:/bitbucket.org/berkeleylab/jgi_pps_clarity-client.git
+https://lvishwas@bitbucket.org/berkeleylab/jgi-data-request-executer/
+
 #RQC
 https://code.jgi.doe.gov/qaqc/jgi-rqc-pipeline
 https://code.jgi.doe.gov/qaqc/jgi-rqc (/global/dna/projectdirs/PI/rqc/prod/ )
 https://code.jgi.doe.gov/qaqc/jgi-rqc-web
-https://code.jgi.doe.gov/qaqc/autoqc-data # autoqc thresholds
-https://code.jgi.doe.gov/qaqc/autoqc # autoqc code
-Deprecated?
-https://bitbucket.org/berkeleylab/jgi-rqc # rqc (/global/dna/projectdirs/PI/rqc/prod/ )
-https://bitbucket.org/berkeleylab/jgi-rqc-autoqc # stephans code rqc autoqc
-https://bitbucket.org/berkeleylab/jgi-rqc-autoqc-data # stephans code rqc-autoqc-data
-https://bitbucket.org/berkeleylab/jgi-qaqc
-https://bitbucket.org/berkeleylab/jgi-gaag
-https://bitbucket.org/berkeleylab/jgi-bbtools
 
 #Portal
 https://bitbucket.org/berkeleylab/jgi-portal-libraries
 https://bitbucket.org/berkeleylab/jgi-genome-portal
 
 #SDM
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-ncbi.git
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-cron
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-common
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-hudsonalpha
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-illumina
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-misc
+https://code.jgi.doe.gov/advanced-analysis/jgi-sdm-pacbio
+https://code.jgi.doe.gov/advanced-analysis/jgi-jamo
+https://code.jgi.doe.gov/advanced-analysis/jgi-jat
+https://code.jgi.doe.gov/advanced-analysis/jgi-jat-email
+https://code.jgi.doe.gov/advanced-analysis/jgi-jat-ui
 https://bitbucket.org/htandra/jgi-kbase-es
 https://bitbucket.org/berkeleylab/jgi-lapinpy
-https://bitbucket.org/berkeleylab/jgi-sdm-ncbi
-https://bitbucket.org/berkeleylab/jgi-sdm-pacbio
-https://bitbucket.org/berkeleylab/jgi-sdm-kbase
-https://bitbucket.org/berkeleylab/jgi-sdm-illumina
-https://bitbucket.org/berkeleylab/jgi-sdm-common
-https://bitbucket.org/berkeleylab/jgi-jrm
 
 #DW
 https://bitbucket.org/berkeleylab/jgi-its-warehouse
@@ -108,13 +168,6 @@ https://foster505@bitbucket.org/berkeleylab/jgi-mga.git # Brian's MG assembly jg
 # misc
 https://bitbucket.org/wandreopoulos/singlecelldb/
 https://bitbucket.org/wandreopoulos/jgi-rqc-16s-library/
-
-# deprecated
-jigsaw -
-https://bitbucket.org/berkeleylab/jgi-auto-qc  # Michael's autoqc code
-https://bitbucket.org/berkeleylab/jgi_itagger # itagger
-https://accopeland@bitbucket.org/berkeleylab/jgi-rqc-autoqc-data.git # autoqc
-bitbucket.org:berkeleylab/jgi-gaag.git
 
 # MISC
 https://github.com/accopeland/MDM_SAG/tree/master/contaminated

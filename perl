@@ -97,3 +97,8 @@ perlbrew
 cpan> o conf makepl_arg "INSTALLBIN=/usr/local/bin INSTALLSCRIPT=/usr/local/bin"
 cpan> o conf commit
 cpan> exit
+
+# avoid quoting hell w heredoc
+$ perl -lna - ng.input <<'EOF'
+if (@F==2) {print $F[0] . "\t". $F[1] . "\n"} else { print "\t" . $F[0] . "\n" }
+EOF

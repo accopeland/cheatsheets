@@ -10,6 +10,10 @@ $ ssh-A <user>@<host>
 # To execute a command on a remote server:
 $ ssh-t <user>@<host> 'the-remote-command'
 
+# remote
+# see ssh/.config + RemoteCommand
+$  ssh -T perlmutter shifter --image=quay.io/biocontainers/seqkit@sha256:2f3cb2be9909165a153e9b9bef2956d1d7ef7ee4c6f08984ff07f7562c3d7327 -E seqkit
+
 # To connect to a host with a specific key exchange algorithm:
 # Full list of available algorithms : man ssh_config
 $ ssh-oKeXAlgorithms=+diffie-hellman-group-exchange-sha1 <user>@<server>
@@ -74,9 +78,7 @@ ssh-keygen -t rsa -b 4096 -f ~/.ssh/gitlab_4096
 
 # bastion postgres port-forward
 # see https://aws.amazon.com/premiumsupport/knowledge-center/rds-connect-using-bastion-host-linux/
-# works
-# dw-prddb01.jgi.doe.gov
-$ ssh-i ~/.ssh/nersc -fN -l copeland -L 5432:128.3.122.41:5432 cori.nersc.gov -v
+$ ssh -i ~/.ssh/nersc -fN -l copeland -L 5432:128.3.122.41:5432 cori.nersc.gov -v # works:dw-prddb01.jgi.doe.gov
 Then in DBeaver (etc) , connect to localhost:5432
 
 # tunnel kill
@@ -100,9 +102,10 @@ ServerAliveInterval operates on the ssh layer. It will actually send data throug
 # keepalive - kernel params
 grep -T . /proc/sys/net/ipv4/tcp_keepalive*
 
-# tunnel 3 hop
+# tunnel / portforward  3 hop
 $ ssh-A -t myhomegateway -l user1 -p 11111 ssh -A -t localhost -l user2 -p 22222 ssh -A servername -l user3 -p 33333
 http://sshmenu.sourceforge.net/articles/transparent-mulithop.html
+
 # cori
 $ ssh-A -t cori ssh -A -t cmom05 ssh -A -t nid00025
 
@@ -118,10 +121,7 @@ xauth add $DISPLAY -  `mcookie`
 ~& Background ssh at logout when waiting for forwarded connection / X11 sessions to terminate.
 ~? Display a list of escape characters.
 ~B Send a BREAK to the remote system (only useful for SSH protocol version 2 and if the peer supports it).
-~C Open command line. Currently this allows the addition of port
-forwardings using the -L and -R options (see below). It also al-
-lows the cancellation of existing remote port-forwardings using
--KR hostport. Basic help is available, using the -h option.
+~C Open command line. Currently this allows the addition of portforwardings using the -L and -R options (see below). It also allows the cancellation of existing remote port-forwardings using -KR hostport. Basic help is available, using the -h option.
 
 # ssh dropped connections
 https://github.com/openssl/openssl/issues/9984
@@ -186,18 +186,20 @@ HostName <hostname_of_server>
 User <user_on_server>
 ProxyCommand ssh <user_on_server>@<proxy_server> nc %h %p
 
+# reverse proxy + SOCKS
+Create SOCKS proxy on dtn. laptop connects web browser to local port 24680 and by proxy, uses SOCKS proxy at dtn
+dtn$ ssh -R 24680:localhost:12345 remotehost # dtn
+dtn$ ssh -D 12345 localhost #  dtn
+
 # multihop ssh -- https://unix.stackexchange.com/questions/317491/proxycommand-use-for-multiple-hops-and-prompt-authentication
 requires >= v7.3
-$ ssh-q -J user1@jumphost1,user2@jumphost2,user3@jumphost3 user@server
+$ ssh -q -J user1@jumphost1,user2@jumphost2,user3@jumphost3 user@server # same as below
+$ ssh -l username1 -t jumphost1	ssh -l username2 -t jumphost2 ssh -l username3 -t jumphost3 ssh -l username4    server
 
-# to get
-$ ssh -l username1 -t jumphost1
-	ssh -l username2 -t jumphost2 \
-		ssh -l username3 -t jumphost3 \
-			ssh -l username4    server
+# multihop w different logins
+ssh -J accopeland@jgi-interactive00.jgi.lbl.gov,copeland@dtn03.nersc.gov copeland@perlmutter.nersc.gov  # works
 
-edit ~/.ssh/config
-
+# multihop via 'config' -- edit ~/.ssh/config
 Host jumphost1
   User username1
 Host jumphost2
@@ -210,9 +212,9 @@ Host server
   User username4
   ProxyCommand ssh -W %h:%p jumphost3
 
-or
+# multihop via proxycommand
+$ ssh -oProxyCommand='ssh -oProxyCommand=\'ssh -o ProxyCommand=\\\'ssh username@hostd nc %h %p 2>/dev/null\\\' username@hostc nc %h %p 2> /dev/null' username@hostb nc %h %p 2> /dev/null' username@hostd
 
-$ ssh-oProxyCommand='ssh -oProxyCommand=\'ssh -o ProxyCommand=\\\'ssh username@hostd nc %h %p 2>/dev/null\\\' username@hostc nc %h %p 2> /dev/null' username@hostb nc %h %p 2> /dev/null' username@hostd
 # log of successful connectoin w forwarding
 ...
 debug1: Authentications that can continue: publickey,password,keyboard-interactive,hostbased
@@ -260,3 +262,28 @@ Host "10.2.?.*","10.2.??.*", "10.2.10?.*","10.2.11?.*","!10.2.128.*","!10.2.129.
 # Error: ssh_dispatch_run_fatal
 # Fix:\
 
+# % vars := TOKENS
+Arguments to some keywords can make use of tokens, which are
+expanded at runtime:
+      %%    A literal ‘%’.
+      %C    Hash of %l%h%p%r%j.
+      %d    Local user's home directory.
+      %f    The fingerprint of the server's host key.
+      %H    The known_hosts hostname or address that is being searched for.
+      %h    The remote hostname.
+      %i    The local user ID.
+      %j    The contents of the ProxyJump option, or the empty string if this option is unset.
+      %K    The base64 encoded host key.
+      %k    The host key alias if specified, otherwise the original remote hostname given on the command line.
+      %L    The local hostname.
+      %l    The local hostname, including the domain name.
+      %n    The original remote hostname, as given on the command line.
+      %p    The remote port.
+      %r    The remote username.
+      %T    The local tun(4) or tap(4) network interface assigned if tunnel forwarding was requested, or "NONE" otherwise.
+      %t    The type of the server host key, e.g.  ssh-ed25519.
+      %u    The local username.
+      %I    string describing reason for a KnownHostsCommand execution:
+	    - ADDRESS when looking up host by address (only when CheckHostIP enabled),
+	    - HOSTNAME when searching by hostname
+            - ORDER when preparing host key algorithm preference list to use for the destination host.

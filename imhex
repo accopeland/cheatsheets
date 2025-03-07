@@ -1,0 +1,126 @@
+# see ~/Projects/2024/20241108-_InterOp
+
+open /Applications/Imhex.app
+
+# pattern -- cbcl
+mport std.sys;
+import std.core;
+import std.io;
+#pragma array_limit 16777216
+#pragma pattern_limit 4294967296
+struct QVals {
+    u32 bin_from ;
+    u32 bin_to ;
+} ;
+u16 version_number @ 0x00;
+u32 header_size @ 0x02;
+u8 bits_per_base @ 0x06 ;
+u8 bits_per_qval @ 0x07 ;
+u32 num_bins @0x08 ; // 0 => no mapping
+/*
+B>0 => B pairs of u32 values {from, to}, {from, to}, …
+  from: qscore
+  to:   qscore
+*/
+QVals qualbins[num_bins] @ 0x0c ;
+u32 num_tiles @ 0x2C;
+// gzip virtual file offsets one per tile (num_tiles records)
+u32 tile_number @0x30 ;
+u32 clusters_in_cur_block @ 0x34 ;
+u32 uncompressed_block_size @ 0x38 ;
+u32 compressed_block_size @ 0x3c ;
+u8 non_PF_clusters_excluded_flag @ 0x40 ;
+/*
+N blocks of gzip files, where N is the num_tiles .
+Each block consists of 'C' basecall/qscore pairs where
+C is number of clusters for given tile.
+
+Each basecall/qscore pair has the following format (assuming base calls use 2 bits):
+• Bits 0–1: Base calls (respectively [A, C, G, T] for [00, 01, 10, 11])
+• Bits 2 and up: Q score
+  (unsigned Q bit little endian integer where Q is #bits per q-score [bits_per_qval]).
+
+For a 2-bit quality score, each byte has two clusters where
+- the bottom 4 bits are the first cluster
+- the higher 4 bits are the second cluster.
+*/
+bitfield BaseCode {
+    b : 2 ;
+} ;
+enum Base  : BaseCode  {
+    A = 0b00 ,
+    C = 0b01 ,
+    G = 0b10 ,
+    T = 0b11 ,
+};
+bitfield BCL {
+    basecode : 2 ; // bits_per_base
+    qbin   : 2 ; // bits_per_qval
+} ;
+struct BaseQual  {
+    BCL cluster_m ;
+    BCL cluster_n ;
+} ;
+//BaseQual base_and_qual[clusters_in_cur_block] @ 0x41 ;
+BaseQual base_and_qual[1024] @ 0x41 ;
+
+# pattern TileMetricsOut.bin
+import std.sys;
+import std.core;
+import std.io;
+#pragma array_limit 16777216
+#pragma pattern_limit 4294967296
+#pragma endian little
+/* Where N is the record index.
+ byte 0: file version number (3)
+ byte 1: length of each record (15)
+ bytes 2–5: area of a tile in mm^2 (float)
+ bytes(N*15+6)-(N*15+20):record:
+ 2 bytes: lane number (uint16)
+ 4 bytes: tile number (uint32)
+ 1 byte: metricCode, the metric code (char) u  if(metricCode == 't')
+ 4 bytes: cluster count (float)
+ 4 bytes: PF cluster count (float) u else if(metricCode == 'r')
+ 4 bytes: read number (uint32)
+ 4 bytes: % aligned (float) u  else if(metricCode == '\0')
+ 8 bytes:0
+*/
+struct Header {
+    u8 version;
+    u8 record_size;
+};
+struct ExtendedHeader {
+    float area;
+    //u32 tile_area_mm2 @ 0x02 ;
+};
+struct MetricId {
+    u16 lane;
+    u32 tile;
+};
+struct TileMetric {
+    u8 code;
+    if (code == 't') {
+        float cluster_count;
+        float pf_cluster_count;
+    } else if (code == 'r') {
+        u32 read_number;
+        float percent_aligned;
+    }
+};
+/*
+// bytes(N*15+6)-(N*15+20):record:
+struct Record {
+    MetricId metric_id;
+    TileMetric tile_metric;
+};
+Header header @ 0x00;
+ExtendedHeader extended_header @ 0x02;
+ /*
+ if (header.version == 2) {
+    TileMetric metrics[while(!std::mem::eof())] @ 0x02;
+} else {
+    // Handle other versions if needed
+    // For example, version 3 has a different structure
+}
+*/
+Record records[while(!std::mem::eof())] @ 0x06;

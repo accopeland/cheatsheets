@@ -1,6 +1,10 @@
 # description
 Notes on Illumina
 
+# docs
+see gslides NovaseqX (in techtalks)
+https://illumina.github.io/interop/index.html
+
 # optics patents
 https://patents.google.com/patent/US20230296516A1/en
 https://patents.google.com/patent/US20200319115A1/en?oq=20200319115
@@ -15,13 +19,98 @@ https://www.taylorfrancis.com/chapters/edit/10.1201/9781351129404-15/super-resol
 # data
 https://basespace.illumina.com/datacentral
 
+# cbcl -- Concatenated Base Call Files
+aggregated BCL data; Tiles from the same lane and surface are aggregated into one CBCL file for each lane and surface.
+CBCL Header
+ u16 Bytes 0–1 Version number, current version is 1 unsigned 16 bits little endian integer
+ u32 Bytes 2–5 Header size unsigned 32 bits little endian integer
+ u8 Byte 6 Number of bits per base call unsigned
+ u8 Byte 7 Number of bits per q-score unsigned
+q-val mapping info
+ u32 Bytes 0–3 Number of bins (B), zero indicates no mapping B pairs of 4 byte values (if B > 0) {from, to}, {from, to}, {from, to} …
+	 from: quality score bin
+	 to: quality score
+ u32 Number of tile records unsigned 32 bits little endian integer gzip virtual file offsets, one record per tile
+ u32 Bytes 0–3: tile number
+ u32 Bytes 4–7 Number of clusters written into the current block (required due to bitpacked q-scores)
+ u32 Bytes 8–11 Uncompressed block size of the tile data (useful for sanity check when excluding non-PF clusters)
+ u32 Bytes 12–15 Compressed block size of the tiledata
+ b1 ? non-PF clusters excluded flag 1: non-PF clusters are excluded 0: non-PF clusters are included
+GZIP blocks
+...
+
 # interop
 https://github.com/Illumina/interop
+https://github.com/Illumina/interop/archive/refs/tags/v1.3.2.tar.gz
+see sequencing-analysis-viewer-v-2-4-software-guide-15066069-04.pdf
 
-# InterOp Metric Files
-Filename	Description
+# interop tools -- github.com/Illumina/interop
+dumpbin
+summary
+aggregate
+plot_flowcell
+imaging_table
+
+# imaging_table --
+# about 650M / run
+# Lane,Tile,Cycle,Read,CycleWithinRead,Density(k/mm2),DensityPf(k/mm2),ClusterCount(k),ClusterCountPf(k),%PF,%Aln,LegacyPhasingRate,LegacyPrephasingRate,ErrorRate,%>=Q20,%>=Q30,P90blue,P90grn,%NoCalls,%A,%C,%G,%T,Fwhm_blue,Fwhm_grn,CorrectedA,CorrectedC,CorrectedG,CorrectedT,CalledA,CalledC,CalledG,CalledT,SignalToNoise,PhasingWt,PrephasingWt,PhasingSlope,PhasingOffset,PrephasingSlope,PrephasingOffset,MinContrast_blue,MinContrast_grn,MaxContrast_blue,MaxContrast_grn,Surface,Swath,TileNumber,ClusterCountOccupied(k),%Occupied
+$ imaging_table  /global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/20250218_LH00223_0111_B22LJ5HLT4/ > 20250218_LH00223_0111_B22LJ5HLT4.itbl.csv
+$ xsv stats 2*l.csv
+field,type,sum,min,max,min_length,max_length,mean,stddev
+Lane,Integer,9088128,1,8,1,1,4.500000000000076,2.2912878474779124
+Tile,Integer,3634241408,1101,2498,4,4,1799.4999999999723,513.1279080307218
+Cycle,Integer,326162816,1,322,1,3,161.49999999999721,92.9529450851387
+Read,Integer,5048960,1,4,1,1,2.5000000000000475,1.4580042515423945
+CycleWithinRead,Integer,144644864,1,151,1,3,71.6211180124236,45.51962843283422
+Density(k/mm2),Float,19103043886.70363,9458.900391,9458.900391,11,11,9458.900391,0
+DensityPf(k/mm2),Float,14510181958.466623,1119.400024,8496.700195,4,11,7184.738024496577,1046.1156637137583
+ClusterCount(k),Float,13137798230.998816,6505.200195,6505.200195,11,11,6505.200195,0
+ClusterCountPf(k),Float,9979114465.034403,769.9000244,5843.5,4,11,4941.173263922403,719.4468201267546
+%PF,Float,153402023.6392152,11.80000019,89.80000305,2,11,75.95723853976791,11.058955498073818
+%Aln,Float,NaN,NaN,NaN,1,12,NaN,NaN
+LegacyPhasingRate,Float,NaN,0,0.351000011,1,14,NaN,NaN
+LegacyPrephasingRate,Float,NaN,0,0.3079999983,1,14,NaN,NaN
+ErrorRate,Float,NaN,NaN,NaN,1,14,NaN,NaN
+%>=Q20,Float,NaN,0.5400000215,100,2,12,NaN,NaN
+%>=Q30,Float,NaN,0.5199999809,100,2,12,NaN,NaN
+P90blue,Integer,314180104,0,364,1,3,155.56674245785467,36.35376843055017
+P90grn,Integer,483466651,0,438,1,3,239.38922619707617,47.76667225649512
+%NoCalls,Float,20986.099939666292,0,100,1,12,0.010391298376132807,0.6921601947844519
+%A,Float,NaN,0,99.40000153,1,12,NaN,NaN
+%C,Float,NaN,0,98.69999695,1,12,NaN,NaN
+%G,Float,NaN,0,100,1,12,NaN,NaN
+%T,Float,NaN,0,99.80000305,1,12,NaN,NaN
+Fwhm_blue,Float,5080742.706944761,0.8100000024,3.420000076,1,12,2.515737254279376,0.11450153571980946
+Fwhm_grn,Float,5079075.347413543,0.8100000024,3.349999905,1,12,2.514911658739367,0.10138979285338935
+CorrectedA,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CorrectedC,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CorrectedG,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CorrectedT,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CalledA,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CalledC,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CalledG,Float,NaN,NaN,NaN,3,3,NaN,NaN
+CalledT,Float,NaN,NaN,NaN,3,3,NaN,NaN
+SignalToNoise,Float,NaN,NaN,NaN,3,3,NaN,NaN
+PhasingWt,Float,NaN,0,26.75,1,13,NaN,NaN
+PrephasingWt,Float,NaN,0,15.68700027,1,13,NaN,NaN
+PhasingSlope,Float,NaN,0.02300000004,0.172999993,3,13,NaN,NaN
+PhasingOffset,Float,NaN,-1.532999992,4.823999882,1,15,NaN,NaN
+PrephasingSlope,Float,NaN,0,0.1070000008,1,14,NaN,NaN
+PrephasingOffset,Float,NaN,-0.5910000205,5.882999897,1,15,NaN,NaN
+MinContrast_blue,Integer,258737402,18,462,2,3,128.11420668810578,26.99644813861259
+MinContrast_grn,Integer,371515538,13,607,2,3,183.95646727247376,51.29098257498532
+MaxContrast_blue,Integer,514964788,41,710,2,3,254.98557524718177,46.60809923445397
+MaxContrast_grn,Integer,817252533,50,1061,2,4,404.66379858424904,89.00279277911196
+Surface,Integer,3029376,1,2,1,1,1.5000000000000457,0.5000000000000026
+Swath,Integer,5048960,1,4,1,1,2.4999999999999276,1.118033988749854
+TileNumber,Integer,99969408,1,98,1,2,49.499999999996426,28.288690319631577
+ClusterCountOccupied(k),Float,11455084146.912497,1202.300049,6333.799805,4,11,5672.001831526047,694.723833306559
+%Occupied,Float,176092623.09032187,18.5,97.40000153,2,11,87.19252236613343,10.679604740827452
+
+
+# InterOp Metric Files -- https://illumina.github.io/interop/binary_formats.html
 CorrectedIntMetricsOut.bin	Per tile per cycle per channel average intensity values
-ErrorMetricsOut.bin	Per tile per cycle percente of incorrect calls for aligned clusters
+ErrorMetricsOut.bin	Per tile per cycle percent of incorrect calls for aligned clusters
 ExtractionMetricsOut.bin	Per tile per cycle per channel 90th percentile of intensity and FWHM values
 ImageMetricsOut.bin	Per tile per cycle per channel pixel value percentile for thumbnail autocontrast
 QMetricsOut.bin	Per tile per cycle subsampled basecall quality score histogram
@@ -32,6 +121,296 @@ QMetricsByLaneOut.bin	Per tile per cycle Q-score histogram per lane
 EmpiricalPhasingMetricOut.bin	Phasing weights per tile per cycle
 ExtendedTileMetricsOut.bin	Per tile occupancy metrics
 SummaryRunMetricsOut.bin	Per run summary metrics
+SummaryRunOut.bin -- https://illumina.github.io/interop/summary_run_v1.html
+Summary.bin -- https://illumina.github.io/interop/summary_run_v1.html
+...
+AlignmentMetricsOut.bin
+BasecallingMetricsOut.bin
+EmpiricalPhasingMetricsOut.bin
+EventMetricsOut.bin
+FWHMGridMetricsOut.bin
+ImageQualityMetricsOut.bin
+InsertSizeMetricsOut.bin
+OpticalMetricsOut.bin
+OpticalModelMetricsOut.bin
+PFGridMetricsOut.bin
+RegistrationMetricsOut.bin
+RunInfoMetricsOut.bin
+
+# csv -- https://support-docs.illumina.com/SW/BCL_Convert/Content/SW/BCLConvert/MetricsOutput__swBCL_swBS_appBCL.htm
+# Index_Hopping_Counts.csv
+contains the number of reads for each expected and hopped index for unique, dual index runs.
+The count is only reported for Unique Dual Indexes (UDI) per lane, where no barcode collision is detected in either index.
+For index hopping metrics to be output for the given lane, each pair of entries within each index must have a distance between bases of at least 2n+1, where n is the barcode mismatch tolerance specified for the index.
+
+
+# Adapter_Metrics.csv -- https://support-docs.illumina.com/SW/BCL_Convert/Content/SW/BCLConvert/MetricsOutput__swBCL_swBS_appBCL.htm
+reports the number of bases detected to belong to adapters for each read per sample ID.
+This information allows for the detection of the genomic yield by subtracting the count of adapter sequence bases.
+Bases that match adapter sequences can be removed (trimmed) or replaced with N(s) (masked) from the output by configuring the [BCLConvert_Settings]section.
+Each Read Group is reported and defined as the unique combination of lane, sample ID, and index pair.
+The columns are left blank if they do not apply to the given sample. For a run without adapters, the file is output with only the header.
+The following headings are present in the Adapter Metrics File:
+Heading         Description
+Lane            Lane number.
+Sample_ID       Sample ID.
+index           The Index 1 (i7) index adapter sequence.
+index2          The Index 2 (i5) index adapter sequence.
+R1_AdapterBases Number of bases trimmed or masked from the corresponding read for the corresponding and sample. Includes Ns that replace base pairs according to the MaskShortReads setting.
+R1_SampleBases  Number of PF bases included in the corresponding read not belonging to an adapter for the corresponding and sample.
+R2_AdapterBases Number of bases trimmed or masked from the corresponding read for the corresponding sample, including Ns that replace base pairs according to the MaskShortReads setting.
+R2_SampleBases  Number of PF bases included in the corresponding read not belonging to an adapter for the corresponding and sample.
+\#Reads         Number of reads.
+
+
+# csv files -- from ILMN in .../Reports e.g.
+SampleSheet.csv -
+Adapter_Cycle_Metrics.csv -   Lane,Sample_ID,index,index2,ReadNumber,Cycle,NumClustersWithAdapterAtCycle,% At Cycle
+Adapter_Metrics.csv -         Lane,Sample_ID,index,index2,ReadNumber,AdapterBases,SampleBases,% Adapter Bases
+Demultiplex_Stats.csv - used to create sdm_total_clusters ;
+                              Lane,SampleID,Index,# Reads,# Perfect Index Reads,# One Mismatch Index Reads,# Two Mismatch Index Reads,% Reads,% Perfect Index Reads,% One Mismatch Index Reads,% Two Mismatch Index Reads
+Demultiplex_Tile_Stats.csv -  Lane,SampleID,Index,Tile,# Reads,% Reads
+Index_Hopping_Counts.csv -    Lane,SampleID,index,index2,# Reads,% of Hopped Reads,% of All Reads
+Quality_Metrics.csv -         Lane,SampleID,index,index2,ReadNumber,Yield,YieldQ30,QualityScoreSum,Mean Quality Score (PF),% Q30
+Quality_Tile_Metrics.csv -    Lane,SampleID,index,index2,ReadNumber,Tile,Yield,YieldQ30,QualityScoreSum,Mean Quality Score (PF),% Q30
+Top_Unknown_Barcodes.csv -    Lane,index,index2,# Reads,% of Unknown Barcodes,% of All Reads
+SampleSheet.csv - 1:[Header],7:[Reads]13:[BCLConvert_Settings]18:[BCLConvert_Data]3240:[Cloud_Settings]3243:[Cloud_Data]
+  BCLConvert_Data: Lane│Sample_ID│Index│Index2│BarcodeMismatchesIndex1│BarcodeMismatchesIndex2
+  Cloud_Data: Sample_ID,ProjectName,LibraryName,LibraryPrepKitName,IndexAdapterKitName
+# /global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/20250127_LH00223_0106_A22MLYFLT4/
+?? Analysis/1/Data/BCLConvert/OPWGS/fastqc/OPWGS.fastqc_metrics.csv -
+?? Analysis/1/Data/BCLConvert/OXAHX/fastqc/OXAHX.mapping_metrics.csv -
+?? Analysis/1/Data/BCLConvert/logs/msl_0001/msg_0004/fqc.dragen_events.csv - time,label
+?? Analysis/1/Data/BCLConvert/logs/msl_0001/msg_0003/streaming_log_fcmuser.csv - time(s),filename,numbytes,info
+?? Analysis/1/Data/b2c_dragen_events.csv -
+?? Analysis/1/Data/dmx_dragen_events.csv -
+?? Analysis/1/Data/BCLConvert/fastq/streaming_log_fcmuser.csv -
+?? Analysis/1/Data/BCLConvert/fastq/dragen.time_metrics.csv -
+?? Analysis/1/Data/BCLConvert/logs/bcl2fastq.dragen_events.csv -
+?? Analysis/1/Data/BCLConvert/logs/msl_0001/msg_000?/streaming_log_fcmuser.csv -
+?? Analysis/1/Data/BCLConvert/logs/msl_0001/msg_000?/fqc.dragen_events.csv -
+?? bcl_convertNNNNN/Analysis/1/Data/BCLConvert/OXAHX/fastqc/OXAHX.mapping_metrics.csv -
+#
+?? Data/Intensities/BaseCalls/bcl_convert_samplesheet_lane_?.csv -
+#
+
+# Instrument logs
+?? InstrumentAnalyticsLogs/running__LH00223__2025-01-29-03.59.47__0197__RunCycle__195.imf1 - sequencer logs
+Camera
+CE
+Chassis
+ChemistryStep
+Chimney
+CHM
+CIB
+CSB
+CTA
+DMI
+Door
+ENC
+EOM
+FC
+FCH
+FIB
+FLU
+FTM
+Header
+IM
+Laser
+Leak
+LGM
+LYO
+Opt
+OPT
+PSU
+PwrButton
+RBA
+Reservoir
+SBC
+STM
+SYS
+TCD
+TTC
+Waste
+XYB
+zStage
+
+# SummaryRun/SummaryRunOut.bin -- https://illumina.github.io/interop/summary_run_v1.html
+Header:    byte 0: version number (1)
+n-Records:
+ 2 byte: dummy (int16)
+ 4 byte: occupancy proxy cluster count (float)
+ 4 byte: raw cluster count (float)
+ 4 byte: occupancy cluster count (float)
+ 4 byte: PF cluster count (float)
+
+# Demultiplex_Stats.csv -- used by sdm to create sdm_total_clusters
+# provides number of passing filter reads assigned to each sample in the sample sheet, and the set of undetermined reads treated as one sample.
+# The file also contains information about the quality scores of bases in the passing filter reads assigned to each sample. For each sample ID in each lane, the following information is provided:
+•Number of reads
+•Number of perfect Index Reads
+•Number of One Mismatch Index Reads
+•Number of >= Q30 Bases (Passing Filter)
+•Mean Quality Score (Passing Filter)
+
+# Locs file -- Location Files
+(LOCS) are binary files that contain the cluster positions on the flow cell. CLOCS files are compressed versions of LOCS files.
+Files appended with  _pos.txt are text-based files containing two columns and a number of rows equal to the
+number of clusters. The first column records the X-coordinate and the second column records the Y-coordinate.
+Each row ends with <cr><lf>.
+
+# ExtractionMetricsOut.bin -- Per tile per cycle per channel 90th percentile of intensity and FWHM values
+Extraction metrics such as FWHM scores and raw intensities
+ byte 0: file version number (3)
+ byte 1: L, the length of each record
+ byte 2: ChannelCount, the channel count
+ bytes(N*L+3)-((N+1)*L+2):record:
+  2 bytes: lane number (uint16)
+  4 bytes: tile number (uint32)
+  2 bytes: cycle number (uint16)
+  4 x ChannelCount bytes: fwhm scores (float) for channels in the order listed in the RunInfo (or [A, C, G, T] for legacy platforms).
+	2 x ChannelCount bytes: intensities (uint16) for channel in the order listed in the RunInfo (or [A, C, G, T] for legacy platforms).
+Where N is the record index.
+
+# Quality Metrics (QMetricsOut.bin)
+The quality metrics file contains the quality score distribution.
+ byte 1: length of each record
+ byte 2: quality score binning (byte flag representing if binning was on) if (byte 2 == 1) // quality score binning on
+ byte 3: number of quality score bins, numBins
+forallbinsBfrom1tonumBins:
+ byte 4 + 3*(B-1): lower boundary of bin B
+ byte 5 + 3*(B-1): upper boundary of bin B u byte 6 + 3*(B-1): remapped scores of bin B
+The remaining bytes are for the records, with each record in this format: u 2 bytes: lane number (uint16)
+ 4 bytes: tile number (uint32)
+ 2 bytes: cycle number (uint16)
+ if (byte 2 == 1)
+	4x numBinsbytes: numberofclustersassignedtoQ-scorebins1–numBins(uint32)
+ else
+  4x50 bytes: numberofclustersassignedscoreQ1throughQ50(uint32)
+
+# Error Metrics (ErrorMetricsOut.bin)
+The error metrics file contains cycle error rate. Version 3 format contains counts for perfect reads and read with 1–4 errors.
+ byte 0: file version number (4)
+ byte 1: length of each record (12)
+ bytes(N*12+2)-(N*12+13):record:
+  2 bytes: lane number (uint16)
+  4 bytes: tile number (uint32)
+  2 bytes: cycle number (uint16)
+  4 bytes: error rate (float) Where N is the record index.
+
+# Error Metrics (ErrorMetricsOut.bin) -- version 6
+  byte 0: version number (6)
+  byte 1: record size (12+4*num_adapter)
+Extended Header
+    byte 2-3: num_adapter (uint16)
+    byte 4-5: adapter_base_cnt (uint16)
+    byte 6-(6+num_adapter*adapter_base_cnt) (uint8)
+n-Records
+    2 bytes: lane number (uint16)
+    4 bytes: tile number (uint32)
+    2 bytes: cycle number (uint16)
+    4 bytes: error rate (float32)
+    4*num_adapter bytes: vector of fraction of reads adapter-trimmed at the cycle (float32)
+
+# Tile Metrics (TileMetricsOut.bin)
+The tile metrics file contains aggregate or read metrics by tile.
+ byte 0: file version number (3)
+ byte 1: length of each record (15)
+ bytes 2–5: area of a tile in mm^2 (float)
+ bytes(N*15+6)-(N*15+20):record:
+ 2 bytes: lane number (uint16)
+ 4 bytes: tile number (uint32)
+ 1 byte: metricCode, the metric code (char) u  if(metricCode == 't')
+ 4 bytes: cluster count (float)
+ 4 bytes: PF cluster count (float) u else if(metricCode == 'r')
+ 4 bytes: read number (uint32)
+ 4 bytes: % aligned (float) u  else if(metricCode == '\0')
+ 8 bytes:0
+Where N is the record index.
+
+# Extended Tile Metrics (ExtendedTileMetricsOut.bin)
+The extended tile metrics file contains aggregate or read metrics by tile.
+NovaSeq 6000 produces the ExtendedTileMetricsOut.bin file in both the version 2 and 3 formats.
+Format for version 3:
+ byte 0: file version number (3)
+ byte 1: length of each record (18)
+ bytes(N*18+2)-(N*18+19):record:
+  2 bytes: lane number (uint16)
+  4 bytes: tile number (uint32)
+  4 bytes: occupied cluster count (float)
+  4 bytes: upper left fiducial location in X (float)
+	4 bytes: upper left fiducial location in Y(float)
+Where N is the record index.
+Format for version 2:
+ byte 0: file version number (2)
+ byte 1: length of each record (10)
+ bytes(N*10+2)-(N*10+11):record:
+  2 bytes: lane number (uint16)
+  4 bytes: tile number (uint32)
+  4 bytes: occupied cluster count (float)
+Where N is the record index.
+
+# Corrected Intensity Metrics (CorrectedIntMetricsOut.bin)
+The corrected intensity metrics file contains base call metrics.
+NovaSeq 6000 produces the CorrectedIntMetricsOut.bin file in version 4 format:
+ byte 0: file version number (4)
+ byte 1: length of each record (28)
+ bytes(N*28+2)-(N*28+29):record:
+ 2 bytes: lane number (uint16)
+ 4 bytes: tile number (uint32)
+ 2 bytes: cycle number (uint16)
+ 4 bytes:numberofNoCallbasecalls(uint32)
+ 4 bytes:numberofAbasecalls(uint32)
+ 4 bytes:numberofCbasecalls(uint32)
+ 4 bytes: number of G base calls (uint32)
+ 4 bytes:numberofTbasecalls(uint32)
+Where N is the record index.
+
+# Image Metrics (ImageMetricsOut.bin)
+The image metrics file contains minimum and maximum contrast values for images.
+NovaSeq 6000
+NovaSeq 6000 produces the ImageMetricsOut.bin file in version 3 format:
+ byte 0: file version number (3)
+ byte 1: length of each record (recordLength, depends on number of channels)
+ byte 2: number of channels
+ bytes (N * recordLength + 3) - ((N+1) * recordLength + 2): record:
+ 2 bytes: lane number (uint16)
+ 4 bytes: tile number (uint32)
+ 2 bytes: cycle number (uint16)
+For each channel in the channel set
+ 2 bytes: min contrast value for image (uint16) For each channel in the channel set
+ 2 bytes: max contrast value for image (uint16)
+Where N is the record index.
+
+# Index Metrics (IndexMetricsOut.bin):
+The index metrics file reports the indexes count and is not generated in RTA 2.x or RTA 3.x.
+Byte 0: file version (1)
+Bytes (variable length): record:
+ 2 bytes: lane number(unint16)
+ 2 bytes: tile number(unint16)
+ 2 bytes: read number(unint16)
+ 2bytes:numberofbytesYforindexname(unint16)
+ Y bytes: index name string (string in UTF8Encoding)
+ 4bytes:#clustersidentifiedasindex(uint32)
+ bytes: number of bytes V for sample name(unint16)
+ bytes: sample name string (string in UTF8Encoding)
+u 2 bytes: number of bytes W for sample project(unint16)
+u W bytes: sample project string (string in UTF8Encoding)
+
+# Index Metrics (IndexMetricsOut.bin) -- https://support-docs.illumina.com/SW/BCL_Convert/Content/SW/BCLConvert/MetricsOutput__swBCL_swBS_appBCL.htm
+The index metrics out file (IndexMetricsOut.bin) is a binary file that contains index statistics for each sample and index combination per lane provided to BCL Convert in the sample sheet. The content of the file is documented as follows:
+Byte 0: file version number (2)
+The remaining bytes represent records, which are composed of the following information:
+2 bytes—Lane number (uint16)
+4 bytes—Tile number (uint32)
+2 bytes—Read number (uint16)
+2 bytes—indexLength, the length in bytes of index name (uint16)
+indexLength bytes—String representing index name
+8 bytes—Number of occurrences of index (uint64)
+2 bytes—sampleLength, the length in bytes of the sample name (uint16)
+sampleLength bytes—String representing sample name
+2 bytes—projectLength, the length in bytes of the project name (uint16)
+projectLength bytes—String representing project name
 
 # read simulation
 bbtools::randomreads.sh
@@ -72,7 +451,7 @@ BEETL [10],(2012)
 (Proprietary) https://www.petagene.com/downloads/#petasuite
 
 # read header
-@<instrument>:<run_number>:<flowcell_ID>:<lane>:<tile>:<x>:<y> <read>:<is_filtered>:<control_number>:<sample_number>
+@<instrument>:<run_number>:<flowcell_ID>:<lane>:<tile>:<x>:<y>:<UMI> <read>:<is_filtered>:<control_number>:<sample_number|idx sequence>
 @pi1-04:47:222Y2JLT3:1:1101:38262:1000 1:N:0:CNGCTTCC+GATCTATC
 sequence (the base calls; A, C, T, G and N).
 separator, which is simply a plus (+) sign.
@@ -81,4 +460,112 @@ Phred +33 encoded qscores, using ASCII characters to represent the numerical qua
 # novaseqX
 /global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/ (Perlmutter, DTN)
 
+# DRAGEN / dragen
+https://help.dragen.illumina.com/product-guides/dragen-v4.3/tools-and-utilities
+$ dragen_lic -j
+$ sudo /usr/bin/dragen_lic -i /tmp/new_license.lic
+$ dragen_lic -b
+$ dragen_lic
+
+# dragen -- logs
+20250210_LH00223_0110_A22LJ7TLT4/Analysis/1/Data/logs/dragen_prev_48_hrs.log
+Feb  9 02:17:39 localhost dragen[3913]: (dragend|root) LM challenge CHIPID=015668C825906145, dongle SN=890002971A2C1878, post-challenge timeToLock=3735928559: OK, enabled DNA+RNA+GZIP+GUNZ+HMM+SMW+RANS+GRAPH+DeepRTA, next challenge @ 2025-02-09 03:17:39
+
+# bcl files
+https://support.illumina.com/content/dam/illumina-support/documents/documentation/software_documentation/bcl2fastq/bcl2fastq2-v2-20-software-guide-15051736-03.pdf
+
+# data / mounts
+dori: /clusterfs/jgi/illumina_processing/production/novaseqx
+/clusterfs/jgi/illumina_processing/production/novaseqx/20240524_LH00223_0055_B22C2NCLT4/
+nersc:
+/global/cfs/cdirs/seqfs/prod/illumina/staging/novaseqx/20240524_LH00223_0055_B22C2NCLT4/RunInfo.xml
+
+# Movies
+/global/cfs/cdirs/bbtools/movie/
+
+# RunInfo.xml
+<?xml version="1.0"?>
+<RunInfo Version="6">
+        <Run Id="20240524_LH00223_0055_B22C2NCLT4" Number="55">
+                <Flowcell>22C2NCLT4</Flowcell>
+                <Instrument>LH00223</Instrument>
+                <Date>2024-05-25T05:43:15Z</Date>
+                <Reads>
+                        <Read Number="1" NumCycles="151" IsIndexedRead="N" IsReverseComplement="N"/>
+                        <Read Number="2" NumCycles="10" IsIndexedRead="Y" IsReverseComplement="N"/>
+                        <Read Number="3" NumCycles="10" IsIndexedRead="Y" IsReverseComplement="Y"/>
+                        <Read Number="4" NumCycles="151" IsIndexedRead="N" IsReverseComplement="N"/>
+                </Reads>
+		....
+
+# SDM Files
+NERSC will have the files for the longest period.
+files may be incomplete for up to a few days (or longer) after sequencing has released the run (can be weeks-months if concerns about mixups or other issues).
+During this time, IGB (and Dori) will have the complete set of files.
+The illumina run folder folder is a windows file system, the processing output folder is a linux file system.
+there are two illumina file systems, both are mounted at IGB:
+Dori all sequencer output: /clusterfs/jgi/illumina/
+Dori pipeline output:      /clusterfs/jgi/illumina_processing production/novaseqx
+NERSC:  only parts of the FS are synced over to NERSC from IGB. For all practical purposes you can mostly assume these paths to be equivalent:
+Dori: /clusterfs/jgi/illumina/staging/*
+NERSC: /global/cfs/cdirs/seqfs/prod/illumina/staging/*
+
+# SDM processing
+At NERSC folder will be incomplete for the early part of run folders' lifecycle. IGB/Dori will have a shortened lifecycle. So this is what happens:
+- When sequencing starts, Illumina starts rsycing the files over to NERSC.
+  + This process is halted once processing starts.  The run at NERSC at this point may or may not be complete.
+- When the run has completed processing and prod seq has released the files, the rsync process is started up again.
+  + The run folder is rsync'ed to completion, this may take days to complete, so any recently sequenced folder is always incomplete.
+  + After the run folder is sync'ed over, the processing output folder (which is in a different location on Dori and IGB) is synced into the run folder at NERSC.
+- Once syncing is complete, the processing folder at IGB is cleared out.
+  + Afterwards the run folder (at IGB/Dori) has parts of it removed in order to make space on the file system for future sequencing.
+- After 1-3 months, the run folders at NERSC have the BCL files and fastqs are removed, and the logs, thumbnails, data, and analysis folders are tarred up.
+  + After this is complete, the folder is sent to tape.
+- After a few more months, the folder at NERSC is removed.
+  + Once the folder is removed, what is left of the folder at IGB (and Dori) is removed.
+
+# SDM -- statistics.py
+with open(self.fastq_folder + '/Reports/Quality_Metrics.csv', 'r') as f:
+'read' here means one of read 1, 4
+def find_all_bcl2_library_stats(self):
+        """
+        +-----------------------------------+
+        | all | Field - sdm_seq_unit_read_stats table.  Only passed clusters are included.
+        +-----------------------------------+ self.metrics[sample_id][read_num] = {}  stats by read level
+        |  x  | sdm_seq_unit_id             |
+        |  x  | read_num                    | read_number
+        |  x  | no_pass_bases_per_lane      | yield
+        |     | perc_pass_clusters_per_lane | 100
+        |  x  | yield_pf                    | yield
+        |  ?  | yield30_pf                  | yieldQ30
+        |  ?  | quality_score_sum_pf        | quality_score_sum
+        |  ?  | q30                         | percent_q30
+        |     | no_basepairs_raw_by_lane    | -- obsolete
+        |     | yield_raw                   | -- obsolete
+        |     | yield30_raw                 | -- obsolete
+        |     | quality_score_sum_raw       | -- obsolete
+        These fields are at the run level (vs read level) and will be the same for all reads. They are the mean/std of the number of clusters per tile
+        +-----------------------------------+ self.metrics[sample_id] = {}
+        |  ?  | no_pass_clusters_per_lane   | reads - this will be the same for all reads
+        |  x  | std_pass_clusters_per_lane  | std_pass_clusters_per_lane - not by read_num
+        |  x  | mean_pass_clusters_per_lane | mean_pass_clusters_per_lane - not by read_num
+        |     | no_raw_clusters_per_lane    | - obsolete
+        |     | std_raw_clusters_per_lane   | - obsolete
+        |     | mean_raw_clusters_per_lane  | - obsolete
+        +-----------------------------------+ new fields bclconvert 4 fields
+        |  ?  | mean_quality_score
+        |  ?  | num_perfect_index_reads
+        |  ?  | num_one_mismatch_index_reads
+        |  ?  | num_two_mismatch_index_reads
+        |  ?  | percent_perfect_index_reads
+        |  ?  | percent_one_mismatch_index_reads
+        |  ?  | percent_two_mismatch_index_reads
+        'all' record is also included for the entire data lane, items marked with x are calculated
+
+# SDM -- physical_run.py
+class PhysicalRun(object):
+    def __init__(self, **kwargs):
+        """Creates a new physical run object representing a flowcell.
+
+# SDM -- physical_run_unit.py
 

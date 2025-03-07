@@ -2,6 +2,7 @@
 Various stuff about sql, query tools and databases
 
 # tools
+sq https://sq.io
 prestodb -
 orientdb -
 duckdb  - fast , timeseries, postgres
@@ -69,7 +70,6 @@ sqlite> select sum(bases) from sra s inner join ids i on s.run_accession=i.rid ;
 .headers on
 .separator ROW "\n"
 .nullvalue NULL
-
 
 
 # cycle time
@@ -453,18 +453,19 @@ where
     and s.filter_reads_count > 0
     and l.seq_prod_name not in ('Eukaryote Community Metatranscriptome', 'Metagenome Metatranscriptome')
     and s.run_date between '2021-03-07' and '2021-10-07'
-             and l.library_protocol in ('Low Input (DNA)','Low Input (RNA)','Regular (DNA)','Regular (RNA)','smRNA','Ultra-Low Input (DNA)','Ultra-Low Input (RNA)') order by s.run_date
+    and l.library_protocol in ('Low Input (DNA)','Low Input (RNA)','Regular (DNA)','Regular (RNA)','smRNA','Ultra-Low Input (DNA)','Ultra-Low Input (RNA)')
+    order by s.run_date
+
+# periscope
 select
   case
     when floor([column]/[bin]) * [bin] < [trunc]
-      then floor([column]/[bin]) * [bin]
+    then floor([column]/[bin]) * [bin]
     else [trunc]
   end as lower
   , case
     when floor([column]/[bin]) * [bin] < [trunc]
-      then cast(floor([column]/[bin]) * [bin] as varchar) || ' - ' ||
-           cast(floor (([column]+[bin]) / [bin]) * [bin] -1 as varchar
-    )
+    then cast(floor([column]/[bin]) * [bin] as varchar) || ' - ' || cast(floor (([column]+[bin]) / [bin]) * [bin] -1 as varchar )
     else [trunc] || ' +'
   end as label
   , count(*) as cnt
@@ -473,7 +474,7 @@ from
 group by 1 ,2
 order by 1
 
-#
+# edna mg
 select proposal_id, proposal_pi, proposal_title as title, sp_project_id as spid, sp_project_name as sp_name,
 s.library_name as lib, s.sdm_raw_base_count as bases_raw, s.filter_reads_count*150 as bases_filt
 -- air.sp_expected_num_samples
@@ -486,13 +487,6 @@ and sp_actual_product in ('Metagenome Standard Draft', 'Metagenome Minimal Draft
 -- and sp_actual_product like '%Metagenome%Draft'
 -- proposal_id= 502924
 order by proposal_id
-CREATE OR REPLACE FUNCTION random_between(low INT ,high INT)
-   RETURNS INT AS
-$$
-BEGIN
-   RETURN floor(random()* (high-low + 1) + low);
-END;
-$$ language 'plpgsql' STRICT;
 
 #
 SELECT tube.id as id, tube.archive_purpose$ as archive_reason, modified_at$ as modified_date from jgi.tube$raw tube
@@ -509,39 +503,6 @@ WHERE (modified_at$ BETWEEN NOW() - INTERVAL '72 HOURS' AND NOW())
 AND well.archive_purpose$ = 'Shipped' OR well.archive_purpose$ = 'Expended'
 AND entity.schema_id = 'ts_gIK6hizg'
 
-# -
-select workflowname, trunc(daily_avg) as daily_avg, trunc(weekly_avg) as wk_avg, trunc(monthly_avg) as mon_avg
-from (
-    select workflowname, avg(count) monthly_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01'
-        group by workflowname, date_trunc('month', date_in)
-    ) s
-    group by 1
-) monthly
-join (
-    select workflowname, avg(count) weekly_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01'
-        group by workflowname, date_trunc('week', date_in)
-    ) s
-    group by 1
-) weekly using(workflowname)
-join (
-    select workflowname, avg(count) daily_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01'
-        group by workflowname, date_trunc('day', date_in)
-    ) s
-    group by 1
-) daily using(workflowname)
-order by 1;
 
 # event
 select event,
@@ -561,49 +522,14 @@ from (
 ) s
 group by event
 
-# workflow
-select workflowname, daily_avg, weekly_avg, monthly_avg
-from (
-    select workflowname, avg(count) monthly_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01' -- workflowname in ('thing1', 'thing2', 'thing3')
-        group by workflowname, date_trunc('month', created_at)
-    ) s
-    group by 1
-) monthly
-join (
-    select workflowname, avg(count) weekly_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01' -- workflowname in ('thing1', 'thing2', 'thing3')
-        group by workflowname, date_trunc('week', created_at)
-    ) s
-    group by 1
-) weekly using(workflowname)
-join (
-    select workflowname, avg(count) daily_avg
-    from (
-        select workflowname, count(*)
-        from dw.clarity_sow_item_queues
-        where date_in between '2019-04-01' and '2019-06-01' -- workflowname in ('thing1', 'thing2', 'thing3')
-        group by workflowname, date_trunc('day', created_at)
-    ) s
-    group by 1
-) daily using(workflowname)
-order by 1;
-
-# workflow
+# clarity workflow rollup
 select workflowname, yr, trunc(daily_avg) as daily_avg, trunc(weekly_avg) as wk_avg, trunc(monthly_avg) as mon_avg, trunc(yearly_avg) as yr_avg
 from (
-    select workflowname, avg(count) yearly_avg, yr
+    select workflowname, avg(count) yearly_avg, s.yr
     from (
         select workflowname, count(*), extract(year from date_in) as yr
         from dw.clarity_sow_item_queues
         where date_in between '2016-09-01' and '2021-09-01'
-
         group by workflowname, yr
     ) s
     group by 1,3
@@ -615,7 +541,7 @@ join (
         from dw.clarity_sow_item_queues
         where date_in between '2016-09-01' and '2021-09-01'
         group by workflowname, date_trunc('month', date_in)
-    ) s
+    ) t
     group by 1
 ) monthly using(workflowname)
 join (
@@ -625,7 +551,7 @@ join (
         from dw.clarity_sow_item_queues
         where date_in between '2016-09-01' and '2021-09-01'
         group by workflowname, date_trunc('week', date_in)
-    ) s
+    ) u
     group by 1
 ) weekly using(workflowname)
 join (
@@ -635,10 +561,11 @@ join (
         from dw.clarity_sow_item_queues
         where date_in between '2016-09-01' and '2021-09-01'
         group by workflowname, date_trunc('day', date_in)
-    ) s
+    ) v
     group by 1
 ) daily using(workflowname)
-order by  workflowname, yr;
+order by  workflowname, yr
+
 
 # constant column
 select f1, f2, 'new_col' as foo from bar;
@@ -667,3 +594,13 @@ from uss.dt_sample sam join sam_hist on sam_hist.sample_id = sam.sample_id
     join dw.all_inclusive_report air on air.sam_id = sam_hist.sample_id
 where sam.qc_status is not null and sam.qc_date between '$F' and '$T' order by sample_id;
 
+# heredoc / parallel
+ local LIB=${@:?"lib"} ;
+    parallel "rqc <<EOQ
+        select l.library_name as lib, s.seq_unit_name as su_name,rqs.rqc_status_name as status
+        from seq_units s,rqc_status rqs,library_info l
+        where l.library_name='{}'
+        and l.library_id=s.rqc_library_id
+        and s.rqc_status_id=rqs.rqc_status_id
+EOQ
+" ::: $LIB

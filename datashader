@@ -1,0 +1,87 @@
+# description
+Plot lots of points
+
+# docs
+https://hvplot.holoviz.org
+
+# usage
+$ ~/.local/bin/venvs/jupyterlab/jupyter lab
+
+# libs
+pippx inject jupyterlab pandas
+pipx inject jupyterlab sympy
+pipx inject jupyterlab datashader
+pipx inject --force jupyterlab dask[dataframe]
+pipx inject --force jupyterlab numpy==2.0
+pipx inject jupyterlab colorcet
+pipx inject jupyterlab holoviews
+pipx inject jupyterlab bokeh
+pipx inject jupyterlab bokeh
+pipx inject jupyterlab matplotlib
+pipx inject jupyterlab pyparsing
+pipx inject jupyterlab xarray
+pipx inject jupyterlab param
+pipx inject jupyterlab panel
+pipx inject jupyterlab intake
+pipx inject jupyterlab hvplot
+pipx inject jupyterlab PIL
+pipx inject jupyterlab spatialpandas
+pipx inject jupyterlab bokeh_sampledata
+pipx inject jupyterlab dask
+pipx inject jupyterlab polars
+
+# install
+pipx inject jupyterlab datashader
+pipx inject jupyterlab hvplot
+
+# explorer
+import hvplot.pandas
+from bokeh.sampledata.penguins import data as df
+hvexplorer = df.hvplot.explorer()
+hvexplorer
+
+# large data
+import hvplot.pandas
+from hvplot.sample_data import catalogue as cat
+df = cat.airline_flights.read()
+df.hvplot.scatter(x='distance', y='airtime', rasterize=True, cnorm='eq_hist', width=500)
+
+# xarray + interactive
+import hvplot.xarray
+import panel as pn
+import xarray as xr
+w_time = pn.widgets.IntSlider(name='time', start=0, end=10)
+da = xr.tutorial.open_dataset('air_temperature').air
+da.interactive.isel(time=w_time).mean().item() - da.mean().item()
+
+# dask
+import dask
+import hvplot.dask
+df_dask = dask.dataframe.from_pandas(df, npartitions=2)
+df_dask.hvplot.scatter(x='bill_length_mm', y='bill_depth_mm', by='species')
+
+# polars
+import polars
+import hvplot.polars
+df_polars = polars.from_pandas(df)
+df_polars.hvplot.scatter(x='bill_length_mm', y='bill_depth_mm', by='species')
+
+# duckdb
+import duckdb
+import hvplot.duckdb
+from bokeh.sampledata.autompg import autompg_clean as df
+df_duckdb = duckdb.from_df(df)
+table = df_duckdb.groupby(['origin', 'mfr'])['mpg'].mean().sort_values().tail(5)
+table.hvplot.barh('mfr', 'mpg', by='origin', stacked=True)
+
+# parquet
+https://colab.research.google.com/github/holoviz-community/HoloViz_KDD2022/blob/main/03_Big_Data_Visualization.ipynb
+import hvplot.pandas
+import holoviews as hv, pandas as pd, colorcet as cc
+from holoviews.element.tiles import EsriImagery
+from holoviews.operation.datashader import datashade
+hv.extension('bokeh')
+
+# arrow
+
+# chunked IO

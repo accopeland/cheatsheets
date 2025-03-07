@@ -1,11 +1,18 @@
-cscope
+# description
+Various high level notes on profiling and tuning and tools for same
 
+# docs
+https://pramodkumbhar.com/2017/04/summary-of-profiling-tools/#h3-Aftermath
+
+# call graph
+cscope
 pycallgraph
 
-pyan
- python ./pyan.py  ../jgi-rqc-pipeline/jigsaw/jigsaw.py  --dot > f.dot
+# pyan --
+$ python ./pyan.py  ../jgi-rqc-pipeline/jigsaw/jigsaw.py  --dot > f.dot
 
-python -m cProfile foo.py
+# python builtin
+$ python -m cProfile foo.py
 
-
+# perl builtin
 perl  - perlmonks::sub_graph.pl

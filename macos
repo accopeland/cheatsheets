@@ -86,7 +86,7 @@ $ otool -l bar.o | sed -n '/LC_VERSION/,/^Load/p'
 Load command 2
 
 # dtrace : https://8thlight.com/blog/colin-jones/2017/02/02/dtrace-gotchas-on-osx.html
-$ ktrace trace ...
+$ suco ktrace trace ...
 
 # dtrace - list all macos probes:
 $ sudo dtrace -l
@@ -94,3 +94,10 @@ $ sudo dtrace -l
 # openssl linking: https://medium.com/@timmykko/using-openssl-library-with-macos-sierra-7807cfd47892
 
 # compiler stuff: https://developer.apple.com/download/more/
+
+
+# typing pi
+option+p -- works
+alt+0960  -- nope
+P^ -- nope
+

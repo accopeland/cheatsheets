@@ -1,0 +1,47 @@
+# description
+
+# doc
+
+# install
+$ pipx install polars
+$ pipx inject jupyterlab polars
+
+# synopsis
+import polars
+import hvplot.polars
+import colorcet
+dfp = polars.read_csv('dump.tsv', separator='\t', infer_schema_length=500) #, n_rows=100000) #, has_header=False) 'dump.tsv'
+dfp.head()
+dfp["tile"].n_unique()
+dfp.top_k(4, by="tile")
+dfp.collect_schema()
+#dfp.corr().drop_na()
+#dfp.glimpse()
+dfp.describe().drop("errKR","errKB","eKRRate","A","C","G","T","N","bcBadRt","hDAvg","insCnt","delCnt")
+dfp.top_k(5,by=["insRate","delRate"])
+dfp.describe()
+dfp.estimated_size("mb")
+dfp.filter(polars.col("tile").is_in([1101,1102]) & polars.col("discard")>0)
+dfp.filter(tile=1102, discard=2)
+polars.DataFrame({"a": [2, 1, 3],"b": [1, 2, 3], "c": [1.0, 2.0, 3.0],}).fold(lambda s1, s2: s1 + s2)
+##dfp.group_by("tile").agg(by="alnRead".sum())   # df.group_by_dynamic("ts", every="1d").agg(pl.col("value").sum())
+dfp.corr().limit(100).interpolate()
+dfp.max()
+dfp.min()
+dfp.n_unique()
+dfp.partition_by("tile") #dfp.partition_by("x1","y1","tile")
+dfp.pivot("tile",  values="alnBase")  # index=...
+dfp.pivot("x1", index="tile", values="alnBase", aggregate_function="median") # {‘min’, ‘max’, ‘first’, ‘last’, ‘sum’, ‘mean’, ‘median’, ‘len’} ; aggregate_function=pl.element().tanh().mean(),
+dfp.sample(fraction=0.01).pivot("x1", index="tile", values="alnBase", aggregate_function="median")   #10)
+dfp.schema
+dfp.select("x1","y1").shape
+dfp.sql("select x1,y1 from self where tile=1101")
+# dfp.to_arrow()
+dfp.transpose(include_header=True) # very expensive (but still fast for 200k rows)
+dfp.unique().shape  # drop dupes
+dfp.with_columns(polars.col("probEF").cast(polars.Float32).alias("_pF32"))
+dfp.with_columns(a2=polars.col("A") + 2)
+dfp.with_row_index()
+# dfp.write_avro(path) write_csv() write_parquet()
+# df.write_database( table_name="target_table", connection="postgresql://user:pass@server:port/database", engine="adbc", engine_options={"temporary": True},)
+dfp.hvplot("x1")

@@ -18,6 +18,14 @@ postmark
 S3aSim
 tiobench
 https://www.vi4io.org/tools/benchmarks/bonnie
+ior
+
+# ior mpi
+# see https://jiaweizhuang.github.io/blog/
+$ mkdir /fsx/ior_tempdir
+$ cd /fsx/ior_tempdir
+$ srun -N 2 --ntasks-per-node 36 ior -t 1m -b 16m -s 4 -F -C -e
+$ srun -N 8 --ntasks-per-node 36 ior -t 1m -b 16m -s 4 -F -C -e # 8 nodes max out IO ?
 
 # docker IO slow (2016) https://github.com/moby/moby/issues/21485
 	# docker (SLOW)

@@ -1,0 +1,12 @@
+# description
+Yet another genome browser. This one has a million dependencies include two new build/config tools from google
+which look unsupported and are very byzantine. Also the build tree is absolutely massive. Needs >10G to get started
+on the build
+
+# install
+brew install kcleal/homebrew-gw/gw
+
+# synopsis
+seems not to work at all
+gw /Users/copeland/Projects/2024/20240430-_seq/seq/test/data/toy.cram
+and all flavors of this fail

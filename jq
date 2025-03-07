@@ -109,3 +109,7 @@ cat jgi.ami.json | jq --arg dt "2024-03-01" -r '.Images[]| select(.DeprecationTi
 
 # filter ami by key/val
 cat  jgi.ami.json  |  jq 'select(.Images[].OwnerId=="080819234838")'
+
+# nested data from ncbi datasets program
+$ cat t.taxonid.stats.json  | jq -r '.reports[] | [.organism.organism_name,.assembly_info.assembly_name,.assembly_info.assembly_method,.organism.tax_id,.average_nucleotide_identity.submitted_organism,.accession, .assembly_info.assembly_name,.assembly_stats.gc_percent,.assembly_stats.number_of_contigs,.assembly_stats.total_genome_length,.average_nucleotide
+_identity.assembly_coverage,.average_nucleotide_identity.best_ani_match.ani] | @csv'

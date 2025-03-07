@@ -77,7 +77,6 @@ ade ace abe
 
 # variable expansion
 
->>>>>>> 5ebb389 (vim: fixed whitespace)
 # for loop
 for file in *;
 do
@@ -159,6 +158,11 @@ this is a line
 so is this
 EOF
 
+# heredoc - avoid quoting hell
+perl -lna - ng.input <<'EOF'
+if (@F==2) {print $F[0] . "\t". $F[1] . "\n"} else { print "\t" . $F[0] . "\n" }
+EOF
+# bash -c example...
 # regex substitutions - see http://tldp.org/LDP/LG/issue57/eyler.html  http://tldp.org/LDP/abs/html/refcards.html#AEN22004
 $foo="this is a test"
 '#'  delete shortest possible match from left:  >echo ${foo#t*is}  --> is a test
@@ -178,7 +182,7 @@ ${string/%substring/replacement}    If $substring matches back end of $string, s
 
 # negation globbing
 #see http://stackoverflow.com/questions/216995/how-can-i-use-negative-wildcards-in-a-unix-linux-shell
-shopt -s extglob
+shopt -s extglob # but see readonly
 cp !(*Music*) /tmp
 ls -d !(*@(.c|.h))
 
@@ -257,7 +261,7 @@ cmd 2>&1 logfile
 cmd &>> logfile
 
 # global search replace in command line
- !!:gs/foo/bar/
+!!:gs/foo/bar/
 
 # name of current function
 ${FUNCNAME[0]} #  This array contains the current call stack. To quote the man page:
@@ -278,13 +282,25 @@ silent_background() {
 
 # snippets
 
-# "$@ $*"
+# what is the difference between $*, $@, "$*", and "$@"?:
+https://stackoverflow.com/questions/3348443/a-confusion-about-array-versus-array-in-the-context-of-a-bash-comple/3355375#3355375
+https://stackoverflow.com/questions/255898/how-to-iterate-over-arguments-in-a-bash-script/256225#256225
+ -  $* and $@ (unquoted) do the same thing. They treat each 'word' (sequence of non-whitespace) as a separate argument.
+ - "$*" treats the argument list as a single space-separated string,
+ - "$@" treats the arguments almost exactly as they were when specified on the command line.
+ - "$@" expands to nothing at all when there are no positional arguments; see IFS
+ - "$*" expands to an empty string — and yes, there's a difference, though it can be hard to perceive it.
+
+# more "$@ $*"
 $* and $@ are like $1 $2 $3 …
 resulting values subject to word splitting and filename expansion (globbing); usually do not want to use these without double quotes.
 "$*" is like "$1 $2 $3…"
 All positional parameter values joined into a single “word” (string) that is protected from further word splitting and globbing.
 The character that is put between each positional parameter value is actually the first character from IFS; this is usually a plain space.
 "$@" is like "$1" "$2" "$3" …
+
+# quote
+$ printf "'%s'," $(< /tmp/y)
 
 # array assignment in read -
 # read -a assigns resulting values to successive members of an array.
@@ -317,6 +333,12 @@ env -i bash --noprofile --norc
 .bash_profile for login shells,
 .bashrc for interactive shells.
 
+# readonly
+$ readonly -p  # some shopt not modifiable
+
+# modify readonly shopt
+?
+
 # spaces before / after auto complete
 # after  https://askubuntu.com/questions/41707/bash-auto-completion-with-added-spaces-why-and-how-to-fix
 # before: shopt
@@ -348,3 +370,124 @@ if(interactive_non_login_shell)
 # pointer vars
 eval \$$var
 ${!var}
+
+# getopt / getopts (builtin)
+Colon in front of option allows you handle the errors in your code:
+- var will contain '?' if unsupported option,
+- ':' if missing value.
+OPTARG - is set to current argument value,
+OPTERR - indicates if Bash should display error messages.
+OPTSTRING is string with list of expected arguments,
+h    - check for '-h' w/out parameters; error on unsupported options;
+h:   - check for '-h' w parameter; errors on unsupported options;
+abc  - check for '-a', '-b', '-c'; errors on unsupported options;
+:abc - check for '-a', '-b', '-c'; silences errors on unsupported options;
+
+# getopts example
+function usage() { echo "$0 usage:" && grep " .)\ #" $0; exit 0; }
+[ $# -eq 0 ] && usage
+while getopts ":hs:p:" arg; do
+    case $arg in
+        p) # Specify p value.
+            echo "p is ${OPTARG}"
+        ;;
+        s) # Specify strength, either 45 or 90.
+            S=${OPTARG}
+            [ $S -eq 45 -o $S -eq 90 ]  && echo "S is $S." || echo "S needs to be either 45 or 90, $S found instead."
+        ;;
+        h | *) # Display help.
+            usage
+            exit 0
+        ;;
+    esac
+done
+
+# filter
+while   IFS= read -r line        &&
+case    $line in (@@*start) :;;  (*)
+        printf %s\\n "$line"
+        sed -un "/^@@.*start$/q;p";;
+esac;do sed -un "/^@@.*end$/q;=;p" |
+        paste -d: - -
+done    <infile
+
+# filter -- using sed
+sed '/^@@.*start$/!b
+     s//nl <<\\@@/;:l;N
+     s/\(\n@@\)[^\n]*end$/\1/
+Tl;e'  <infile
+Above sed collects input in pattern space until it has enough to successfully pass the substitution Test and stop branching back to the the :label. When it does, it executes nl with input represented as a <<here-document for all of the rest of its pattern-space.
+
+The workflow is like this:
+
+/^@@.*start$/!b
+if an ^entire line$ does !not /match/ the above pattern, then it is branched out of the script and autoprinted - so from this point on we are only working with a series of lines which began with the pattern.
+s//nl <<\\@@/
+the empty s//field/ stands in for the last address sed attempted to match - so this command substitutes the entire @@.*start line for nl <<\\@@ instead.
+:l;N
+The : command defines a branch label - here I set one named :label. The Next command appends the next line of input to pattern space followed by a \newline character. This is one of only a few ways to get a \newline in a sed pattern space - the \newline character is a sure delimiter to a sedder who has been doing it awhile.
+s/\(\n@@\)[^\n]*end$/\1/
+this s///ubstitution can only be successful after a start is encountered and only on the first following occurrence of an end line. It will only act on a pattern space in which the final \newline is immediately followed by @@.*end marking the very end$ of pattern space. When it does act, it replaces the whole matched string with the \1first \(group\), or \n@@.
+Tl
+the Test command branches to a label (if provided) if a successful substitution has not occurred since the last time an input line was pulled into pattern space (as I do w/ N). This means that each time a \newline is appended to pattern space which does not match your end delimiter, the Test command fails and branches back to the :label, which results in sed pulling in the Next line and looping until successful.
+e
+
+When the substitution for the end match is successful and the script does not branch back for a failed Test, sed will execute a command that looks like this:
+
+nl <<\\@@\nline X\nline Y\nline Z\n@@$
+
+# printf v echo -- https://unix.stackexchange.com/questions/65803/why-is-printf-better-than-echo/65819#65819
+if the first argument matches the ^-([eEn]*|-|-help|-version)$ extended regexp or any argument contains backslashes (or characters whose encoding contains the encoding of the backslash character like α in locales using the BIG5 charset), then the behaviour is unspecified.
+printf, on the other hand, is more reliable, at least when it's limited to the basic usage of echo.
+$ printf '%s\n' "$var" # Will output the content of $var followed by a newline character regardless of what character it may contain.
+$ printf '%s' "$var" # Will output it without the trailing newline character.
+
+
+# seek fd
+There are many commands out there that can only deal with seekable files, but when that's the case, that's generally not for the files open on their stdin.
+$ unzip -l file.zip
+Archive:  file.zip ...
+$ unzip -l <(cat file.zip)  # more or less the same as cat file.zip | unzip -l /dev/stdin
+  error
+unzip needs to read the index stored at the end of the file, and then seek within the file to read the archive members. But here, the file (regular in the first case, pipe in the second) is given as a path argument to unzip, and unzip opens it itself (typically on fd other than 0) instead of inheriting a fd already opened by the caller. It doesn't read zip files from its stdin. stdin is mostly used for user interaction.
+
+# set args from stdin
+#!/bin/bash
+declare -a A=("$@")
+[[ -p /dev/stdin ]] && { \
+    mapfile -t -O ${#A[@]} A; set -- "${A[@]}"; \
+}
+echo "$@"
+#
+#Example use :
+$ ./script.sh arg1 arg2 arg3
+> arg1 arg2 arg3
+$ echo "piped1 piped2 piped3" | ./script.sh
+> piped1 piped2 piped3
+$ echo "piped1 piped2 piped3" | ./script.sh arg1 arg2 arg3
+> arg1 arg2 arg3 piped1 piped2 piped3
+
+# read -t 0     #<timeout>
+# -t timeout time out and return failure if a complete line of input is not read withint TIMEOUT seconds. The value of the TMOUT variable is the default timeout. TIMEOUT may be a fractional number. The exit status is greater than 128 if the timeout is exceeded
+# If TIMEOUT is 0, read returns immediately, without trying to read any data, returning success only if input is available on the specified file descriptor.
+$ read -t 0 && read -d '' myData;  # see if there's anything to read; if yes, read it.
+
+# redirect fd
+exec 4>&1 # duplicate file descriptor 1 (stdout) as descriptor 4.
+key=$(password_program 3>&1 >&4-) #because of the $() exec password_program in subshell whose stdout will go into the variable key. But we let that subshell do some descriptor mangling, before actually executing password_program: Descriptor 3 is opened as a copy of descriptor 1, so that password_program can write its results to descriptor 3.
+exec 4>&- # descriptor 4 (saved "copy" of original stdout) moved to descriptor 1. So the result is: password_program will run with its stdout as the same file (or tty etc.), that the shell was started with. The final command then gets rid again of the descriptor 4 in the main shell.
+
+# Brace Expansion
+mechanism to generate arbitrary strings; similar to pathname expansion, but the filenames generated need not exist.  Patterns are optional preamble, followed by either a series of comma-separated strings or a sequence expression between a pair of braces, followed by an optional postscript.
+The preamble is prefixed to each string contained within the braces, and the postscript is then appended to each resulting string, expanding left to right.
+Brace expansions may be nested.  The results of each expanded string are not sorted; left to right order is preserved.  For example, a{d,c,b}e expands into `ade ace abe'.
+
+# Sequence expression
+# takes the form {x..y[..incr]}, where x and y are either integers or single letters, and incr, an optional increment, is an integer.
+When integers are supplied, the expression expands to each number between x and y, inclusive.  Supplied integers may be prefixed with 0 to force each term to have the same width.
+When either x or y begins with a zero, the shell attempts to force all generated terms to contain the same number of digits, zero-padding where necessary.
+When letters are supplied, the expression expands to each character lexicographically between x and y, inclusive, using the default C locale.
+Note that both x and y must be of the same type (integer or letter).
+When the increment is supplied, it is used as the difference between each term.  The default increment is 1 or -1 as appropriate.
+
+$ {a..z}

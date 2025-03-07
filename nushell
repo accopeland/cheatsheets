@@ -39,6 +39,19 @@ nu -l -c --config foo_config.nu --env-config foo_env.nu
 Always reads specified file foo_env.nu
 Always reads specified file foo_config.nu
 
+# lib - fetcher
+nu> use fetcher.nu
+nu> fetcher fetch-lib png
+
+# install plugin
+$ cargo install nu_plugin_gstat # etc
+$ cargo install nu_plugin_polars
+$ nu
+nu> plugin add ~/.cargo/bin/nu_plugin_polars
+
+# list plugins
+$ plugin list
+
 # plugin
 > let plugin = ((which nu).path.0 | path dirname | path join 'nu_plugin_query'); nu -c $'register ($plugin); version'
 

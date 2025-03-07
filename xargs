@@ -13,4 +13,19 @@ find -name *.pdf | xargs -I{} -n1 echo '&{}='
 
 # If find returns no result, do not run rm
 # This option is a GNU extension.
-find -name "*.pdf" | xargs --no-run-if-empty rm
+$ find -name "*.pdf" | xargs --no-run-if-empty rm
+
+# functions
+function foo() {
+	export -f curll
+	function crl() {  curl -s --proxy socks5://localhost:9050 "$@" ; }
+	function __cmd() { xargs -II bash -c 'crl $RQC_API/rqcws/dumpola/"$1"' _  ;  } # NOPE nor any variants
+	#
+	#function __cmd() {  xargs -II curl -s --proxy socks5://localhost:9050 $RQC_API/rqcws/dumpola/I  ;  } # OK
+	#
+	#function __cmd() {  parallel curl_9050 $RQC_API/rqcws/dumpola/{}  ;  } # OK
+	#
+	# local c="curl -s --proxy socks5://localhost:9050 '$@'";
+	function __cmd (){ xargs -II $c $RQC_API/rqcws/dumpola/I    }; # OK
+    _processInputNoSort "${@:?"Lib,sequnit"}"
+}

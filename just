@@ -340,7 +340,6 @@ foo := if "hello" == "goodbye" {
   "123"
 }
 
-
 # Setting Variables from the Command Line
 os := "linux"
 test: build

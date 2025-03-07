@@ -25,3 +25,13 @@ posix, sysv, cma, knem, and xpmem
 TCP/IP
 NOTE: UCX >= 1.12.0 requires rdma-core >= 28.0 or MLNX_OFED >= 5.0 for Infiniband and RoCE transports support.
 
+# Tuning
+For UCX@:1.9, in GPUDIrectRDMA system configurations where GPU and HCA are connected to same PCIe Switch
+fabric, and the MPI processes are bind to the HCA and GPU under the same PCIe switch, use the following
+rendezvous protocol for optimal GPUDirectRDMA performance:
+-x UCX_RNDV_SCHEME=get_zcopy
+
+# UCX CUDA memory hooks may not work with static building CUDA
+# applications.
+# As a workaround:
+-x UCX_MEMTYPE_CACHE=0

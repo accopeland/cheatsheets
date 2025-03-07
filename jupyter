@@ -1,7 +1,7 @@
 # description
 
 # install
-rye install jupyterlab
+$ rye install jupyterlab
 
 # nope - python broken by PEP668 ...install
 #python3 -m ensurepip
@@ -9,21 +9,21 @@ rye install jupyterlab
 #python3 -m pip install jupyter
 
 # remote -- probably also broken as of python3.12
-pipx install jupyterlab
-pipx install jupyter-core
-pipx install jupyter-client
-pipx install jupyter-kernel
+$ pipx install jupyterlab
+$ pipx install jupyter-core
+$ pipx install jupyter-client
+$ pipx install jupyter-kernel
 
 # usage
-jupyter notebook
+$ upyter notebook
 
 # config
 
 # docs
-https://www.dataquest.io/blog/jupyter-notebook-tips-tricks-shortcuts
+$ ttps://www.dataquest.io/blog/jupyter-notebook-tips-tricks-shortcuts
 
 # example notebooks
-jupyter notebooks - http://bebi103.caltech.edu/2015/tutorials/
+$ upyter notebooks - http://bebi103.caltech.edu/2015/tutorials/
 
 # Error: update kernel - FileNotFoundError
 : [Errno 2] No such file or directory: '/usr/local/Cellar/r/3.3.3_1/R.framework/Resources/bin/R'
@@ -57,14 +57,14 @@ nersc$ cat $HOME/.local/share/jupyter/kernels/env/kernel.json
 # sql
 # make sure you have the right python (and env)
 python3 -m pip install jupyterlab_sql
-jupyter serverextension enable jupyterlab_sql --py --sys-prefix
-jupyter lab build
+$ upyter serverextension enable jupyterlab_sql --py --sys-prefix
+$ upyter lab build
 
 # list kernels
-jupyter-kernelspec list
+$ upyter-kernelspec list
 
 # remove
-jupyter-kernelspec rm <kernel>
+$ upyter-kernelspec rm <kernel>
 
 # shortcuts  - https://www.dataquest.io/blog/jupyter-notebook-tips-tricks-shortcuts/
 ? <obj> : docstring
@@ -93,7 +93,7 @@ Shift + M : merge multiple cells.
 
 # tricks
 # make global
-~/.ipython/profile_default/ipython_config.py
+$ /.ipython/profile_default/ipython_config.py
 c = get_config()
 c.InteractiveShell.ast_node_interactivity = "all"	# Run all nodes interactively
 # or in a single session
@@ -106,14 +106,14 @@ quakes.tail()
 
 # kernels
 > ~/Library/Jupyter/kernels/
-~/.julia/packages/IJulia/e8kqU/src/kernel.jl
+$ /.julia/packages/IJulia/e8kqU/src/kernel.jl
 
 # jupyter kernels conda
-conda install jupyter # conda install bokeh
-jupyter kernelspec list
+$ onda install jupyter # conda install bokeh
+$ upyter kernelspec list
 
 # conda jupyter upgrade:
-conda install -c anaconda jupyter_core
+$ onda install -c anaconda jupyter_core
 Solving environment: done
 
 # conda jupyter upgrade: conda install -c anaconda jupyter_core
@@ -132,12 +132,12 @@ R> IRkernel::installspec()
 
 # sql
 # make sure you have the right python (and env)
-pip3 install jupyterlab_sql
-jupyter serverextension enable jupyterlab_sql --py --sys-prefix
-jupyter lab build
+$ ip3 install jupyterlab_sql
+$ upyter serverextension enable jupyterlab_sql --py --sys-prefix
+$ upyter lab build
 
 # postgres - may need dwtunnel + vpn
-pip3 install ipython-sql Psycopg2 sqlalchemy
+$ pip3 install ipython-sql Psycopg2 sqlalchemy
 import sqlalchemy as sa
 import psycopg2
 engine = sa.create_engine('postgresql://dw_user:dw_user@localhost:5432/dwprd1p')
@@ -155,8 +155,8 @@ widget.show()
 https://github.com/jupyter/jupyter/wiki/A-gallery-of-interesting-Jupyter-Notebooks
 
 # polyglot notebook
-jupyter --kernel sos #
-iodide
+$ jupyter --kernel sos #
+$ iodide
 
 # examples
 http://bebi103.caltech.edu/2015/tutorials/
@@ -165,11 +165,11 @@ http://bebi103.caltech.edu/2015/tutorials/
 IRkernel / R
 
 # which R is determined by IRkernel::InstallSpec()
-jupyter-notebook
-p Library/Jupyter/kernels/ir/kernel.json
-R --version
-brew cask versions R
-jupyter-notebook --kernel=ir
+$ jupyter-notebook
+$ p Library/Jupyter/kernels/ir/kernel.json
+$ R --version
+$ brew cask versions R
+$ jupyter-notebook --kernel=ir
 %config InlineBackend.figure_formats = {'png', 'retina'}
 
 # bokeh
@@ -178,17 +178,17 @@ bokeh.plotting.show(bokeh.mpl.to_bokeh()) # bokeh / js
 # sympy errors
 # Error: libpng warning: Application built with libpng-1.5.17 but running with 1.6.19
 # Fix: brew uninstall libpng -f
-brew install libpng
-python3 -m pip install --force-reinstall --upgrade matplotlib
+$ brew install libpng
+$ python3 -m pip install --force-reinstall --upgrade matplotlib
 
 #  kernels (https://github.com/JuliaLang/IJulia.jl)
-jupyter-kernelspec list
-jupyter-kernelspec remove <krnl>
+$ jupyter-kernelspec list
+$ jupyter-kernelspec remove <krnl>
 
 # remote
-pipx install jupyterlab # on remote
-jupyter-lab --port 9090 --no-browser  # on remote
-ssh -L 9090:localhost:9090 accopeland@jgi-interactive00.jgi.lbl.gov # on localhost
+$ pipx install jupyterlab # on remote
+$ jupyter-lab --port 9090 --no-browser  # on remote
+$ ssh -L 9090:localhost:9090 accopeland@jgi-interactive00.jgi.lbl.gov # on localhost
 -- get token from stdout
 
 # julia kernel

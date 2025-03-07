@@ -1,0 +1,18 @@
+# description
+prompt interface to mathematica
+
+# install
+NA
+
+# licenses
+UCSD
+LBL
+
+# available from
+cborg.lbl.gov
+https://www.wolframalpha.com/input?i=%5B%2F%2Fmath%3Ax%5E2%2F%2F%5D*y%27%27%28x%29%5B%2F%2Fmath%3A-20%2F%2F%5Dy%28x%29%3D%5B%2F%2Fmath%3A0%2F%2F%5D+
+
+# example: 2nd order homogeneous linear diffeq
+[//math:x^2//]*y''(x)[//math:-20//]y(x)=[//math:0//]
+equivalent:
+x^2 y''(x) -20 y(x) = 0

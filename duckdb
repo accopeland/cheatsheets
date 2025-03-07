@@ -6,10 +6,10 @@ brew install duckdb
 https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip
 
 # spack recipe
-100 deps; 
-broken py-ruamel-yaml-clib 
+100 deps;
+broken py-ruamel-yaml-clib
 - cflags -Wno-incompatible-pointer-types
-broken py-pygist2 
+broken py-pygist2
 - libcffi >= 1.16
 - libgit2 >= 1.18
 - git clone source ; make; find errors; fix source; git diff > avx2.patch
@@ -24,7 +24,7 @@ https://duckdb.org/docs
 https://duckdb.org/docs/sql/window_functions
 
 # plot
-curl -sL "https://api.github.com/users/dacort/events?per_page=100" \
+$ curl -sL "https://api.github.com/users/dacort/events?per_page=100" \
    | duckdb -s "COPY (SELECT type, count(*) AS event_count FROM read_json_auto('/dev/stdin') GROUP BY 1 ORDER BY 2 DESC LIMIT 10) TO '/dev/stdout' WITH (FORMAT 'csv', HEADER)" \
    | uplot bar -d, -H -t "GitHub Events for @dacort"
 
@@ -32,14 +32,14 @@ curl -sL "https://api.github.com/users/dacort/events?per_page=100" \
 https://duckdb.org/docs/sql/window_functions
 
 # create database
-duckdb myDB "create table T as select * from 'file.gz' "
-duckdb> ...
+$ duckdb myDB "create table T as select * from 'file.gz' "
+D ...
 
 # in-memory db
 $ duckdb :memory: "SELECT 42 AS the_answer"
 
 # create csv
-COPY (SELECT 42 AS woot UNION ALL SELECT 43 AS woot) TO 'test.csv' (HEADER);
+D COPY (SELECT 42 AS woot UNION ALL SELECT 43 AS woot) TO 'test.csv' (HEADER);
 
 # stdin
 $ cat test.csv | duckdb :memory: "SELECT * FROM read_csv('/dev/stdin')"
@@ -49,10 +49,88 @@ $ cat  dsi.aa.dm_archive.20240408.du | duckdb :memory: "select sum(column0)/1e12
 D select mean(column0)/1e12 as m, sum(column0)/1e12 as s from (select column0  from read_csv_auto('dsi.aa.jaws.20240408'));
 
 # plot
-brew install youplot
+$ spack install ruby-youplot && spack load ruby-youplot
+$ brew install youplot
+$ duckdb RPS "copy (select stats_value from rps where stats_name = 'assy.SIG.5.percent_of_Sequences_assembled_gt10k') to '/dev/stdout' with(format 'csv', header)" | youplot histogram
+$ duckdb RPS "copy (select stats_value from rps where stats_name = 'assy.SIG.5.percent_of_Sequences_assembled_gt10k') to '/dev/stdout' with(format 'csv', header)" | histogram2.pl - 1 10
+
+# histogram
+D select unnest(map_keys(h)) as k, unnest(map_values(h)) as v from (select histogram(sam_isolated_from) as h from air) ;
+D select h['key'] as k, h['value'] as v from (select unnest(map_entries(histogram(sam_isolated_from))) as h from air) ;
+D select sam_isolated_from as k, count(*) as v from air  where sam_isolated_from  like '%needles%' group by k order by v ;
+##D select  key_value['key'] as bucket_max, key_value['value'] as data_points from (select histogram(sam_isolated_from) from air) ;
+D select * from histogram(air, sam_isolated_from, bin_count := 22) ; // nope
+or
+$ duckdb --csv <<< "attach 'dbname=dwprd1p user=dw_user host=127.0.0.1 port=5432 password=dw_user' as dw (type postgres); select no_pass_clusters_per_lane from dw.dw.sdm_lane_statistics"
+$ duckdb STATS -s "copy(select unnest(map_entries(histogram(sam_isolated_from))) from air) to '/dev/stdout'"
+
+# csv
+$ duckdb --csv DB <query>
+
+# summarize
+$ duckdb --csv STATS "select * from (summarize select columns(*) from all_inclusive_report) order by 12,5 desc"
+-- or
+D .mode line
+D copy(select * from (summarize select columns(*) , alq_sop_id from all_inclusive_report )  order by 12,5 desc ) to 'a.csv' with(format 'csv' , header) ;
+
+# columns
+D  select min(columns('date$')) from all_inclusive_report order by 2;
+
+# COLUMNS behavior
+select COALESCE(COLUMNS(*)) from (select NULL, 2, 3) t(a, b, c)
+When the COLUMNS expression is expanded, the resulting query becomes:
+D select COALESCE(a) a, COALESCE(b) b, COALESCE(c) c from (select NULL, 2, 3) t(a, b, c)
+The result of this query is:
+┌───────┬───────┬───────┐
+│   a   │   b   │   c   │
+│ int32 │ int32 │ int32 │
+├───────┼───────┼───────┤
+│       │     2 │     3 │
+└───────┴───────┴───────┘
+
+# *COLUMNS behavior
+select COALESCE(*COLUMNS(*)) from (select NULL, 2, 3) t(a, b, c)
+When the *COLUMNS expression is expanded, the resulting query becomes:
+D select COALESCE(a, b, c) from (select NULL, 2, 3) t(a, b, c)
+The result of this query is:
+┌─────────────────────────┐
+│ COALESCE(t.a, t.b, t.c) │
+│          int32          │
+├─────────────────────────┤
+│                       2 │
+└─────────────────────────┘
+
+# columns regex match
+D select * like 'col%' from tbl ;
+D select * glob 'col*' from tbl ;
+D select * similar to 'col.' ;
+
+# columns + exlucde
+D  select * exclude('alq_curr_vol_ul') from (select columns('bp|pm|molarity|conc|vol') from air where pool_name='OBTYS') ;
+
+# columns() in where
+D SELECT *
+    FROM (
+    SELECT 0 AS x, 1 AS y, 2 AS z
+    UNION ALL
+    SELECT 1 AS x, 2 AS y, 3 AS z
+    UNION ALL
+    SELECT 2 AS x, 3 AS y, 4 AS z
+    )
+    WHERE COLUMNS(*) > 1; -- equivalent to: x > 1 AND y > 1 AND z > 1
+
+#   columns regex
+D SELECT COLUMNS('(id|numbers?)') FROM numbers;
+
+# query_table()
+CREATE TABLE my_table(i INTEGER);
+INSERT INTO my_table VALUES (42);
+PREPARE select_from_table AS SELECT * FROM query_table($1);
+EXECUTE select_from_table('my_table');
+
 
 # csv -> duckdb
-SELECT * FROM read_csv_auto('test.csv', delim='|', header=True, columns={'FlightDate': 'DATE', 'UniqueCarrier': 'VARCHAR', 'OriginCityName': 'VARCHAR'});
+D SELECT * FROM read_csv_auto('test.csv', delim='|', header=True, columns={'FlightDate': 'DATE', 'UniqueCarrier': 'VARCHAR', 'OriginCityName': 'VARCHAR'});
 
 # csv -> duckdb
 COPY weather FROM '/home/user/weather.csv';
@@ -66,114 +144,171 @@ function csv2duckdb() {  local F=${1:?"file.csv"} ; local T=${2:-${F/.*}} ;
 }
 
 # csv -> duckdb
-duckdb> create table T as select * from read_csv_auto('vw_sow_segment_hist.csv');
+D create table T as select * from read_csv_auto('vw_sow_segment_hist.csv');
 
 # csv -> duckdb
-duckdb A "create table T as select * from read_csv_auto('file.csv')"
-
+$ duckdb A "create table T as select * from read_csv_auto('file.csv')"
 
 # s3
 install httpfs
 
+# mysql table copy
+D create table seq_units as select * from A.seq_units ;
+
 # mysql
-install mysql
-ATTACH 'host=localhost user=root port=0 database=mysql' AS mysqldb (TYPE mysql)
-USE mysqldb;
+D install mysql ;
+D load mysql ;
+D ATTACH 'host=localhost user=root port=0 database=mysql' AS mysqldb (TYPE mysql)
+D USE mysqldb;
+D create table rpq as select * from mysql_rqc.rqc_pipeline_queue where dt_created > '2023-09-30' ;
 
 # iceberg -- apache iceberg
-install iceberg ;
+D install iceberg ;
 
 # json plugin
-duckdb> install 'json'
-duckdb> load 'json' ;
+D install 'json'
+D load 'json' ;
 
 # json
 # see https://duckdb.org/2023/03/03/json.html
-duckdb A create table T as select * from read_json_auto('foo.json')
-duckdb> select * from 'foo.json.gz' ;
-duckdb>  select date."$date" as dt , open."$numberDecimal" as op from (select * from 'asset-manager.assets.vtsnx.json' limit 10 ) ;
+$ duckdb A create table T as select * from read_json_auto('foo.json')
+D select * from 'foo.json.gz' ;
+D  select date."$date" as dt , open."$numberDecimal" as op from (select * from 'asset-manager.assets.vtsnx.json' limit 10 ) ;
 
 # json formats: 'values' and 'array_of_values', 'array_of_records', 'records'
-SELECT * FROM read_json('todos.json', auto_detect=true, json_format='array_of_records');
-SELECT * FROM read_json('todos2.json', auto_detect=true, json_format='records');
+D SELECT * FROM read_json('todos.json', auto_detect=true, json_format='array_of_records');
+D SELECT * FROM read_json('todos2.json', auto_detect=true, json_format='records');
 ...
 
 # json structure
-SELECT json_group_structure(json)
-FROM (  SELECT *  FROM 'foo.json.gz');
+D SELECT json_group_structure(json)
+D FROM (  SELECT *  FROM 'foo.json.gz');
+
+# json deep nesting
+https://github.com/duckdb/duckdb/discussions/5272
 
 # .schema
-CREATE TABLE integers(i BIGINT);;
-CREATE TABLE strings(i BIGINT, s VARCHAR, ms VARCHAR, ds VARCHAR);;
-CREATE TABLE t(column00 BIGINT, column01 BIGINT, column02 BIGINT, column03 BIGINT, column04 VARCHAR, column05 BIGINT, column06 VARC
+D CREATE TABLE integers(i BIGINT);;
+D CREATE TABLE strings(i BIGINT, s VARCHAR, ms VARCHAR, ds VARCHAR);;
+D CREATE TABLE t(column00 BIGINT, column01 BIGINT, column02 BIGINT, column03 BIGINT, column04 VARCHAR, column05 BIGINT, column06 VARC
 HAR, column07 BIGINT, column08 BIGINT, column09 BIGINT, column10 VARCHAR, column11 BIGINT, column12 BIGINT, column13 BIGINT, column
 14 BIGINT, column15 VARCHAR);;
 
 # basic counting
-select count(*) from T ;
+D select count(*) from T ;
 
 # describe
-duckdb> describe T
+D describe T
 
 # desribe
-duckdb DD "describe ga0436458_proteins__per_residue__point01"
+$ duckdb DD "describe ga0436458_proteins__per_residue__point01"
 
 # join
 D select a.contig,a.product,b.product from ga0436458_functional_annotation a join ga0436458_ppr b on ( a.contig=b.contig ) ;
 
 # extension
-select * from duckdb_extensions;
+D select * from duckdb_extensions;
+
+# create secret -- stored unencrypted binary format in the ~/.duckdb/stored_secrets
+CREATE persistent SECRET mysecret (
+    TYPE POSTGRES,
+    HOST '127.0.0.1',
+    PORT 5432,
+    DATABASE postgres,
+    USER 'postgres',
+    PASSWORD ''
+);
+
+# secret types
+Secret type	Service / protocol	Extension
+AZURE	Azure Blob Storage	azure
+GCS	Google Cloud Storage	httpfs
+HTTP	HTTP and HTTPS	httpfs
+HUGGINGFACE	Hugging Face	httpfs
+MYSQL	MySQL	mysql
+POSTGRES	PostgreSQL	postgres
+R2	Cloudflare R2	httpfs
+S3	AWS S3	httpfs
+
+# use secret
+D attach '' as mysqldb (type mysql, secret mysecret)
+
+# drop secret
+D DROP PERSISTENT SECRET my_persistent_secret;
+
+# show  secrets
+D FROM duckdb_secrets();
+Invalid Input Error: Secret type 'mysql' not found, try removing the secret at path '/Users/copeland/.duckdb/stored_secrets/rqc_sec.duckdb_secret'.
+D load mysql ;
+D load postgres ;
+D FROM duckdb_secrets();
+┌────────────────────┬──────────┬──────────┬────────────┬────────────┬───────────┬──────────────────────────────────────────────────────────────────────────────────────────────┐
+│        name        │   type   │ provider │ persistent │  storage   │   scope   │                                        secret_string                                         │
+│      varchar       │ varchar  │ varchar  │  boolean   │  varchar   │ varchar[] │                                           varchar                                            │
+├────────────────────┼──────────┼──────────┼────────────┼────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ dw_sec             │ postgres │ config   │ true       │ local_file │ []        │ name=dw_sec;type=postgres;provider=config;serializable=true;scope;dbname=dwprd1p;host=127.…  │
+│ rqc_sec            │ mysql    │ config   │ true       │ local_file │ []        │ name=rqc_sec;type=mysql;provider=config;serializable=true;scope;database=rqc;host=127.0.0.…  │
+│ __default_postgres │ postgres │ config   │ true       │ local_file │ []        │ name=__default_postgres;type=postgres;provider=config;serializable=true;scope;dbname=postg…  │
+└────────────────────┴──────────┴──────────┴────────────┴────────────┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
+D
+
+# postgres
+D attach 'dbname=dwprd1p user=dw_user host=127.0.0.1 port=5432 password=dw_user' as dw (type postgres, SCHEMA 'dw') ;
+D create table myair as select * from dw.air ;
 
 # postgres scanner
-LOAD '/Users/copeland/Repos/Other/postgres_scanner/build/release/extension/postgres_scanner/postgres_scanner.duckdb_extension'
+D LOAD '/Users/copeland/Repos/Other/postgres_scanner/build/release/extension/postgres_scanner/postgres_scanner.duckdb_extension'
+
+# equiv to postgres \G
+.mode line
 
 # timestamptz  -- convert to timestamp
-select now()::timestamptz + interval (1) second;
+D select now()::timestamptz + interval (1) second;
 
 # timestamptz convert
-select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date"::TIMESTAMPTZ as dt date."$date" as dt
+D select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date"::TIMESTAMPTZ as dt date."$date" as dt
   split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;
 
 # timestamptz
 need icu extension
 
 # timediffs
-select datediff('hours', min(o_start), now()::timestamp)   from T ;
+D select datediff('hours', min(o_start), now()::timestamp)   from T ;
 
 # unix epoch (sec since 01-01-1970) -> TIMESTAMP
-select current_date, to_timestamp(column11) from t ;
-select  epoch_ms(1679529742*1000::BIGINT) from t;
-select  yearweek(epoch_ms(column11::BIGINT*1000)) from t;
+D select current_date, to_timestamp(column11) from t ;
+D select  epoch_ms(1679529742*1000::BIGINT) from t;
+D select  yearweek(epoch_ms(column11::BIGINT*1000)) from t;
 D select current_localtimestamp() -  to_timestamp(column11) from t ;
 D select current_date(),  datetrunc('d', to_timestamp(column11)) from t ;
-select sum(column03)/1e12 as TB, (current_date() - datetrunc('d', to_timestamp(column11))) as days from t group by 2 order by 2
+D select sum(column03)/1e12 as TB, (current_date() - datetrunc('d', to_timestamp(column11))) as days from t group by 2 order by 2
 
 # timestamp conversion
-strftime(timestamp, format)	Converts timestamp to string according to the format string
-strptime(text, format)	Converts string to timestamp according to the format string
+D strftime(timestamp, format)	Converts timestamp to string according to the format string
+D strptime(text, format)	Converts string to timestamp according to the format string
 
 #  csv
-duckdb T "create table t as select * from read_csv('/tmp/data', header=False, columns={'inode': 'BIGIN
+$ duckdb T "create table t as select * from read_csv('/tmp/data', header=False, columns={'inode': 'BIGIN
 T', 'gen':'INTEGER', 'snapshotid': 'INTEGER', 'file_size':'BIGINT', 'fileset':'VARCHAR', 'attr':'VARCHAR', 'link':'INTEGER', 'uid':
 'INTEGER', 'gid':'INTEGER', 'mode':'VARCHAR','atime':'TIMESTAMP', 'mtime':'TIMESTAMP','blocksize':'INTEGER','ctime':'TIMESTAMP','fi
 le':'VARCHAR'});"
 
 # percentile
-WITH stats as ( SELECT percentile_disc([0.25, 0.50, 0.75]) WITHIN GROUP (ORDER BY "trip_distance") AS percentiles
+D WITH stats as ( SELECT percentile_disc([0.25, 0.50, 0.75]) WITHIN GROUP (ORDER BY "trip_distance") AS percentiles
   FROM "yellow_tripdata_2022-01.parquet")
-SELECT  percentiles[1] as q1,  percentiles[2] as median,  percentiles[3] as q3
-FROM stats;
+D SELECT  percentiles[1] as q1,  percentiles[2] as median,  percentiles[3] as q3
+D FROM stats;
 
-select percentile_cont([0.25, 0.5, 0.75]) within group(order by i desc) from generate_series(0,100) tbl(i);
+D select percentile_cont([0.25, 0.5, 0.75]) within group(order by i desc) from generate_series(0,100) tbl(i);
 
 # jupysql
 https://duckdb.org/2023/02/24/jupysql.html
 
 # functions
-SELECT  schema_name, function_name FROM duckdb_functions() ORDER BY ALL DESC ;
+D SELECT  schema_name, function_name FROM duckdb_functions() ORDER BY ALL DESC ;
 
 # date create
-select date '1992-01-01' + concat(i, ' months')::interval as d from range(100) tbl(i);
+D select date '1992-01-01' + concat(i, ' months')::interval as d from range(100) tbl(i);
 
 # range
 #
@@ -193,11 +328,11 @@ ntile()
 percentile_cont(fraction) within group (order by ...)
 
 # time
-time_bucket()
-select time_bucket(INTERVAL '...', col::...)
+D time_bucket()
+D select time_bucket(INTERVAL '...', col::...)
 
 # date
-datediff('weeks' min(c1), now()::timestamp)
+D datediff('weeks' min(c1), now()::timestamp)
 
 # csv
 read_csv()
@@ -215,30 +350,35 @@ timestampformat=...
 dateformat=...
 
 # create ints
-CREATE TABLE list_ints (l INTEGER[]);
-INSERT INTO list_ints SELECT LIST(i) FROM range(100) tbl(i);
+D CREATE TABLE list_ints (l INTEGER[]);
+D INSERT INTO list_ints SELECT LIST(i) FROM range(100) tbl(i);
 
 # series
-select i from generate_series(1,10) tbl(i) ;
+D select i from generate_series(1,10) tbl(i) ;
 or
-select a.* from generate_series(1,10) as a(a) ;
+D select a.* from generate_series(1,10) as a(a) ;
 also
-select a.* from generate_series(1,10,2) as a(a) ;
-select unnest(generate_series(1,10,2)) r;
+D select a.* from generate_series(1,10,2) as a(a) ;
+D select unnest(generate_series(1,10,2)) r;
 
 # reuse window
-select datetrunc('d', to_timestamp(atime)) as d, sum(size) over cumsum as sum_s from T
-window cumsum as (partition by d order by atime, size rows between unbounded preceding and current row)
-order by atime;
+D select datetrunc('d', to_timestamp(atime)) as d, sum(size) over cumsum as sum_s from T
+D>window cumsum as (partition by d order by atime, size rows between unbounded preceding and current row)
+D>order by atime;
+
+# partition
+D SELECT "Plant","Date",  row_number() OVER (PARTITION BY "Plant" ORDER BY "Date") AS "Row"
+FROM "Generation History"
+ORDER BY 1, 2;
 
 # grouping
 D select row_number() over() r,size,atime,ntile(10) over (order by size) as g, ntile(10) over(order by atime) as h from t order by h;
 
 # graphs
-CREATE TABLE edge(node1id int, node2id int);
-INSERT INTO edge VALUES (1, 3), (1, 5), (2, 4), (2, 5), (2, 10), (3, 1), (3, 5),
+D CREATE TABLE edge(node1id int, node2id int);
+D INSERT INTO edge VALUES (1, 3), (1, 5), (2, 4), (2, 5), (2, 10), (3, 1), (3, 5),
   (3, 8), (3, 10), (5, 3), (5, 4), (5, 8), (6, 3), (6, 4), (7, 4), (8, 1), (9, 4);
-WITH RECURSIVE paths(startNode, endNode, path) AS (
+D WITH RECURSIVE paths(startNode, endNode, path) AS (
    SELECT -- define the path as the first edge of the traversal
         node1id AS startNode,
         node2id AS endNode,
@@ -260,33 +400,37 @@ SELECT startNode, endNode, path
 FROM paths
 ORDER BY length(path), path;
 
+# append
+D create table stats as select * from read_csv('stats.2025') ;
+D insert into stats select * from read_csv('stats.2024') ;
+
 # qualify (like having for a window function)
-SELECT
+D SELECT
     schema_name,
     function_name,
     -- In this example the function_rank column in the select clause is for reference
     row_number() over (partition by schema_name order by function_name) as function_rank
-FROM duckdb_functions()
-QUALIFY
+D FROM duckdb_functions()
+D QUALIFY
     row_number() over (partition by schema_name order by function_name) < 3;
 
 # filter (instead of case)
-SELECT
+D SELECT
     count(*) as total_rows,
     count(*) FILTER (WHERE i <= 5) as lte_five,
     count(*) FILTER (WHERE i % 2 = 1) as odds
-FROM generate_series(1,10) tbl(i);
+D FROM generate_series(1,10) tbl(i);
 
 # filename / glob
 D select * from read_json_auto('quote-manager/*.json', filename=true) ;
 
 # profiling
-EXPLAIN ANALYZE SELECT name FROM students JOIN exams USING (sid) WHERE name LIKE 'Ma%';
+D EXPLAIN ANALYZE SELECT name FROM students JOIN exams USING (sid) WHERE name LIKE 'Ma%';
 
 # regexp, filename
-select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date" as dt date."$date" as dt,
-open."$numberDecimal" as op, close."$numberDecimal" as cls, dividend."$numberDecimal" as div ,
-split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;
+D select regexp_extract(filename, 'assets.([A-Z]+).json',1) as ticker, date."$date" as dt date."$date" as dt,
+ open."$numberDecimal" as op, close."$numberDecimal" as cls, dividend."$numberDecimal" as div ,
+ split."$numberDecimal" as split from read_json_auto('quote-manager/*.json', filename=true) ;
 
 # macro(v1.1)
 D create or replace macro my_summarize(table_name) as table
@@ -301,4 +445,166 @@ D create or replace macro my_summarize(table_name) as table
   from query_table(table_name::varchar));
 D select * from my_summarize('https://blobs.duckdb.org/data/ontime.parquet') limit 4;
 
+# json from file -- see also https://motherduck.com/blog/analyze-json-data-using-sql/
+D WITH t AS (
+  SELECT j
+  FROM read_json('https://gist.githubusercontent.com/adityawarmanfw/3107de51d1901eb3b918bcc70a5ffb31/raw/d73e365a492f6ceb50ed25816b5a90fcf57b8eb6/ansible-test.json') AS j
+), get_interface_name AS (
+  SELECT
+      j->> '$.ansible_hostname' AS hostname,
+      concat('ansible_', unnest(j->> '$.ansible_interfaces[*]')) AS interface_name
+  FROM t
+)
+SELECT
+    get_interface_name.hostname,
+    interface_name,
+    from_json(interface_data, '{"active":"BOOLEAN","device":"VARCHAR","ipv4":{"address":"VARCHAR","broadcast":"VARCHAR","netmask":"VARCHAR","network":"VARCHAR","prefix":"VARCHAR"},"ipv6":[{"address":"VARCHAR","prefix":"VARCHAR","scope":"VARCHAR"}]}') AS interface_data
+FROM get_interface_name
+LEFT JOIN LATERAL (
+    SELECT
+        t.j->> '$.ansible_hostname' AS hostname,
+        json(t.j->> concat('$.', get_interface_name.interface_name)) AS interface_data
+    FROM t
+  ) get_interfaces ON TRUE
+WHERE get_interface_name.hostname = get_interfaces.hostname
 
+# json querying
+D select reports[2]['organism']['organism_name'] as org, reports[1]['accession'] as acc, reports[1]['assembly_info']['assembly_method'] as m from t;
+
+# json unnest
+D create table t as select * from read_json('t.taxonid.stats.json') ;
+D select unnest(reports, recursive :=true) from t ;
+
+# delete
+D create table foo as select organism_name_3 from t2 where organism_name_3 like ('%uman %')  ;
+D select organism_name_3 from t2 where organism_name_3 in (select * from foo) ;
+┌───────────────────────────────────┐
+│          organism_name_3          │
+│              varchar              │
+├───────────────────────────────────┤
+│ Human papillomavirus 125          │
+│ Human papillomavirus 160          │
+│ Human papillomavirus 160          │
+│ Human papillomavirus 28           │
+│            ·                      │
+│            ·                      │
+│            ·                      │
+│ Human papillomavirus 17           │
+│ Human papillomavirus type 38b     │
+│ Human papillomavirus type 63      │
+│ Human papillomavirus type 63      │
+├───────────────────────────────────┤
+│        57 rows (40 shown)         │
+└───────────────────────────────────┘
+D delete from t2 where organism_name_3 in (select * from foo) ;
+
+# delete + having
+D delete from rps
+D> using (
+D> select stats_name
+D> from rps
+D> group by stats_name
+D> having count(*)<=1
+D> ) t1 where t1.stats_name=rps.stats_name ;
+
+# pivot
+D PIVOT cities
+ON year
+USING sum(population);
+
+# pivot
+D SELECT *
+FROM ⟨dataset⟩
+PIVOT (
+    ⟨values⟩
+    FOR
+        ⟨column_1⟩ IN (⟨in_list⟩)
+        ⟨column_2⟩ IN (⟨in_list⟩)
+        ...
+    GROUP BY ⟨rows⟩
+);
+
+# save memory to file db
+D attach database '/some/path/my.db' as mydb ;
+# or
+D export database '/some/path/' # (format csv|parquet, ...)
+
+# Error:
+$ duckdb ATCC-BSL2 "create or replace table t as select * from read_json('BSL2.taxid.stats.json'); create table bsl2 as select unnest(reports, recursive:=true) from t"
+Invalid Input Error: "maximum_object_size" of 16777216 bytes exceeded while reading file "BSL2.taxid.stats.json" (>33554428 bytes).
+Try increasing "maximum_object_size".
+# Fix:
+$ duckdb ATCC-BSL2 "create or replace table t as select * from read_json('BSL2.taxid.stats.json',maximum_object_size=2147483648); create table bsl2 as select unnest(reports, recursive:=true) from t"
+$ duckdb ATCC-BSL2 "create or replace table t as select * from read_json('BSL2.taxid.stats.json'); create table bsl2 as select unnest(reports, recursive:=true) from t"
+
+# max_by / max_arg()
+D from atcc select organism_name, unnest(max_by(tax_id, release_date,1)) as tax_id where completeness>98.0 and number_of_contigs<5 and host not similar to 'Homo sapiens|Hmo sapiens|Homo sapiens.*|Homo sapiens sapiens|[Hh]uman.*|woman.*|sputum|hospital'  group by organism_name;
+
+# prepared statement
+D prepare cla_x as select sow_total_logical_amt_complete/sow_target_logical_amt as done from air where lib_create_date > $2 and sow_total_logical_amt_complete is not null  and sp_actual_product = $1  order by lib_create_date  ;
+D execute cla_x('Fungal Standard Draft' , '2024-09-30');
+
+D prepare stats_value_count as select count(*) from stats where stats_name = $1 and stats_value is not null ;
+
+# custom summarize
+D CREATE OR REPLACE MACRO my_summarize(table_name) AS TABLE
+  SELECT
+      unnest([*COLUMNS('alias_.*')]) AS column_name,
+      unnest([*COLUMNS('min_.*')]) AS min_value,
+      unnest([*COLUMNS('max_.*')]) AS max_value
+  FROM (
+      SELECT
+          any_value(alias(COLUMNS(*))) AS "alias_\0",
+          min(COLUMNS(*))::VARCHAR AS "min_\0",
+          max(COLUMNS(*))::VARCHAR AS "max_\0"
+      FROM query_table(table_name::VARCHAR)
+  );
+D select * from my_summarize(rpq) ;
+
+# spatial - https://motherduck.com/blog/getting-started-gis-duckdb/
+
+
+# R / duckplyr
+https://github.com/tidyverse/duckplyr
+> install.packages(duckdb)
+> install.packages(duckplyr)
+> library(duckdb)
+> library(duckplyr)
+> con = dbConnect(duckdb(dbdir="./STATS"))
+> dbGetQuery(con, "select count(*) from rpq")
+
+# R factors
+# see https://duckdb.org/2021/11/26/duck-enum.html
+
+
+# show databases
+D pragma database_list ;
+
+# show functions
+D pragma functions ;
+
+# show tables
+D show all tables
+D show tables
+
+# database size
+D pragma database_size ;
+
+# profiling
+D PRAGMA enable_profiling;
+D PRAGMA enable_profile;
+
+# Profiling Format
+The format of enable_profiling can be specified as query_tree, json, query_tree_optimizer, or no_output. Each format prints its output to the configured output, except no_output.
+D SET enable_profiling = 'query_tree'; #The default format is query_tree. It prints the physical query plan and the metrics of each operator in the tree.
+D SET enable_profiling = 'json';  #Alternatively, json returns the physical query plan as JSON:
+D SET enable_profiling = 'query_tree_optimizer'; #To return the physical query plan, including optimizer and planner metrics:
+Database drivers and other applications can also access profiling information through API calls, in which case users can disable any other output. Even though the parameter reads no_output, it is essential to note that this only affects printing to the configurable output. When accessing profiling information through API calls, it is still crucial to enable profiling:
+D SET enable_profiling = 'no_output';
+
+# functions
+https://duckdb.org/docs/sql/functions/aggregates.html
+
+
+# entropy
+entropy() -- log2

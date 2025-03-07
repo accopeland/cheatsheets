@@ -8,6 +8,12 @@ python3 -m pip install sympy
 python3
 >>> import sympy
 
+# constants
+e := sympy.exp(1) = sympy.E
+sympy.EulerGamma
+sympy.pi
+sympy.I
+
 # Laplace
 omega = sympy.Symbol('omega', real=True)
 exp = sympy.exp

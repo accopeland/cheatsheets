@@ -180,6 +180,54 @@ https://help.rc.ufl.edu/doc/Sample_SLURM_Scripts#MPI_job
   hpg2-compute nodes have 2 sockets, each with 16 cores.
   hpg1-compute nodes have 4 sockets, each with 16 cores.
 
+# cpu allocation
+number of CPUs allocated to each socket and node may be different. Refer to https://slurm.schedmd.com/mc_support.html for
+more information on resource allocation, distribution of tasks to nodes, and binding of tasks to CPUs.
+
+# --distribution arg1:arg2:arg3 -- controls distribution of tasks to the nodes(arg1),sockets(arg2),cores(arg3)
+# arg1 (before the first ":") controls the distribution of tasks to nodes.
+# arg2 (after the first ":") controls the distribution of allocated CPUs across sockets.  If affinity enabled
+# arg3 (after the second ":") controls the distribution of allocated CPUs across cores.   If affinity enabled & task/cgroup configured
+#
+ First distribution method (distribution of tasks across nodes):
+
+ *|block distribute tasks such that consecutive tasks share a node. For example, consider an allocation of three nodes each with two
+        cpus. A four-task block distribution request will distribute those tasks to the nodes with tasks one and two on the first node, task three on the  second  node,  and  task
+        four on the third node.  Block distribution is the default behavior if the number of tasks exceeds the number of allocated nodes.
+ cyclic distribute tasks such that consecutive tasks are distributed over consecutive nodes (round-robin). For example, an alloc of three nodes each with two cpus.
+        A four-task cyclic distribution request will distribute those tasks to the nodes with tasks 1 and 4 on node1, task 2 on node2, and task 3 on the node3.
+        Note that when SelectType is select/cons_res, the same number of CPUs may not be allocated on each node. Task distribution will be round-robin among all nodes
+        with CPUs yet to be assigned to tasks.  Cyclic distribution is the default behavior if number of tasks <= than the number of allocated nodes.
+ plane=s  distributed in blocks of size <s>. size must be given or SLURM_DIST_PLANESIZE must be set. The number of tasks distributed to each node is the same as
+        for cyclic distribution, but the taskids assigned to each node depend on the plane size. Additional distribution specifications cannot be combined with this  option.   For
+        more details (including examples and diagrams), please see https://slurm.schedmd.com/mc_support.html and https://slurm.schedmd.com/dist_plane.html
+ arbitrary   distribution will allocate processes in-order as listed in file designated by the environment variable SLURM_HOSTFILE.  If this variable is listed
+        it will over ride any other method specified.  If not set the method will default to block.  Inside the hostfile must contain at minimum the number of hosts requested  and
+        be one per line or comma separated.  If specifying a task count (-n, --ntasks=<number>), your tasks will be laid out on the nodes in the order of the file.
+        NOTE:  The  arbitrary distribution option on a job allocation only controls the nodes to be allocated to the job and not the allocation of CPUs on those nodes. This option
+        is meant primarily to control a job step's task layout in an existing job allocation for the srun command.
+        NOTE: If the number of tasks is given and a list of requested nodes is also given, the number of nodes used from that list will be reduced to match that of the  number  of
+        tasks if the number of nodes in the list is greater than the number of tasks.
+
+ Second distribution method (distribution of CPUs across sockets for binding):
+ *|block  distribute allocated CPUs consecutively from the same socket for binding to tasks, before using the next consecutive socket.
+ cyclic distribute allocated CPUs for binding to a given task consecutively from the same socket, and from the next consecutive socket for the
+        next task, in a round-robin fashion across sockets.  Tasks requiring more than one CPU will have all of those CPUs allocated on a single socket if possible.
+ fcyclic distribute allocated CPUs for binding to tasks from consecutive sockets in a round-robin fashion across the sockets.  Tasks  requiring
+        more than one CPU will have each CPUs allocated in a cyclic fashion across sockets.
+
+ Third distribution method (distribution of CPUs across cores for binding):
+ *|block  distribute allocated CPUs consecutively from the same core for binding to tasks, before using the next consecutive core.
+ cyclic distribute allocated CPUs for binding to a given task consecutively from the same core, and from the next consecutive core for the next
+        task, in a round-robin fashion across cores.
+ fcyclic   distribute allocated CPUs for binding to tasks from consecutive cores in a round-robin fashion across the cores.
+
+ Optional control for task distribution over nodes:
+ Pack   Rather than evenly distributing a job step's tasks evenly across its allocated nodes, pack them as tightly as possible on the nodes.  This only applies  when  the  "block"
+        task distribution method is used.
+ NoPack Rather than packing a job step's tasks as tightly as possible on the nodes, distribute them evenly.  This user option will supersede the SelectTypeParameters CR_Pack_Nodes
+        configuration parameter.
+
 # To cancel a job by id or name:
 scancel <job-id>
 scancel --name <job-name>

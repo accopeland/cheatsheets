@@ -100,6 +100,10 @@ go list -m all # prints the current module’s dependencies.
 go get # changes the required version of a dependency (or adds a new dependency).
 go mod tidy # removes unused dependencies.
 
+# go mod typical sequence
+go mod tidy
+go build
+
 # To run the package in the current directory
 go run .
 
@@ -271,3 +275,6 @@ fast go linter
 # Error: .deepsource.toml permission denied
 # Fix: go@1.22: -modcacherw ...
 https://github.com/spack/spack/issues/44361
+
+# Error: malformed module path <pkg> : missing dot in first path element
+# Fix: ???

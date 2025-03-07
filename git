@@ -685,3 +685,7 @@ git branch -dr <remote>/<branch> # Shorter
 
 git fetch <remote> --prune # Delete multiple obsolete remote-tracking branches
 git fetch <remote> -p      # Shorter
+
+# to show all commits for a file
+$ git rev-list --reverse <branch> -- <file>
+$ git rev-list --reverse develop -- var/spack/repos/builtin/packages/sq/package.py

@@ -1,0 +1,119 @@
+# description
+SMB tools
+
+# see also
+$ cheat smb
+
+# docs
+https://amandaguglieri.github.io/hackinglife/smbclient/
+https://issues.jgi.doe.gov/browse/SIT-5065
+
+# auth
+samba uses uses your AD (Active Directory) password.
+You can reset via https://password.lbl.gov/#/ad or help.lbl.gov .
+
+# JGI
+\\storage.jgi.lbl.gov\GenTech
+\\storage.jgi.lbl.gov\ProdSeq
+\\storage.jgi.lbl.gov\Instrumentation
+
+# install
+brew install samba
+
+# smbclient
+
+# alternatives
+https://github.com/p0dalirius/smbclient-ng
+
+# ports (??)
+137, 138, 139 and 445 with a smb service
+
+# setup
+$ proxyon samba # map 9445->445 9137->137 9138->138
+
+# rpcclient
+$ rpcclient -U "" -N 128.3.96.20
+Cannot connect to server.  Error was NT_STATUS_IO_TIMEOUT
+$ rpcclient -U "" -N 128.3.96.20  -p 9445
+Cannot connect to server.  Error was NT_STATUS_CONNECTION_REFUSED
+
+
+# usage
+$ smbclient //server/share
+
+# nmblookup
+$ nmblookup -A 128.3.96.20
+
+# smb.conf
+# https://linux.die.net/man/5/smb.conf
+
+# usage
+# List shares on a machine using NULL Session
+smbclient -L <target-IP>
+
+# List shares on a machine using a valid username + password
+smbclient -L \<target-IP\> -U username%password
+
+# Connect to a valid share with username + password
+smbclient //\<target\>/\<share$\> -U username%password
+
+# List files on a specific share
+smbclient //\<target\>/\<share$\> -c 'ls' password -U username
+
+# List files on a specific share folder inside the share
+smbclient //\<target\>/\<share$\> -c 'cd folder; ls' password -U username
+
+# Download a file from a specific share folder
+smbclient //\<target\>/\<share$\> -c 'cd folder;get desired_file_name' password -U username
+
+# Copy a file to a specific share folder
+smbclient //\<target\>/\<share$\> -c 'put /var/www/my_local_file.txt .\target_folder\target_file.txt' password -U username
+
+# Create a folder in a specific share folder
+smbclient //\<target\>/\<share$\> -c 'mkdir .\target_folder\new_folder' password -U username
+
+# Rename a file in a specific share folder
+smbclient //\<target\>/\<share$\> -c 'rename current_file.txt new_file.txt' password -U username
+
+# Show available commands
+help
+
+# Download a file
+get <file>
+
+# See status
+smbstatus
+
+# Smbclient also allows us to execute local system commands using an exclamation mark at the beginning (`!<cmd>`) without interrupting the connection.
+!cmd
+!cat prep-prod.txt
+
+# rpcclient
+# SMB NULL Session with rpcclient
+rpcclient -U "" -N $ip
+
+# Connect to a remote shared folder (same as smbclient in this regard)
+rpcclient -U "" 10.129.14.128
+rpcclient -U'%' 10.10.110.17
+srvinfo # Server information
+enumdomains  # Enumerate all domains that are deployed in the network
+querydominfo # Provides domain, server, and user information of deployed domains.
+netshareenumall # Enumerates all available shares.
+netsharegetinfo <share> # Provides information about a specific share.
+getdompwinfo # Get Domain Password Information
+enumdomusers # Enumerates all domain users.
+queryuser <RID> # Provides information about a specific user.
+    # An example:
+    # rpcclient $> queryuser 0x3e8
+querygroup <ID> # Provides information about a specific group.
+enumprivs # Enumerating Privileges
+lsaenumsid # Enumerating SID from LSA
+
+# fragment analyzer
+see https://docs.google.com/document/d/19qLw87ptlozV8GpHPh_F3BmQLedOxSV0ajrvLr-wZTY/edit?tab=t.0#heading=h.tfi7wpmm0r76
+As per lab (Yuko Yoshinaga), since 2018 January the instruments store all Fragment Analyzer individual images on /Volumes/gentech/SMsheet
+Example file:  /Volumes/gentech/SMsheet/2018/1. January/RNA/QC/01092018 JY-Yi_982_RNA-P_3/01112018 JY Y3 17-14-09
+With file names: we may be able pull out the single images using the sample IDs.
+2018 01 11 17H 14M A1 173122
+(YYYY.MM.DD TimeStamp Well SampleID)
+Matt Dunford: It looks like the CIFS share \\storage.jgi.lbl.gov\gentech. I've mounted it at /net/storage.jgi.lbl.gov/gentech on sdm-int-3 for Chris.

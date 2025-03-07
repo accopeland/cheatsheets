@@ -3,11 +3,11 @@ The rust programming languange and tools
 
 # install  -- choose one or the other
 ##1 homebrew
-brew install rustup
-rustup-init
+$ brew install rustup
+$ rustup-init
 ##2 rustup
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup update
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+$ rustup update
 
 # spack install
 must manually update rust-bootstrap and make sure it installs properly
@@ -20,15 +20,15 @@ x.py errors seems to be due to having an invalid (too old) bootstrap
 looks like to compile 1.N bootstrap 1.(N-1) is required
 
 # update
-rustup update
+$ rustup update
 
 # config
 Rustup metadata and toolchains installed into :  /global/homes/c/copeland/.rustup (RUSTUP_HOME)
-Cargo home directory at: /global/homes/c/copeland/.cargo (CARGO_HOME)
+cargo home directory at: /global/homes/c/copeland/.cargo (CARGO_HOME)
 cargo, rustc, rustup and other commands added to:  /global/homes/c/copeland/.cargo/bin (PATH)
 
 # uninstall i
-rustup self uninstall
+$ rustup self uninstall
 
 # docs
 https://www.rust-lang.org/learn/get-started
@@ -41,21 +41,28 @@ https://gitlab.com/carols10cents/rust-next-40-years
 cargo, rustc, rustup
 
 # update rust
-rustup update
-rustup update stable
-/Users/copeland/.rustup  #This can be modified with the RUSTUP_HOME environment variable.
+$ rustup update
+$ rustup update stable
+$ /Users/copeland/.rustup  #This can be modified with the RUSTUP_HOME environment variable.
 
 # cargo
 /Users/copeland/.cargo #The Cargo home directory can be modified with the CARGO_HOME environment variable.
 cargo, rustc, rustup
 /Users/copeland/.cargo/bin
 
+# cargo installed
+$ cargo install --list
+
+
 # update cargo pkg
-cargo install nu # perhaps need rustup update
+$ cargo install nu # perhaps need rustup update
 
 # update all cargo installs
-cargo install --list
-cargo install $(cargo install --list | egrep '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+$ cargo install --list
+$ cargo install $(cargo install --list | egrep '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+
+# cargo install failures -- install from git repo
+$ cargo install --locked --git https://github.com/prefix-dev/pixi.git pixi
 
 # config - 	 modify PATH in
 /Users/copeland/.profile
@@ -82,12 +89,14 @@ default toolchain: stable (default)
   modify PATH variable: yes
 
 # build
-cargo build ...
+$ cargo build ...
 
 # rustup toolchain
-rustup show
-rustup toolchain install nightly
-rustup default nightly
+$ rustup show
+$ rustup toolchain install nightly
+$ rustup default nightly
+$ rustup toolchain list
+$ rustup toolchain remove 1.73.0-x86_64-unknown-linux-gnu
 
 # bootstrap -- bootstrap version matched to specific rust version
 # how to figure this out ?
@@ -109,10 +118,9 @@ wget https://static.rust-lang.org/dist/2019-02-16/channel-rust-nightly.toml
 # Error: ProcessError: Command exited with status 1:
 # Fix: ???
 
-# python3.12' './x.py' 'build' ...
-# Error: ProcessError: Command exited with status 1:
-# Fix: ???
-
 # Error: found a virtual manifest at ... instead of a package manifest
 # Fix: cargo install pkg_rs/foo (see https://stackoverflow.com/questions/61189179/found-a-virtual-manifest-at-path-instead-of-a-package-manifest)
 $ cargo install --path cli  --root /tmp/accopeland/jj --verbose
+
+# Error: does not contain a Cargo.toml file. --path must point to a directory containing a Cargo.toml file
+# Fix:

@@ -11,8 +11,27 @@ celonis www.celonis.de
 bupaR cran
 rapidProM https://arxiv.org/abs/1703.03740 www.rapidprom.org
 
+# other
+https://www.processmining-software.com/tools/
+
 # R
 https://www.dataminingapps.com/2017/11/a-process-mining-tour-in-r/
+Dev-versions of these packages can be installed from GitHub using remotes::install_github().
+bupaR
+bupaverse
+daqapo
+heuristicsmineR
+petrinetR
+pm4py
+processanimateR
+processpredictR
+psmineR
+understandBPMN
+xesreadR
+collaborateR
+bpmnR
+propro
+
 
 #  https://processminingbook.com/read/tutorial/
 #  https://github.com/topics/process-mining?o=desc&s=forks

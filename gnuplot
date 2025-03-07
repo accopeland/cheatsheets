@@ -15,4 +15,78 @@ plot "file" using 1:3 w p title "foo"
   # add transparency (alpha) a=0 to 255 or 0x00 to 0xff
   myTColor(c,a) = sprintf("0x%x%s",a, myColor(c)[3:])
 
-#
+# time
+set timefmt "%Y-%m-%d"
+set xdata time
+plot "$TMPF" u 1:($2!=$3?$2:1/0) t "scaffolds", "" u 1:3 t "contigs", "" u 1:2:($2) smooth csplines t "fit"
+
+# csv
+gnuplot> set datafile separator ","
+gnuplot> plot 'mgsd.csv' u 0:5 w p
+
+# cumulative distribution
+gnuplot> bin(x, s) = s*int(x/s)
+gnuplot> set boxwidth 0.1
+gnuplot> set xrange [0 : *] noextend
+gnuplot> plot 'mgsc.csv' u 5:(1.)  smooth cumulative
+
+
+# columnheader
+set datafile columnheader
+
+# smooth cum norm
+gnuplot> set datafile columnheader
+gnuplot> plot i=5'' u i:i title columnhead(i) smooth cnorm
+
+# other empirical distribution functions
+$ head mgsd.csv
+rqc_pipeline_queue_id,rqc_pipeline_type_id,actual_seq_prod_name,scaf_gt50k,scaf_pct_gt50k,scaf_max,contam_filt,singletons,pct_asm,pct_asm_gt10k
+1398326,13,Metagenome Standard Draft,386,2.838,485472,23555586,20947801,90.6,34.2
+1489812,13,Metagenome Standard Draft,4,0.034,94074,15917804,14800009,84.1,5.5
+1398189,13,Metagenome Standard Draft,133,0.689,275875,90873476,81105861,57.9,3.9
+1398211,13,Metagenome Standard Draft,135,0.724,336800,90508510,80667313,58.7,3.9
+$ gnuplot
+gnuplot> set datafile separator ","
+gnuplot> plot for [i=4:6] '' u 1:i title columnhead(i) smooth cnorm
+
+# terminals
+gunplot> set terminal
+gunplot> set terminal sixel
+gunplot> set terminal qt # mac
+
+# histograms
+gunplot> set style histogram columnstacked
+gunplot> plot for [i=3:8] "datafile" using i title columnhead
+
+# parallelaxes
+gnuplot> set datafile columnheader
+gnuplot> set style data parallelaxes
+gnuplot> set datafile columnheader
+gnuplot> set datafile separator ","
+gnuplot> set border 0
+gnuplot> key
+gnuplot> xrange [] noextend
+gnuplot> ytics
+gnuplot> plot "mgsd.csv" u 9 w parallelaxes at 9 t "%asm" , '' u 10 w parallelaxes at 10 t "%asm>10k" , '' u 5 w parallelaxes at 11 t "%gt50k"
+
+# loops
+gnuplot> array xpos[7] = [4,5,6,7,8,9,10]
+gnuplot> plot for [col=1:7] '' u col w parallelaxes at xpos[col] title columnhead(i)
+
+# alpha linecolor -- add colors by name with transparency (without hex-color code list)
+gnuplot> reset session
+gnuplot> ColorNames = 'red green blue magenta yellow cyan'   # must be existing gnuplot color names
+gnuplot> ColorValues = ''  # get the color values from dummy palettes
+gnuplot> RGBComp(c) = int(word($PALETTE[256],c+1)*0xff)
+gnuplot> do for [i=1:words(ColorNames)] {
+    set palette defined (0 word(ColorNames,i))
+    test palette
+    RGB = sprintf("0x%02x%02x%02x",RGBComp(1),RGBComp(2),RGBComp(3))
+    ColorValues = ColorValues." ".RGB
+}
+gnuplot> myColor(c) = (idx=NaN, sum [i=1:words(ColorNames)] (c eq word(ColorNames,i) ? idx=i : idx), word(ColorValues,idx))
+# add transparency (alpha) a=0 to 255 or 0x00 to 0xff
+gnuplot> myTColor(c,a) = sprintf("0x%02x%s",a, myColor(c)[3:])
+gnuplot> set xrange[0:2*pi]
+gnuplot> set samples 200
+gnuplot> plot sin(x)   w l lw 12 lc rgb myTColor("red",0xcc),  sin(2*x) w l lw 12 lc rgb myTColor("green",0xcc), sin(3*x) w l lw 12 lc rgb myTColor("blue",0xcc)

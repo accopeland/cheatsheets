@@ -182,6 +182,21 @@ du[2] = u[1]*(ρ-u[3]) - u[2]
 du[3] = u[1]*u[2] - β*u[3]
 end
 
+# diffeq full example
+function lotka_volterra!(du, u, p, t)
+    x, y = u
+    α, β, δ, γ = p
+    du[1] = dx = α * x - β * x * y
+    du[2] = dy = -δ * y + γ * x * y
+end
+u0 = [1.0, 1.0]  # Initial condition
+tspan = (0.0, 10.0)  # Simulation interval
+pguess = [1.0, 1.2, 2.5, 1.2]  # LV equation parameter. p = [α, β, δ, γ]
+prob = ODEProblem(lotka_volterra!, u0, tspan, pguess)  # Set up the ODE problem with our guessed parameter values
+initial_sol = solve(prob, saveat = 1) # Solve the ODE problem with our guessed parameter values
+plt = plot(initial_sol, label = ["x Prediction" "y Prediction"]) # View the guessed model solution
+scatter!(plt, t_data, xy_data', label = ["x Data" "y Data"])
+
 # optimization
 MTK + GalacticOptimization / NonlinearOptimization / Optim
 basically same setup as for differential equations
@@ -405,9 +420,12 @@ ENV["JULIA_PKG_SERVER"] = ""
 ]up
 
 # ::RCall - using julia conda install of R, then find R_HOME via R_HOME="/Users/copeland/.julia/conda/3/lib/R"
-ENV["R_HOME"]="/Users/copeland/.julia/conda/3/lib/R"
-or
-ENV["R_HOME"]="*"
+$ R
+R> R.home()
+xxx # /clusterfs/jgi/groups/gentech/genome_analysis/spack-fork/spack/opt/spack/linux-rocky8-zen2/gcc-14.2.0/r-4.4.1-5eq7lxkgadn4rbtjbmr57nfci53uvmor/rlib/R
+$ julia
+julia> ENV["R_HOME"]="xxx" # use existing install
+julia> ENV["R_HOME"]="*" # force conda install
 
 #  compile errors libutf8proc.a wrong arch:
 https://github.com/JuliaStrings/utf8proc.git
@@ -1117,6 +1135,12 @@ reverse(:RdYlGn_11)
 https://makie.juliaplots.org/stable/makielayout/reference.html#Makie.MakieLayout.Axis
 
 # R / julia : /Users/copeland/.julia/packages/Conda/hsaaN/deps/usr/bin/R
+# use spack R
+$ R
+R> R.home()
+$ julia
+julia> ENV["R_HOME"]=... # see above
+juila> Pkg.build("RCall")
 
 # makie vector calculus
 https://docs.juliahub.com/CalculusWithJulia/AZHbv/0.0.2/differentiable_vector_calculus/makie-plotting.html
@@ -1695,6 +1719,12 @@ f = Figure(resolution=(500,500))
 ax = Axis(f[1,1])
 lines!(ax, 1:5, 1:5)
 save("mwe.png", f)
+
+# Makie save plot
+# looks like no way to save unless you use this approach
+# if you just scatter(...) you are screwed if you want to see anything
+fig,ax,plot=lines!(...)
+save("foo.png", fig)
 
 # print numeric precision in repl
 Printf.@printf("%d\n",size(all,1)/8)

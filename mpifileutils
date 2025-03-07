@@ -116,3 +116,7 @@ dwalk --output list.mfu /path/to/walk
 
 # filter list to identify all regular files that were last accessed over 180 days ago
 dfind --input list.mfu --type f --atime +180 --output purgelist.mfu
+
+# salloc -N 2 ...
+$ prterun --display map --map-by node --bind-to cores -np 128  dwalk /global/cfs/projectdirs/m342/balintb/  # ok but only works on one node
+$ prterun --display map --map-by node --bind-to cores -np 512  dwalk /global/cfs/projectdirs/m342/balintb/  # fail

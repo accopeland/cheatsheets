@@ -23,6 +23,10 @@ srun [options] -n <nodes> binary
 https://github.com/spack/spack/pull/10340
 legacylaunchers
 
+# spack configuration for IB? -- spack config edit [--scope <>] packages
+openmpi:
+  require: '@4.1.6' +pmi +thread_multiple ~legacylaunchers  +internal-pmix fabrics=ucx schedulers=slurm
+
 # info
 ompi_info
 pmix_info
@@ -36,6 +40,68 @@ $ ompi_info --param fs       all --level 9
 $ ompi_info --param fbtl     all --level 9
 $ ompi_info --param sharedfp all --level 9
 
+# HFI : host fabric interface
+#
+# MTL :
+#
+# Multirail
+# PSM2 library handles the support for multi-rail which is off by default.
+#
+
+#  guarantee that the tcp, sm, and self BTLs are used:
+$ mpirun --mca pml ob1 --mca btl tcp,sm,self ...
+
+# tcp gotchas
+--mca btl tcp,sm,self
+Failure to specify 'sm' BTL will likely result in lower performance with TCP network stack to send to peers on the same host
+Failure to specify 'self' BTL may result in failure to complete send-to-self scenarios (meaning that your program will run fine until a process tries to send to itself).
+
+
+# tcp and infiniband
+# Open MPI assumes that if you have both an IP network and at least one high-speed network (such InfiniBand), you will likely only want to use the high-speed network(s) for MPI message passing. Hence, the tcp BTL component will sense this and automatically deactivate itself.
+
+# display all parameters available for the tcp BTL component (i.e., the component that uses TCP for MPI communications):
+$ ompi_info --param btl tcp --level 9
+
+# with multiple IP networks on some/all of my cluster nodes. Which ones will Open MPI use?
+# In general, Open MPI will greedily use all IP networks that it finds per its reachability computations.
+
+# To disable Open MPI from using TCP for MPI communications:
+$ mpirun --mca btl ^tcp...  # This says to exclude the TCP BTL component (tcp is not listed, and therefore will not be used)
+$ mpirun --mca btl self,vader,openib ... # This says to include only the listed BTL components
+
+# to use TCP but restrict it from certain networks, use the btl_tcp_if_include or btl_tcp_if_exclude
+# (only one of the two should be set).
+# IP loopback and all local-only devices *must* be included if the exclude list is specified.
+shell$ mpirun --mca btl_tcp_if_exclude lo,eth0 ... # dont use eth0 and lo (implicitly use all others).
+
+# to only use the eth1 and eth2 interfaces (and implicitly ignore the rest)
+$ mpirun --mca btl_tcp_if_include eth1,eth2 ...
+
+# to specify subnets in the include or exclude lists in CIDR notation.
+# For example Only use the 192.168.1.0/24 and 10.10.0.0/16 subnets for MPI
+$ mpirun --mca btl_tcp_if_include 192.168.1.0/24,10.10.0.0/16 ...
+
+# CIDR notation for include/exclude networks
+# N.B.  You must specify the CIDR notation for a given network precisely.
+# For example, if you have two IP networks 10.10.0.0/24 and 10.10.1.0/24, Open MPI will not recognize either of them if you specify “10.10.0.0/16”.
+# N.B. If you use the 'btl_tcp_if_include' / 'btl_tcp_if_exclude' to shape behavior of the TCP, you may also need/want to investigate
+# 'oob_tcp_if_include' / 'oob_tcp_if_exclude' which shape non-MPI TCP-based communication
+# N.B. Not available in PMIx ?
+
+# >1 ip address per interface
+# Does Open MPI support IP interfaces that have more than one IP address?
+# In general, no.
+#
+$ ip address
+0: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
+   link/ether 00:18:ae:f4:d2:29 brd ff:ff:ff:ff:ff:ff
+*   inet 192.168.0.3/24 brd 192.168.0.255 scope global eth0:1
+*   inet 10.10.0.3/24 brf 10.10.0.255 scope global eth0
+   inet6 fe80::218:aef2:29b4:2c4/64 scope link
+      valid_lft forever preferred_lft forever
+# Open MPI will be unable to use this device.
+
 # PML : process management layer
 pmi4x
 $ srun --mpi=list
@@ -46,7 +112,9 @@ either
  - build OMPI against external HWLOC. This assumes that HWLOC didn't change any of the "flags" or functions for parsing the XML string - which wasn't true the last time SLURM/hwloc changed the format. So it is quite possible that there will still be problems even if you do build against the same library.
 -  quit using srun and use mpirun. This truly is the "correct" answer, and not just for this HWLOC problem. OMPI continues to grow in its use of information to support optimizations, and the Slurm support lags further and further behind. srun should only be used by people who just want to run something basic and don't really care about performance, or at least about optimizations introduced in recent OMPI generations. Unless/until something changes in the Slurm world such that they begin to keep up with things, your users will get better experiences by moving to mpirun.
 
+# for highly multi-threaded applications, where there are only one or two MPI processes per host, the btl_tcp_links option may improve TCP throughput considerably.
 
+#
 
 
 SLURM_MPI_TYPE
@@ -196,6 +264,9 @@ NodeName=ln000 CPUs=32 Boards=1 SocketsPerBoard=1 CoresPerSocket=32 ThreadsPerCo
 --with-portals4=DIR: Portals4 libs and header files. Portals is a low-level network API for HP networking... with transport over InfiniBand verbs and UDP.
 --with-ucx=DIR: Specify dir where the UCX libs and header files are located.
 
+# MCA -- multi-component architecture
+# PMI -- process management interface
+#
 
 # run verbose
 $ SLURM_CPU_BIND=verbose,sockets OMPI_MCA_pmix_base_verbose=10  srun  --mem-bind=verbose,none --cpu-bind=verbose,none mpitest-rsegan
@@ -206,7 +277,17 @@ $ prte --daemonize
 $ prun hostname
 $ pterm # terminate the DVM
 
-# run testing
+# run over RoCE (RDMA over combined ethernet)
+$ mpirun --mca pml ucx -x UCX_NET_DEVICES=mlx5_0:1 ...
+$ mpirun --mca pml ucx -x UCX_NET_DEVICES=mlx5_0:1 -x UCX_IB_GID_INDEX=1 ... #
+
+# select IB service level
+$ mpirun --mca pml ucx -x UCX_IB_SL=N ...
+
+# find IB
+$ ibv_devinfo
+
+# run testing -- mca=btl self,vader should disable tcp
 $ mpirun --verbose -n 8 --mca pml ob1 --mca btl self,vader ./test_mpi_main
 ##
 ln000.jgi:2431615 00100000000000000000000000000000

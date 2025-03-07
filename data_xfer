@@ -10,6 +10,7 @@ lftp
 fdt
 mpifileutils - fpart / fpsync
 rsync
+parsyncfp2 - https://github.com/hjmangalam/parsyncfp2
 globus - globus-url-copy
 https://docs.globus.org/premium-storage-connectors/v5/google-drive/
 bbcp

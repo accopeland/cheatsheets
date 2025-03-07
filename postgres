@@ -31,6 +31,8 @@ postgresql://user:secret@localhost
 postgresql://other@localhost/otherdb?connect_timeout=10&application_name=myapp
 postgresql://localhost/mydb?user=other&password=secret
 
+# select schema
+psql ... --set search_path=dw ...
 
 # using other schemas
 \db
@@ -127,7 +129,14 @@ extract() : extract(year from lib_create_date) as y, extract(epoch from (lib_cre
 # info
 \timing
 \watch
-\gx  # toggle \x
+
+# expanded mode
+\gx
+
+# backslash
+\g [FILE] or ;         execute query (and send results to file or |pipe)
+\gdesc                 describe result of query, without executing it
+\gx [FILE]             as \g, but forces expanded output mode
 
 # winodw
 window()
@@ -167,6 +176,8 @@ select * from my_table where my_column ilike any (array['%some%', '%words%'])
 
 # citext - case insensitive matching
 create extension citext;
+
+# ???
 dw <<< "select sample_id, date_created, current_status from dw.sample_aliquot where date_created>='2021-11-09'\x \! ls" # arbitrary cmd
 
 # full text search
@@ -199,20 +210,24 @@ where constraint is:
 
 
 # postgres rollup
-dw <<< "select extract(year from sp_status_date) y, extract (month from sp_status_date) M, count(sp_status_date) ct from dw.all_inclusive_report where sp_status_date>'2021-03-01' group by rollup (extract( year from sp_status_date), extract (month from sp_status_date));"
+select extract(year from sp_status_date) y, extract (month from sp_status_date) M, count(sp_status_date) ct
+from dw.all_inclusive_report
+where sp_status_date>'2021-03-01'
+group by rollup (extract( year from sp_status_date), extract (month from sp_status_date))
 
 # rollup without subtotals -- grouping()
- select extract(year from ap_created_date) y,
-        extract(month from ap_created_date) m,
-        count(*) ct, ap_in_prog_to_all_done_days, ap_all_done_to_complete_days
-        from dw.anal_proj_and_task_report
-        where ap_created_dt between '$F' and '$T'
-        group by rollup having grouping(y) = 0 and grouping(m) = 0  order by y,m
-
+ select extract(year from ap_created_date) y, extract(month from ap_created_date) m, count(*) ct, ap_in_prog_to_all_done_days, ap_all_done_to_complete_days
+from dw.anal_proj_and_task_report
+where ap_created_dt between '$F' and '$T'
+group by rollup having grouping(y) = 0 and grouping(m) = 0
+order by y,m
 
 # group by week (start)
 select count(*), date_trunc('week', request_time) from requests group by date_trunc('week', request_time) order by date_trunc desc ;
-\c example # psql switch db
+
+# psql switch db
+\c example
+
 # time series monitoring and db:
 timescaledb (postgres extension)
 influxdb/ flux
@@ -431,3 +446,47 @@ select * from a inner join b on a.id=b.id
 Dori in pg_hba.conf for SMC is:
 # dori
 host    all             all             128.3.7.0/24            md5
+
+# datetime
+
+# date convert
+> SELECT to_char(DATE '2014-04-01', 'DD/MM/YYYY');
+> to_date('05 Dec 2000', 'DD Mon YYYY') → 2000-12-05
+> date_trunc('hour', timestamp '2001-02-16 20:38:40') → 2001-02-16 20:00:00
+> select sam_qc_date::date from dw.all_inclusive_report limit 10"
+
+# temp tables
+dwprd1p=>  create temporary table t0 ( id serial primary key, name varchar(12)) ;
+dwprd1p=> insert into t0 values (1, 'abc') ;
+dwprd1p=> select * from t0 ;
+dwprd1p=> drop table t0 ;
+dwprd1p=> create temporary table t0 (atid numeric) ;
+dwprd1p=> \copy t0(atid) from 'at.txt'
+dwprd1p=> select count(*) from t0 ;
+
+# create temp table matching another
+CREATE TEMP TABLE tmp_table AS SELECT * FROM original_table LIMIT 0;
+CREATE TEMP TABLE tmp_table (LIKE original_table)
+select top 0 * into #temptable from mytable
+
+# prepared statement
+dwprd1p=> prepare my_stmt(int) as select sp_project_id,at_id from dw.all_inclusive_report where sp_project_id=$1 ;
+dwprd1p=> execute my_stmt(1151231) ;
+dwprd1p=> deallocate my_stmt ;
+
+# anonymous prepared stmt -- v>16?
+SELECT $2||$1 AS str \parse q
+SELECT * FROM pg_prepared_statements \gx
+\bind_named q 42 'Answer: ' \g
+\close q
+
+# version
+ dw <<< "select version()"                                                                                             │SELECT * FROM pg_prepared_statements \gx
+version                                                                                                                                                                          │\bind_named q 42 'Answer: ' \g
+"PostgreSQL 15.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-44), 64-bit"
+
+# subquery in prepared stmt
+# not allowed -- have to use function and/or do block
+#
+#
+

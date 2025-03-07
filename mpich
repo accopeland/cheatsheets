@@ -1,0 +1,4 @@
+# description
+
+# GPUdirect RDMA / osu-micro-benchmarks
+$ mpirun -np 2 host1 host2 -genv MV2_CPU_MAPPING=0 -genv MV2_USE_CUDA=1 -genv MV2_USE_GPUDIRECT=1 osu_bw -d cuda D D

@@ -1,936 +1,929 @@
+# Description
+UNIX-like reverse engineering framework and command-line toolset
+
+r2 is a complete rewrite of radare. It provides a set of libraries, tools and
+plugins to ease reverse engineering tasks. Distributed mostly under LGPLv3,
+each plugin can have different licenses (see r2 -L, rasm2 -L, ...).
+
+The radare project started as a simple command-line hexadecimal editor focused
+on forensics. Today, r2 is a featureful low-level command-line tool with
+support for scripting with the embedded Javascript interpreter or via r2pipe.
+
+r2 can edit files on local hard drives, view kernel memory, and debug programs
+locally or via a remote gdb/windbg servers. r2's wide architecture support
+allows you to analyze, emulate, debug, modify, and disassemble any binary.
+
+
 # Command Line options
-	-L: List of supported IO plugins
-
-	-q: Exit after processing commands
-
-	-w: Write mode enabled
-
-	-i: Interprets a r2 script
-
-	-A: Analize executable at load time (xrefs, etc)
-
-	-n: Bare load. Do not load executable info as the entrypoint
-
-	-c'cmds': Run r2 and execute commands (eg: r2 -wqc'wx 3c @ main')
-
-	-p: Creates a project for the file being analyzed (CC add a comment when opening a file as a project)
-
-	-: Opens r2 with the malloc plugin that gives a 512 bytes memory area to play with (size can be changed); Similar to r2 malloc://512
+-L: List of supported IO plugins
+-q: Exit after processing commands
+-w: Write mode enabled
+-i: Interprets a r2 script
+-A: Analize executable at load time (xrefs, etc)
+-n: Bare load. Do not load executable info as the entrypoint
+-c'cmds': Run r2 and execute commands (eg: r2 -wqc'wx 3c @ main')
+-p: Creates a project for the file being analyzed (CC add a comment when opening a file as a project)
+-: Opens r2 with the malloc plugin that gives a 512 bytes memory area to play with (size can be changed); Similar to r2 malloc://512
 
 -----------------------------------------------------------------------------------------------------------------------------
 
 # Configuration properties
-	e: Returs configuration properties
-	
-	e <property>: Checks a specific property:
-    		e asm.tabs => false
+e: Returs configuration properties
+e <property>: Checks a specific property:
+	e asm.tabs => false
+e <property>=<value>: Change property value
+	e asm.arch=ppc
+e? help about a configuration property
+	e? cmd.stack
 
-	e <property>=<value>: Change property value
-    		e asm.arch=ppc
+# Show comments at right of disassembly if they fit in screen
+e asm.cmtright=true
 
-	e? help about a configuration property
-    		e? cmd.stack
+# Shows pseudocode in disassembly. Eg mov eax, str.ok = > eax = str.ok
+e asm.pseudo = true
 
-	
-	
-	# Show comments at right of disassembly if they fit in screen
-		e asm.cmtright=true
+# Display stack and register values on top of disasembly view (visual mode)
+e cmd.stack = true
 
-	# Shows pseudocode in disassembly. Eg mov eax, str.ok = > eax = str.ok
-		e asm.pseudo = true
+# Solarized theme
+eco solarized
 
-	# Display stack and register values on top of disasembly view (visual mode)
-		e cmd.stack = true
-
-	# Solarized theme
-		eco solarized
-
-	# Use UTF-8 to show cool arrows that do not look like crap :)
-		e scr.utf8 = true
+# Use UTF-8 to show cool arrows that do not look like crap :)
+e scr.utf8 = true
 
 -----------------------------------------------------------------------------------------------------------------------------
 
 # Basic Commands
+; Command chaining: x 3;s+3;pi 3;s+3;pxo 4;
+| Pipe with shell commands: pd | less
+! Run shell commands: !cat /etc/passwd
+!! Escapes to shell, run command and pass output to radare buffer
+	Note: 	The double exclamation mark tells radare to skip the plugin list to find an IO plugin handling this
+		command to launch it directly to the shell. A single one will walk through the io plugin list.
 
-	; Command chaining: x 3;s+3;pi 3;s+3;pxo 4;
-    
-	| Pipe with shell commands: pd | less
-    
-	! Run shell commands: !cat /etc/passwd
-    
-	!! Escapes to shell, run command and pass output to radare buffer
-    		
-		Note: 	The double exclamation mark tells radare to skip the plugin list to find an IO plugin handling this
-			command to launch it directly to the shell. A single one will walk through the io plugin list.
-
-    	` Radare commands: wx `!ragg2 -i exec`
-    
-	~ grep
-    
-	~! grep -v
-    
-	~[n] grep by columns afl~[0]
-
-    	~:n grep by rows afl~:0
-	
-	<command>~.. less/more mode
-
-	+-------------------------------------------------------------------
-	
-	pi~mov,eax            ; lines with mov or eax
-    	pi~mov&eax            ; lines with mov and eax
-    	pi~mov,eax:6          ; 6 first lines with mov or eax
-    	pd 20~call[0]:0       ; grep first column of the first row matching 'call'
-	
-	+-------------------------------------------------------------------
-
-	.cmd Interprets command output
-	
-	+-------------------------------------------------------------------
-	
-	is* prints symbolos
-	.is* interprets output and define the symbols in radare (normally they are already loaded if r2 was not invoked with -n)
-	
-	+-------------------------------------------------------------------
-	
-	.. repeats last commands (same as enter \n)
-    	
-	( Used to define and run macros
-    
-	$ Used to define alias
-    
-	$$: Resolves to current address
-    	
-	Offsets (@) are absolute, we can use $$ for relative ones @ $$+4
-    
-	? Evaluate expression
-	+-------------------------------------------------------------------
-
-	[0x00000000]> ? 33 +2
-	35 0x23 043 0000:0023 35 00100011 35.0 0.000000
-	Note: | and & need to be escaped
-
-	+-------------------------------------------------------------------
-
-	?$? Help for variables used in expressions
-    
-	$$: Here
-    
-	$s: File size
-    
-	$b: Block size
-    
-	$l: Opcode length
-    
-	$j: When $$ is at a jmp, $j is the address where we are going to jump to
-    
-	$f: Same for jmp fail address
-	
-	$m: Opcode memory reference (e.g. mov eax,[0x10] => 0x10)
-    
-	??? Help for ? command
-    
-	?i Takes input from stdin. Eg ?i username
-    
-	?? Result from previous operations
-    
-	?s from to [step]: Generates sequence from to every
-    
-	?p: Get physical address for given virtual address
-    
-	?P: Get virtual address for given physical one
-    
-	?v Show hex value of math expr
-
-	+-------------------------------------------------------------------
-
-	?v 0x1625d4ca ^ 0x72ca4247 = 0x64ef968d
-	?v 0x4141414a - 0x41414140  = 0xa
-
-	+-------------------------------------------------------------------
-
-	?l str: Returns the length of string
-    
-	@@: Used for iteractions
+` Radare commands: wx `!ragg2 -i exec`
+~ grep
+~! grep -v
+~[n] grep by columns afl~[0]
+~:n grep by rows afl~:0
+<command>~.. less/more mode
 
-	+-------------------------------------------------------------------
++-------------------------------------------------------------------
 
-	wx ff @@10 20 30      Writes ff at offsets 10, 20 and 30
-	wx ff @@`?s  1 10 2`  Writes ff at offsets 1, 2 and 3
-	wx 90 @@ sym.*        Writes a nop on every symbol
+pi~mov,eax            ; lines with mov or eax
+pi~mov&eax            ; lines with mov and eax
+pi~mov,eax:6          ; 6 first lines with mov or eax
+pd 20~call[0]:0       ; grep first column of the first row matching 'call'
 
-	+-------------------------------------------------------------------
++-------------------------------------------------------------------
 
-# Positioning
+.cmd Interprets command output
 
-	s address: Move cursor to address or symbol
-	
-	s-5 (5 bytes backwards)
-	
-	s- undo seek
++-------------------------------------------------------------------
 
-	s+ redo seek
+is* prints symbolos
+.is* interprets output and define the symbols in radare (normally they are already loaded if r2 was not invoked with -n)
 
-# Block Size
++-------------------------------------------------------------------
 
-	b size: Change block size
+.. repeats last commands (same as enter \n)
 
-# Analyze
-	
-	aa: Analyze all (fcns + bbs) same that running r2 with -A
+( Used to define and run macros
 
-	ahl <length> <range>: fake opcode length for a range of bytes
-	
-	ad: Analyze data
+$ Used to define alias
 
-	ad@rsp (analize the stack)
+$$: Resolves to current address
 
-	+ Normal mode
-		
-		af: Analyze functions
+Offsets (@) are absolute, we can use $$ for relative ones @ $$+4
 
-		afl: List all functions
-    			number of functions: afl~?
+? Evaluate expression
++-------------------------------------------------------------------
 
-		afi: Returns information about the functions we are currently at
+[0x00000000]> ? 33 +2
+35 0x23 043 0000:0023 35 00100011 35.0 0.000000
+Note: | and & need to be escaped
 
-		afr: Rename function: structure and flag
-	
-		afr off: Restore function name set by r2
++-------------------------------------------------------------------
 
-		afn: Rename function
-		
-		afn strlen 0x080483f0
+?$? Help for variables used in expressions
 
-		af-: Removes metadata generated by the function analysis
+$$: Here
 
-		af+: Define a function manually given the start address and length
-			af+ 0xd6f 403 checker_loop
+$s: File size
 
-		axt: Returns cross references to (xref to)
+$b: Block size
 
-		axf: Returns cross references from (xref from)
-	
-	+ Visual mode
+$l: Opcode length
 
-		d, f: Function analysis
+$j: When $$ is at a jmp, $j is the address where we are going to jump to
 
-		d, u: Remove metadata generated by function analysis
+$f: Same for jmp fail address
 
-	+ Opcode analysis
-		
-		ao x: Analize x opcodes from current offset
+$m: Opcode memory reference (e.g. mov eax,[0x10] => 0x10)
 
-		a8 bytes: Analize the instruction represented by specified bytes
+??? Help for ? command
 
-# Information
+?i Takes input from stdin. Eg ?i username
 
-		iI: File info
+?? Result from previous operations
 
-		iz: Strings in data section
+?s from to [step]: Generates sequence from to every
 
-		izz: Strings in the whole binary
-	
-		iS: Sections
-			iS~w returns writable sections
+?p: Get physical address for given virtual address
 
-		is: Symbols
-			is~FUNC exports
-		
-		il: Linked libraries
+?P: Get virtual address for given physical one
 
-		ii: Imports
+?v Show hex value of math expr
 
-		ie: Entrypoint
++-------------------------------------------------------------------
 
-	+ Mitigations
+?v 0x1625d4ca ^ 0x72ca4247 = 0x64ef968d
+?v 0x4141414a - 0x41414140  = 0xa
 
-		i~pic : check if the binary has position-independent-code
-	
-		i~nx : check if the binary has non-executable stack
++-------------------------------------------------------------------
 
-		i~canary : check if the binary has canaries
+?l str: Returns the length of string
 
-# Print
+@@: Used for iteractions
 
-	psz n @ offset: Print n zero terminated String
++-------------------------------------------------------------------
 
-	px n @ offset: Print hexdump (or just x) of n bytes
+wx ff @@10 20 30      Writes ff at offsets 10, 20 and 30
+wx ff @@`?s  1 10 2`  Writes ff at offsets 1, 2 and 3
+wx 90 @@ sym.*        Writes a nop on every symbol
 
-	pxw n @ offset: Print hexdump of n words
-		pxw size@offset  prints hexadecimal words at address
++-------------------------------------------------------------------
 
-	pd n @ offset: Print n opcodes disassambled
+oning
 
-	pD n @ offset: Print n bytes disassembled
+s address: Move cursor to address or symbol
 
-	pi n @ offset: Print n instructions disassambeled (no address, XREFs, etc. just instrunctions)
+s-5 (5 bytes backwards)
 
-	pdf @ offset: Print disassembled function
-		pdf~XREF (grep: XREFs)
-		pdf~call (grep: calls)
+s- undo seek
 
-	pcp n @ offset: Print n bytes in python string output.
-		pcp 0x20@0x8048550
-		import struct
-		buf = struct.pack ("32B",
-    			0x55,0x89,0xe5,0x83,0xzz,0xzz,0xzz,0xzz,0xf0,0x00,0x00,
-			0x00,0x00,0xc7,0x45,0xf4,0x00,0x00,0x00,0x00,0xeb,0x20,
-			0xc7,0x44,0x24,0x04,0x01,0x00,0x00,0x00,0xzz,0xzz)
+s+ redo seek
 
-	p8 n @ offset: Print n bytes (8bits) (no hexdump)
-	
-	pv: Print file contents as IDA bar and shows metadata for each byte (flags , ...)
+Size
 
-	pt: Interpret data as dates
+b size: Change block size
 
-	pf: Print with format
+e
 
-	pf.: list all formats
+aa: Analyze all (fcns + bbs) same that running r2 with -A
 
-	p=: Print entropy ascii graph
+ahl <length> <range>: fake opcode length for a range of bytes
 
-# Write
+ad: Analyze data
 
-	wx: Write hex values in current offset
-    		wx 123456
-    		wx ff @ 4
+ad@rsp (analize the stack)
 
-	wa: Write assembly
-    		wa jnz 0x400d24
++ Normal mode
 
-	wc: Write cache commit
+	af: Analyze functions
 
-	wv: Writes value doing endian conversion and padding to byte
+	afl: List all functions
+		number of functions: afl~?
 
-	wo[x]: Write result of operation
-    		wow 11223344 @102!10
-        		write looped value from 102 to 102+10
-        		0x00000066  1122 3344 1122 3344 1122 0000 0000 0000
-    
-	wox 0x90
-        	XOR the current block with 0x90. Equivalent to wox 0x90 $$!$b (write from current position, a whole block)
-    	
-	wox 67 @4!10
-        	XOR from offset 4 to 10 with value 67
+	afi: Returns information about the functions we are currently at
 
-	wf file: Writes the content of the file at the current address or specified offset (ASCII characters only)
+	afr: Rename function: structure and flag
 
-	wF file: Writes the content of the file at the current address or specified offset
+	afr off: Restore function name set by r2
 
-	wt file [sz]: Write to file (from current seek, blocksize or sz bytes)
-    		Eg: Dump ELF files with wt @@ hit0* (after searching for ELF headers: \x7fELF)
+	afn: Rename function
 
-	woO 41424344 : get the index in the De Bruijn Pattern of the given word
+	afn strlen 0x080483f0
 
-# Flags
+	af-: Removes metadata generated by the function analysis
 
-	f: List flags
+	af+: Define a function manually given the start address and length
+		af+ 0xd6f 403 checker_loop
 
-	f label @ offset: Define a flag `label` at offset
-    		f str.pass_len @ 0x804999c
+	axt: Returns cross references to (xref to)
 
-	f -label: Removes flag
+	axf: Returns cross references from (xref from)
 
-	fr: Rename flag
++ Visual mode
 
-	fd: Returns position from nearest flag (looking backwards). Eg => entry+21
+	d, f: Function analysis
 
-	fs: Show all flag spaces
+	d, u: Remove metadata generated by function analysis
 
-	fs flagspace: Change to the specified flag space
++ Opcode analysis
 
-	fe loop and create numbered flags:
-		
-		1. fs demo_flagspace
-		2. fe demo_flagspace @@=`pdf~jne[1]`
+	ao x: Analize x opcodes from current offset
 
-# Yank & Paste
+	a8 bytes: Analize the instruction represented by specified bytes
 
-	y n: Copies n bytes from current position
+ation
 
-	y: Shows yank buffer contentent with address and length where each entry was copied from
+	iI: File info
 
-	yp: Prints yank buffer
+	iz: Strings in data section
 
-	yy offset: Paste the contents of the yank buffer at the specified offset
+	izz: Strings in the whole binary
 
-	yt n target @ source: Yank to. Copy n bytes fromsource to target address
+	iS: Sections
+		iS~w returns writable sections
 
-# Visual Mode
+	is: Symbols
+		is~FUNC exports
 
-	q: Exits visual mode
+	il: Linked libraries
 
-	hjkl: move around (or HJKL) (left-down-up-right)
+	ii: Imports
 
-	o: go/seek to given offset
+	ie: Entrypoint
 
-	?: Help
++ Mitigations
 
-	.: Seek EIP
+	i~pic : check if the binary has position-independent-code
 
-	<enter>: Follow address of the current jump/call
+	i~nx : check if the binary has non-executable stack
 
-	:cmd: Enter radare commands. Eg: x @ esi
+	i~canary : check if the binary has canaries
 
-	d[f?]: Define cursor as a string, data, code, a function, or simply to undefine it.
-    		dr: Rename a function
-    		df: Define a function
 
-	v: Get into the visual code analysis menu to edit/look closely at the current function.
 
-	p/P: Rotate print (visualization) modes
-    		hex, the hexadecimal view
-    		disasm, the disassembly listing
-        		Use numbers in [] to follow jump
-        		Use "u" to go back
-    		
-		debug, the debugger
-    		words, the word-hexidecimal view
-    		buf, the C-formatted buffer
-    		annotated, the annotated hexdump.
+psz n @ offset: Print n zero terminated String
 
-	c: Changes to cursor mode or exits the cursor mode
-    		select: Shift+[hjkl]
-    		i: Insert mode
-    		a: assembly inline
-    		A: Assembly in visual mode
-    		y: Copy
-    		Y: Paste
-    		f: Creates a flag where cursor points to
-    		<tab> in the hexdump view to toggle between hex and strings columns
+px n @ offset: Print hexdump (or just x) of n bytes
 
-	V: View ascii-art basic block graph of current function
+pxw n @ offset: Print hexdump of n words
+	pxw size@offset  prints hexadecimal words at address
 
-	W: WebUI
+pd n @ offset: Print n opcodes disassambled
 
-	x, X: XREFs to current function. ("u" to go back)
+pD n @ offset: Print n bytes disassembled
 
-	t: track flags (browse symbols, functions..)
+pi n @ offset: Print n instructions disassambeled (no address, XREFs, etc. just instrunctions)
 
-	gG: Begging or end of file
+pdf @ offset: Print disassembled function
+	pdf~XREF (grep: XREFs)
+	pdf~call (grep: calls)
 
-	HUD
-    		_ Show HUD
-    		backspace: Exits HUD
-    		We can add new commands to HUD in: radare2/shlr/hud/main
+pcp n @ offset: Print n bytes in python string output.
+	pcp 0x20@0x8048550
+	import struct
+	buf = struct.pack ("32B",
+		0x55,0x89,0xe5,0x83,0xzz,0xzz,0xzz,0xzz,0xf0,0x00,0x00,
+		0x00,0x00,0xc7,0x45,0xf4,0x00,0x00,0x00,0x00,0xeb,0x20,
+		0xc7,0x44,0x24,0x04,0x01,0x00,0x00,0x00,0xzz,0xzz)
 
-	;[-]cmt: Add/remove comment
+p8 n @ offset: Print n bytes (8bits) (no hexdump)
 
-	m<char>: Define a bookmark
+pv: Print file contents as IDA bar and shows metadata for each byte (flags , ...)
 
-	'<char>: Go to previously defined bookmark
+pt: Interpret data as dates
 
-# ROP
-	
-	/R opcodes: Search opcodes
-    	
-	/R pop,pop,ret
-	
-	/Rl opcodes: Search opcodes and print them in linear way
-	
-	/Rl jmp eax,call ebx
+pf: Print with format
 
-	/a: Search assembly
-    	
-	/a jmp eax
+pf.: list all formats
 
-	pda: Returns a library of gadgets that can be use. These gadgets are obtained by disassmbling byte per byte instead of obeying to opcode leng
+p=: Print entropy ascii graph
 
-	e search.roplen = 4  (change the depth of the search, to speed-up the hunt)
 
-# Searching
 
-	/ bytes: Search bytes
-    		\x7fELF
+wx: Write hex values in current offset
+	wx 123456
+	wx ff @ 4
 
-	+-------------------------------------------------------------------
+wa: Write assembly
+	wa jnz 0x400d24
 
-	push ebp
-	mov ebp, esp
+wc: Write cache commit
 
-	Opcodes: 5589e5
+wv: Writes value doing endian conversion and padding to byte
 
-	/x 5589e5
-		[# ]hits: 54c0f4 < 0x0804c600  hits = 1
-    		0x08049f70 hit0_0 5589e557565383e4f081ec
-    		0x0804c31a hit0_1 5589e583ec18c704246031
-    		0x0804c353 hit0_2 5589e583ec1889442404c7
-    		0x0804c379 hit0_3 5589e583ec08e87cffffff
-    		0x0804c3a2 hit0_4 5589e583ec18c70424302d
+wo[x]: Write result of operation
+	wow 11223344 @102!10
+		write looped value from 102 to 102+10
+		0x00000066  1122 3344 1122 3344 1122 0000 0000 0000
 
-		pi 5 @@hit* (Print 5 first instructions of every hit)
+wox 0x90
+	XOR the current block with 0x90. Equivalent to wox 0x90 $$!$b (write from current position, a whole block)
 
-	+-------------------------------------------------------------------
+wox 67 @4!10
+	XOR from offset 4 to 10 with value 67
 
-	Its possible to run a command for each hit. Use the cmd.hit property:
+wf file: Writes the content of the file at the current address or specified offset (ASCII characters only)
 
-		e cmd.hit=px
+wF file: Writes the content of the file at the current address or specified offset
 
-# Comments and defines
+wt file [sz]: Write to file (from current seek, blocksize or sz bytes)
+	Eg: Dump ELF files with wt @@ hit0* (after searching for ELF headers: \x7fELF)
 
-	Cd [size]: Define as data
+woO 41424344 : get the index in the De Bruijn Pattern of the given word
 
-	C- [size]: Define as code
 
-	Cs [size]: Define as String
 
-	Cf [size]: Define as struct
-    		We can define structures to be shown in the disassmbly
+f: List flags
 
-	CC: List all comments or add a new comment in console mode
-    		C* Show all comments/metadata
-    		CC <comment> add new comment
-    		CC- remove comment
+f label @ offset: Define a flag `label` at offset
+	f str.pass_len @ 0x804999c
 
-# Magic files
+f -label: Removes flag
 
-	pm: Print Magic files analysis
-    		[0x00000000]> pm
-    		0x00000000 1 ELF 32-bit LSB executable, Intel 80386, version 1
+fr: Rename flag
 
-	/m [magicfile]: Search magic number headers with libmagic
+fd: Returns position from nearest flag (looking backwards). Eg => entry+21
 
-	search.align
-	search.from (0 = beginning)
-	search.to (0 = end)
-	search.asmstr
-	search.in
+fs: Show all flag spaces
 
-# Yara
-	
-	:yara scan
+fs flagspace: Change to the specified flag space
 
-# Zignatures
+fe loop and create numbered flags:
 
-	zg <language> <output file>: Generate signatures
-		eg: zg go go.z
+	1. fs demo_flagspace
+	2. fe demo_flagspace @@=`pdf~jne[1]`
 
-	Run the generated script to load signatures
-    		eg: . go.z
+ Paste
 
-	z: To show signatures loaded:
+y n: Copies n bytes from current position
 
-	+-------------------------------------------------------------------
-	
-	r2-(pid2)> pd 35 @ 0x08049adb-10
-	|          0x08049adb   call fcn.0805b030
-	|             fcn.0805b030(unk, unk, unk, unk) ; sign.sign.b.sym.fmt.Println
-	|          0x08049ae0   add esp, 0xc
-	|          0x08049ae3   call fcn.08095580
+y: Shows yank buffer contentent with address and length where each entry was copied from
 
-	+-------------------------------------------------------------------
+yp: Prints yank buffer
 
-# Compare Files
+yy offset: Paste the contents of the yank buffer at the specified offset
 
-	r2 -m 0xf0000 /etc/fstab    ; Open source file
-	
-	o /etc/issue                ; Open file2 at offset 0
-	
-	o                           ; List both files
+yt n target @ source: Yank to. Copy n bytes fromsource to target address
 
-	cc offset: Diff by columns between current offset address and "offset"
+ Mode
 
-# Graphs
+q: Exits visual mode
 
-	+ Basic block graphs
-		
-		af: Load function metadata
+hjkl: move around (or HJKL) (left-down-up-right)
 
-		ag $$ > a.dot: Dump basic block graph to file
+o: go/seek to given offset
 
-		ag $$ | xdot: Show current function basic block graph
+?: Help
 
-	+ Call graphs
+.: Seek EIP
 
-		af: Load function metadata
+<enter>: Follow address of the current jump/call
 
-		agc $$ > b.dot: Dump basic block graph to file
+:cmd: Enter radare commands. Eg: x @ esi
 
-	+ Convert .dot in .png
+d[f?]: Define cursor as a string, data, code, a function, or simply to undefine it.
+	dr: Rename a function
+	df: Define a function
 
-		dot -Tpng -o /tmp/b.png b.dot
+v: Get into the visual code analysis menu to edit/look closely at the current function.
 
-	+ Generate graph for file
+p/P: Rotate print (visualization) modes
+	hex, the hexadecimal view
+	disasm, the disassembly listing
+		Use numbers in [] to follow jump
+		Use "u" to go back
 
-		radiff2 -g main crackme.bin crackme.bin > /tmp/a
-		xdot /tmp/a
+	debug, the debugger
+	words, the word-hexidecimal view
+	buf, the C-formatted buffer
+	annotated, the annotated hexdump.
 
-# Debugger
+c: Changes to cursor mode or exits the cursor mode
+	select: Shift+[hjkl]
+	i: Insert mode
+	a: assembly inline
+	A: Assembly in visual mode
+	y: Copy
+	Y: Paste
+	f: Creates a flag where cursor points to
+	<tab> in the hexdump view to toggle between hex and strings columns
 
-	+ Start r2 in debugger mode. r2 will fork and attach
-		
-		r2 -d [pid|cmd|ptrace] (if command contains spaces use quotes: r2 -d "ls /")
-		
-		ptrace://pid (debug backend does not notice, only access to mapped memory)
+V: View ascii-art basic block graph of current function
 
-	+ Pass arguments
-		
-		r2 -d rarun2 program=pwn1 arg1=$(python exploit.py)
+W: WebUI
 
-	+ Pass stdin
-		
-		r2 -d rarun2 program=/bin/ls stdin=$(python exploit.py)
+x, X: XREFs to current function. ("u" to go back)
 
-	+ Commands
+t: track flags (browse symbols, functions..)
 
-		do: Reopen program
+gG: Begging or end of file
 
-		dp: Shows debugged process, child processes and threads
+HUD
+	_ Show HUD
+	backspace: Exits HUD
+	We can add new commands to HUD in: radare2/shlr/hud/main
 
-		dc: Continue
+;[-]cmt: Add/remove comment
 
-		dcu <address or symbol>: Continue until symbol (sets bp in address, continua until bp and remove bp)
+m<char>: Define a bookmark
 
-		dc[sfcp]: Continue until syscall(eg: write), fork, call, program address (To exit a library)
+'<char>: Go to previously defined bookmark
 
-		ds: Step in
 
-		dso: Step out
 
-		dss: Skip instruction
+/R opcodes: Search opcodes
 
-		dr register=value: Change register value
+/R pop,pop,ret
 
-		dr(=)?: Show register values
+/Rl opcodes: Search opcodes and print them in linear way
 
-		db address: Sets a breakpoint at address
-    			db sym.main add breakpoint into sym.main
-    			db 0x804800 add breakpoint
-    			db -0x804800 remove breakpoint
+/Rl jmp eax,call ebx
 
-		dsi (conditional step): Eg: "dsi eax==3,ecx>0"
+/a: Search assembly
 
-		dbt: Shows backtrace
+/a jmp eax
 
-		drr: Display in colors and words all the refs from registers or memory
+pda: Returns a library of gadgets that can be use. These gadgets are obtained by disassmbling byte per byte instead of obeying to opcode leng
 
-		dm: Shows memory map (* indicates current section)
-    			[0xb776c110]> dm
-    			sys 0x08048000 - 0x08062000 s r-x /usr/bin/ls
-    			sys 0x08062000 - 0x08064000 s rw- /usr/bin/ls
-    			sys 0xb776a000 - 0xb776b000 s r-x [vdso]
-    			sys 0xb776b000 * 0xb778b000 s r-x /usr/lib/ld-2.17.so
-    			sys 0xb778b000 - 0xb778d000 s rw- /usr/lib/ld-2.17.so
-    			sys 0xbfe5d000 - 0xbfe7e000 s rw- [stack]
+e search.roplen = 4  (change the depth of the search, to speed-up the hunt)
 
-	+ To follow child processes in forks (set-follow-fork-mode in gdb)
+ing
 
-		dcf until a fork happen then use dp to select what process you want to debug.
+/ bytes: Search bytes
+	\x7fELF
 
-	+ PEDA like details
-		
-		drr;pd 10@-10;pxr 40@esp
++-------------------------------------------------------------------
 
-	+ Debug in visual mode
+push ebp
+mov ebp, esp
 
-		toggl breakpoints with F2
-		single-step with F7 (s)
-		step-over with F8 (S)
-		continue with F9
+Opcodes: 5589e5
 
-# WebGUI
-	
-	=h: Start the server
-	=H: Start server and browser
+/x 5589e5
+	[# ]hits: 54c0f4 < 0x0804c600  hits = 1
+	0x08049f70 hit0_0 5589e557565383e4f081ec
+	0x0804c31a hit0_1 5589e583ec18c704246031
+	0x0804c353 hit0_2 5589e583ec1889442404c7
+	0x0804c379 hit0_3 5589e583ec08e87cffffff
+	0x0804c3a2 hit0_4 5589e583ec18c70424302d
 
-# rax2 - Base Conversion
+	pi 5 @@hit* (Print 5 first instructions of every hit)
 
-	-e: Change endian
-	
-	-k: random ASCII art to represent a number/hash. Similar to how SSH represents keys
-	
-	-s: ASCII to hex
-    		rax2 -S hola (from string to hex)
-    		rax2 -s 686f6c61 (from hex to string)
++-------------------------------------------------------------------
 
-	-S: binary to hex (for files)
-	
-	-N: pack an integer 
-		rax2 -N 0x1234 # \x34\x12\x00\x00
+Its possible to run a command for each hit. Use the cmd.hit property:
 
-# rahash2 - Entropy, hashes and checksums
+	e cmd.hit=px
 
-	-a: Specify the algorithm
+ts and defines
 
-	-b XXX: Block size
+Cd [size]: Define as data
 
-	-B: Print all blocks
+C- [size]: Define as code
 
-	-a entropy: Show file entropy or entropy per block (-B -b 512 -a entropy)
-	
-	+ Rot13 with rahash2
-		rahash2 -E rot -S s:13 -s ‘Hello\n’
+Cs [size]: Define as String
 
-# radiff2 - File diffing
+Cf [size]: Define as struct
+	We can define structures to be shown in the disassmbly
 
-	-s: Calculate text distance from two files.
+CC: List all comments or add a new comment in console mode
+	C* Show all comments/metadata
+	CC <comment> add new comment
+	CC- remove comment
 
-	-d: Delta diffing (For files with different sizes. Its not byte per byte)
+files
 
-	-C: Code diffing (instead of data)
+pm: Print Magic files analysis
+	[0x00000000]> pm
+	0x00000000 1 ELF 32-bit LSB executable, Intel 80386, version 1
 
-	+-------------------------------------------------------------------
+/m [magicfile]: Search magic number headers with libmagic
 
-	Diff original and patched on x86_32, using graphdiff algorithm
-    		radiff2 -a x86 -b32 -C original patched
+search.align
+search.from (0 = beginning)
+search.to (0 = end)
+search.asmstr
+search.in
 
-	Show differences between original and patched on x86_32
-    		radiff2 -a x86 -b32 original patched :
 
-	+-------------------------------------------------------------------
 
-# rasm2 - Assembly/Disasembly
- 
-	-L: Supported architectures
+:yara scan
 
-	-a arch instruction: Sets architecture
-    		rasm2 -a x86 'mov eax,30' => b81e000000
+ures
 
-	-b tam: Sets block size
+zg <language> <output file>: Generate signatures
+	eg: zg go go.z
 
-	-d: Disassembly
-    		rasm2 -d b81e000000 => mov eax, 0x1e
+Run the generated script to load signatures
+	eg: . go.z
 
-	-C: Assembly in C output
-    		rasm2 -C 'mov eax,30' => "\xb8\x1e\x00\x00\x00"
+z: To show signatures loaded:
 
-	-D: Disassemble showing hexpair and opcode
-    		rasm2 -D b81e0000 => 0x00000000   5               b81e000000  mov eax, 0x1e
++-------------------------------------------------------------------
 
-	-f: Read data from file instead of ARG.
+r2-(pid2)> pd 35 @ 0x08049adb-10
+|          0x08049adb   call fcn.0805b030
+|             fcn.0805b030(unk, unk, unk, unk) ; sign.sign.b.sym.fmt.Println
+|          0x08049ae0   add esp, 0xc
+|          0x08049ae3   call fcn.08095580
 
-	-t: Write data to file
++-------------------------------------------------------------------
 
-	+ Disassemble shellcode from hex stdin
+e Files
 
-	+-------------------------------------------------------------------
+r2 -m 0xf0000 /etc/fstab    ; Open source file
 
-	echo -n "31c048bbd19d9691d08c97ff48f7db53545f995257545eb03b0f05" | rasm2 -a x86 -b 64 -d -
-		xor eax, eax
-		movabs rbx, 0xff978cd091969dd1
-		neg rbx
-		push rbx
-		push rsp
-		pop rdi
-		cdq
-		push rdx
-		push rdi
-		push rsp
-		pop rsi
-		mov al, 0x3b
-		syscall
+o /etc/issue                ; Open file2 at offset 0
 
-	+-------------------------------------------------------------------
+o                           ; List both files
 
-# rafind2 - Search
+cc offset: Diff by columns between current offset address and "offset"
 
-	-Z: Look for Zero terminated strings
 
-	-s str: Look for specifc string
 
-	-X: Hex dump around output
++ Basic block graphs
 
-	+ Search "/bin/sh" in libc
+	af: Load function metadata
 
-		rafind2 -X -s "/bin/sh" /usr/lib/libc.so.6
+	ag $$ > a.dot: Dump basic block graph to file
 
-# ragg2 - Shellcode generator, C/opcode compiler
+	ag $$ | xdot: Show current function basic block graph
 
-	P: Generate De Bruijn patterns
-    		ragg2 -P 300 -r
++ Call graphs
 
-	-a arch: Configure architecture
+	af: Load function metadata
 
-	-b bits: Specify architecture bits (32/64)
+	agc $$ > b.dot: Dump basic block graph to file
 
-	-i shellcode: Specify shellcode to generate
++ Convert .dot in .png
 
-	-e encoder: Specify encoder
+	dot -Tpng -o /tmp/b.png b.dot
 
-	+ ragg2-cc: Generate shellcode from c
++ Generate graph for file
 
-	+ Generate a x86, 32 bits exec shellcode
-    		ragg2 -a x86 -b 32 -i exec
+	radiff2 -g main crackme.bin crackme.bin > /tmp/a
+	xdot /tmp/a
 
-# rabin2 - Executable analysis: symbols, imports, strings
+er
 
-	-I: Executable information
++ Start r2 in debugger mode. r2 will fork and attach
 
-	-C: Returns classes. Useful to list Java Classes
+	r2 -d [pid|cmd|ptrace] (if command contains spaces use quotes: r2 -d "ls /")
 
-	-l: Dynamic linked libraries
+	ptrace://pid (debug backend does not notice, only access to mapped memory)
 
-	-s: Symbols
++ Pass arguments
 
-	-z: Strings
+	r2 -d rarun2 program=pwn1 arg1=$(python exploit.py)
 
-# rarun2 - Launcher to run programs with different environments, args, stdin, permissions, fds
++ Pass stdin
 
-	r2 -b 32 -d rarun2 program=pwn1 arg1=$(ragg2 -P 300 -r) : runs pwn1 with a De Bruijn Pattern as first argument, inside radare2's debugger, and force 32 bits
-	r2 -d rarun2 program=/bin/ls stdin=$(python exploit.py) : runs /bin/ls with the output of exploit.py directed to stdin
+	r2 -d rarun2 program=/bin/ls stdin=$(python exploit.py)
 
-# ESIL emulation
++ Commands
 
-	1) aei: Initialize ESIL VM
-	
-	2) aeim: Assign ESIL stack
-		aeim 0xffffd000 0x1000 stack
-	
-	3) aeip: Program counter to current seek
+	do: Reopen program
 
-	4) e io.cache=true: Enable caching read/write of virtual memory (Important if self modifying code)
+	dp: Shows debugged process, child processes and threads
 
-	5) aes: Single stepping in emulation mode
+	dc: Continue
 
-	+ Toggle IL representation via O in Visual Mode
+	dcu <address or symbol>: Continue until symbol (sets bp in address, continua until bp and remove bp)
 
-# ESIL Linear emulation
+	dc[sfcp]: Continue until syscall(eg: write), fork, call, program address (To exit a library)
 
-	Find all references to curr. address using linear esil emulation on all imports.
-		
-		/re$$@@ sym.imp.*
+	ds: Step in
 
-# ESIL IL Representation
+	dso: Step out
 
-	op 	esil
-	------------
-	mov 	=
-	mul 	*
-	div 	/
-	and 	&
-	neg	!
-	read 	[]
-	if 	?{
-	add	+
-	sub	-
-	xor 	^
-	or	|
-	cmp	==
-	write	=[]
-	
-	+ prefix is %
-	+ carry from bit x -> %cx
-	+ borrow from bit x -> %bx
-	+ zero-flag -> %z
-	+ parity of dst -> %p
-	+ sign-flag -> %s
-	+ overflow-flag -> %o
+	dss: Skip instruction
 
-	+ BREAK - Stop parsing and emulate next instruction
-	+ LOOP - restart emulation of instruction
-	+ GOTO n - jump to n
-	+ TODO - stop emulation and eprintf("TDOD %s", ins)
+	dr register=value: Change register value
 
-	x86			ESIL
-	------------------------------------------------------
-	mov eax, ebx		ebx,eax,=
-	jz 0xaabbccdd		zf,?{,0xaabbccdd,eip,=,}
-	cmp ecx,edx		edx,ecx,==,%z,zf,=,%b32,cf,=,%p,pf,=,%s,sf,=
-	push ebp		4,esp,-=ebp,esp,=[4]
+	dr(=)?: Show register values
 
-	+ ESIL Doc
-		https://github.com/radare/radare2book/blob/master/esil.md
-	
-# r2pipe commands
+	db address: Sets a breakpoint at address
+		db sym.main add breakpoint into sym.main
+		db 0x804800 add breakpoint
+		db -0x804800 remove breakpoint
 
-	+ Invoke r2pipe script via r2 cmdline
-		
-		[0x00000000]> #!pipe node script.js
-		[0x00000000]> #!pipe python script.py
+	dsi (conditional step): Eg: "dsi eax==3,ecx>0"
 
-	+ Good collection:
-		https://radare.org/get/r2pipe-nn2015.pdf
-		https://github.com/jpenalbae/r2-scripts
-# Parsing ELF
-	
-	!!! open with r2 -nn 
+	dbt: Shows backtrace
 
-	+ Parse 9 program headers (elf_phdr) from curr. seek plus offset 0x40 with temporary block size 0x200 in less mode (~..)
+	drr: Display in colors and words all the refs from registers or memory
 
-		[0x00000000]> pf 9? (elf_phdr)phdr @ $$+0x40!0x200~..
-	
-# pf Templates
-	
-	+ Generate templates for structs/enums with td command
+	dm: Shows memory map (* indicates current section)
+		[0xb776c110]> dm
+		sys 0x08048000 - 0x08062000 s r-x /usr/bin/ls
+		sys 0x08062000 - 0x08064000 s rw- /usr/bin/ls
+		sys 0xb776a000 - 0xb776b000 s r-x [vdso]
+		sys 0xb776b000 * 0xb778b000 s r-x /usr/lib/ld-2.17.so
+		sys 0xb778b000 - 0xb778d000 s rw- /usr/lib/ld-2.17.so
+		sys 0xbfe5d000 - 0xbfe7e000 s rw- [stack]
 
-		"td enum elf_class {ELFCLASSNONE=0, ELFCLASS32=1, ELFCLASS64=2};"
++ To follow child processes in forks (set-follow-fork-mode in gdb)
 
-	https://github.com/Maijin/r2-pf-templates/
+	dcf until a fork happen then use dp to select what process you want to debug.
 
-	+ Cast data @ <addr> to <type> and print it		
-		
-		tp <type>  = <address>
++ PEDA like details
 
-# r2scapy
+	drr;pd 10@-10;pxr 40@esp
 
-	r2 -i r2scapy.py dump.bin
-		[0x00000000]> scapy DNS 0x81de3c 48
-		DNS(aa=1L, qr=1L, an=DNSRR(rclass=32769, ttl=120, rrname='flashair.local.', rdata='192.168.0.1', type=1), ad=0L, nscount=0, qdcount=1, ns=None, tc=0L, rd=1L, arcount=0, ar=None, opcode=0L, ra=0L, cd=0L, z=0L, rcode=0L, id=0, ancount=1, qd=DNSQR(qclass=32769, qtype=255, qname='flashair.local.'))
-	
-	+ generate packets with scapy
-		>>> from scapy.all import *
-		>>> sr1(IP(dst="8.8.8.8")/UDP(dport=53)/DNS(rd=1,qd=DNSQR(qname="www.thepacketgeek.com")),verbose=0)
++ Debug in visual mode
 
-# r2m2 -Miasm  Intermediate Representation Plugin
-	
-	+ Assemble and disassemble MIPS32 using rasm2
+	toggl breakpoints with F2
+	single-step with F7 (s)
+	step-over with F8 (S)
+	continue with F9
 
-		r2m2$ export R2M2_ARCH=mips32l; rasm2 -a r2m2 'addiu a0, a1, 2' |rasm2 -a r2m2 -d -
-		ADDIU      A0, A1, 0x2
 
-	+ Disassemble random MSP430 instructions in r2
 
-		r2m2$ R2M2_ARCH=msp430 r2 -a r2m2 -qc 'woR; pd 5' -
-            		0x00000000      07fa           and.w      R10, R7
-            		0x00000002      47ad           dadd.b     R13, R7
-            		0x00000004      f05e0778       add.b      @R14+, 0x7807(PC)
-            		0x00000008      f46d81ed       addc.b     @R13+, 0xED81(R4)
-            		0x0000000c      3fdc           bis.w      @R12+, R15
-	+ Assemble MIPS32 using rasm2 and display the call graph using r2
+=h: Start the server
+=H: Start server and browser
 
-		r2m2$ R2M2_ARCH=mips32b rasm2 -a r2m2 'j 0x4; nop' -B > j_nop.bin
+ Base Conversion
 
-		r2m2$ R2M2_ARCH=mips32b r2 -a r2m2 -qc 'pd 2' j_nop.bin
-        		,=< 0x00000000      0c000001       JAL        0x4
-       			`-> 0x00000004      00000000       NOP
+-e: Change endian
 
-# bin carving with r2
+-k: random ASCII art to represent a number/hash. Similar to how SSH represents keys
 
-	+ Open raw dump
-		
-		r2 -n dump.bin
-	
-	+ Searching for  magic
-		
-		[0x00000000]> / \x7fELF
-		Searching 4 bytes from 0x00000000 to 0x0000002d: 7f 45 4c 46
-		0x00001340 hit0_0
-		0x00001744 hit0_1
-		...
+-s: ASCII to hex
+	rax2 -S hola (from string to hex)
+	rax2 -s 686f6c61 (from hex to string)
 
-	+ Dump 1M with at several hits
+-S: binary to hex (for files)
 
-		[0x00000000]> b 1M
-		[0x00000000]> wt @@ hit0*
+-N: pack an integer
+	rax2 -N 0x1234 # \x34\x12\x00\x00
 
-	+ Automate it
-		
-		$ for a in dump.* ; do
-		sz=`rabin2 -Z $a`     # get RBin.filesize
-		r2 -wnqc"r $sz" $a  # resize file
-		done
+2 - Entropy, hashes and checksums
 
-	http://radare.today/posts/carving-bins/
+-a: Specify the algorithm
 
-# r4ge - symbolic execution
-	+ https://github.com/gast04/r4ge
+-b XXX: Block size
 
-	Usage: https://asciinema.org/a/155856
+-B: Print all blocks
 
-# r2wiki -Macro for using wiki in commandline
-	
-	+ https://github.com/securisec/r2wiki
+-a entropy: Show file entropy or entropy per block (-B -b 512 -a entropy)
 
-	$wiki "query string"
-	
++ Rot13 with rahash2
+	rahash2 -E rot -S s:13 -s ‘Hello\n’
+
+2 - File diffing
+
+-s: Calculate text distance from two files.
+
+-d: Delta diffing (For files with different sizes. Its not byte per byte)
+
+-C: Code diffing (instead of data)
+
++-------------------------------------------------------------------
+
+Diff original and patched on x86_32, using graphdiff algorithm
+	radiff2 -a x86 -b32 -C original patched
+
+Show differences between original and patched on x86_32
+	radiff2 -a x86 -b32 original patched :
+
++-------------------------------------------------------------------
+
+- Assembly/Disasembly
+
+-L: Supported architectures
+
+-a arch instruction: Sets architecture
+	rasm2 -a x86 'mov eax,30' => b81e000000
+
+-b tam: Sets block size
+
+-d: Disassembly
+	rasm2 -d b81e000000 => mov eax, 0x1e
+
+-C: Assembly in C output
+	rasm2 -C 'mov eax,30' => "\xb8\x1e\x00\x00\x00"
+
+-D: Disassemble showing hexpair and opcode
+	rasm2 -D b81e0000 => 0x00000000   5               b81e000000  mov eax, 0x1e
+
+-f: Read data from file instead of ARG.
+
+-t: Write data to file
+
++ Disassemble shellcode from hex stdin
+
++-------------------------------------------------------------------
+
+echo -n "31c048bbd19d9691d08c97ff48f7db53545f995257545eb03b0f05" | rasm2 -a x86 -b 64 -d -
+	xor eax, eax
+	movabs rbx, 0xff978cd091969dd1
+	neg rbx
+	push rbx
+	push rsp
+	pop rdi
+	cdq
+	push rdx
+	push rdi
+	push rsp
+	pop rsi
+	mov al, 0x3b
+	syscall
+
++-------------------------------------------------------------------
+
+2 - Search
+
+-Z: Look for Zero terminated strings
+
+-s str: Look for specifc string
+
+-X: Hex dump around output
+
++ Search "/bin/sh" in libc
+
+	rafind2 -X -s "/bin/sh" /usr/lib/libc.so.6
+
+- Shellcode generator, C/opcode compiler
+
+P: Generate De Bruijn patterns
+	ragg2 -P 300 -r
+
+-a arch: Configure architecture
+
+-b bits: Specify architecture bits (32/64)
+
+-i shellcode: Specify shellcode to generate
+
+-e encoder: Specify encoder
+
++ ragg2-cc: Generate shellcode from c
+
++ Generate a x86, 32 bits exec shellcode
+	ragg2 -a x86 -b 32 -i exec
+
+ - Executable analysis: symbols, imports, strings
+
+-I: Executable information
+
+-C: Returns classes. Useful to list Java Classes
+
+-l: Dynamic linked libraries
+
+-s: Symbols
+
+-z: Strings
+
+ - Launcher to run programs with different environments, args, stdin, permissions, fds
+
+r2 -b 32 -d rarun2 program=pwn1 arg1=$(ragg2 -P 300 -r) : runs pwn1 with a De Bruijn Pattern as first argument, inside radare2's debugger, and force 32 bits
+r2 -d rarun2 program=/bin/ls stdin=$(python exploit.py) : runs /bin/ls with the output of exploit.py directed to stdin
+
+mulation
+
+1) aei: Initialize ESIL VM
+
+2) aeim: Assign ESIL stack
+	aeim 0xffffd000 0x1000 stack
+
+3) aeip: Program counter to current seek
+
+4) e io.cache=true: Enable caching read/write of virtual memory (Important if self modifying code)
+
+5) aes: Single stepping in emulation mode
+
++ Toggle IL representation via O in Visual Mode
+
+inear emulation
+
+Find all references to curr. address using linear esil emulation on all imports.
+
+	/re$$@@ sym.imp.*
+
+L Representation
+
+op 	esil
+------------
+mov 	=
+mul 	*
+div 	/
+and 	&
+neg	!
+read 	[]
+if 	?{
+add	+
+sub	-
+xor 	^
+or	|
+cmp	==
+write	=[]
+
++ prefix is %
++ carry from bit x -> %cx
++ borrow from bit x -> %bx
++ zero-flag -> %z
++ parity of dst -> %p
++ sign-flag -> %s
++ overflow-flag -> %o
+
++ BREAK - Stop parsing and emulate next instruction
++ LOOP - restart emulation of instruction
++ GOTO n - jump to n
++ TODO - stop emulation and eprintf("TDOD %s", ins)
+
+x86			ESIL
+------------------------------------------------------
+mov eax, ebx		ebx,eax,=
+jz 0xaabbccdd		zf,?{,0xaabbccdd,eip,=,}
+cmp ecx,edx		edx,ecx,==,%z,zf,=,%b32,cf,=,%p,pf,=,%s,sf,=
+push ebp		4,esp,-=ebp,esp,=[4]
+
++ ESIL Doc
+	https://github.com/radare/radare2book/blob/master/esil.md
+
+ commands
+
++ Invoke r2pipe script via r2 cmdline
+
+	[0x00000000]> #!pipe node script.js
+	[0x00000000]> #!pipe python script.py
+
++ Good collection:
+	https://radare.org/get/r2pipe-nn2015.pdf
+	https://github.com/jpenalbae/r2-scripts
+g ELF
+
+!!! open with r2 -nn
+
++ Parse 9 program headers (elf_phdr) from curr. seek plus offset 0x40 with temporary block size 0x200 in less mode (~..)
+
+	[0x00000000]> pf 9? (elf_phdr)phdr @ $$+0x40!0x200~..
+
+plates
+
++ Generate templates for structs/enums with td command
+
+	"td enum elf_class {ELFCLASSNONE=0, ELFCLASS32=1, ELFCLASS64=2};"
+
+https://github.com/Maijin/r2-pf-templates/
+
++ Cast data @ <addr> to <type> and print it
+
+	tp <type>  = <address>
+
+y
+
+r2 -i r2scapy.py dump.bin
+	[0x00000000]> scapy DNS 0x81de3c 48
+	DNS(aa=1L, qr=1L, an=DNSRR(rclass=32769, ttl=120, rrname='flashair.local.', rdata='192.168.0.1', type=1), ad=0L, nscount=0, qdcount=1, ns=None, tc=0L, rd=1L, arcount=0, ar=None, opcode=0L, ra=0L, cd=0L, z=0L, rcode=0L, id=0, ancount=1, qd=DNSQR(qclass=32769, qtype=255, qname='flashair.local.'))
+
++ generate packets with scapy
+	>>> from scapy.all import *
+	>>> sr1(IP(dst="8.8.8.8")/UDP(dport=53)/DNS(rd=1,qd=DNSQR(qname="www.thepacketgeek.com")),verbose=0)
+
+Miasm  Intermediate Representation Plugin
+
++ Assemble and disassemble MIPS32 using rasm2
+
+	r2m2$ export R2M2_ARCH=mips32l; rasm2 -a r2m2 'addiu a0, a1, 2' |rasm2 -a r2m2 -d -
+	ADDIU      A0, A1, 0x2
+
++ Disassemble random MSP430 instructions in r2
+
+	r2m2$ R2M2_ARCH=msp430 r2 -a r2m2 -qc 'woR; pd 5' -
+    		0x00000000      07fa           and.w      R10, R7
+    		0x00000002      47ad           dadd.b     R13, R7
+    		0x00000004      f05e0778       add.b      @R14+, 0x7807(PC)
+    		0x00000008      f46d81ed       addc.b     @R13+, 0xED81(R4)
+    		0x0000000c      3fdc           bis.w      @R12+, R15
++ Assemble MIPS32 using rasm2 and display the call graph using r2
+
+	r2m2$ R2M2_ARCH=mips32b rasm2 -a r2m2 'j 0x4; nop' -B > j_nop.bin
+
+	r2m2$ R2M2_ARCH=mips32b r2 -a r2m2 -qc 'pd 2' j_nop.bin
+		,=< 0x00000000      0c000001       JAL        0x4
+		`-> 0x00000004      00000000       NOP
+
+rving with r2
+
++ Open raw dump
+
+	r2 -n dump.bin
+
++ Searching for  magic
+
+	[0x00000000]> / \x7fELF
+	Searching 4 bytes from 0x00000000 to 0x0000002d: 7f 45 4c 46
+	0x00001340 hit0_0
+	0x00001744 hit0_1
+	...
+
++ Dump 1M with at several hits
+
+	[0x00000000]> b 1M
+	[0x00000000]> wt @@ hit0*
+
++ Automate it
+
+	$ for a in dump.* ; do
+	sz=`rabin2 -Z $a`     # get RBin.filesize
+	r2 -wnqc"r $sz" $a  # resize file
+	done
+
+http://radare.today/posts/carving-bins/
+
+ symbolic execution
++ https://github.com/gast04/r4ge
+
+Usage: https://asciinema.org/a/155856
+
+ -Macro for using wiki in commandline
+
++ https://github.com/securisec/r2wiki
+
+$wiki "query string"
+

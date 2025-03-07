@@ -17,3 +17,6 @@ sudo mdutil -a -i off /
 sudo killall -KILL Spotlight spotlightd mds
 sudo rm -rf ~/Library/Metadata/CoreSpotlight/
 sudo rm -Rf /System/Volums/Data/.Spotlight-V100
+
+# cmd-space broken after update
+disconnect the external display, then press cmd-space, then move the search window a little. After that it works with the external display.

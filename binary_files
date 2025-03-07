@@ -1,0 +1,16 @@
+# description
+Catalog of tools for dealing with binary files
+
+# tools
+kaitai
+010
+imhex
+od
+binrw
+gnu-poke
+
+# parser generator
+https://github.com/dloss/binary-parsing
+
+# rust parser generator
+nom

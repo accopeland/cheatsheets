@@ -3,7 +3,7 @@
 # doc
 
 # install
-brew install gunpg
+$ brew install gunpg
 
 # config -- using gpg in an ssh session.
 # cat ~/.gnupg/gpg-agent.conf
@@ -14,47 +14,46 @@ default-cache-ttl 86400 # time to live ttl (5,6) is set to 24 hours.
 max-cache-ttl 86400     # no re-enter pass when, for example, a cron which invokes a gpg-agent, is run daily.
 
 # Create a key
-gpg --gen-key
+$ gpg --gen-key
 
 # Show keys
-gpg --list-keys
+$ gpg --list-keys
 
 #  To show your public key
-gpg --armor --export
+$ gpg --armor --export
 
 #  To show the fingerprint for a key
-gpg --fingerprint KEY_ID
+$ gpg --fingerprint KEY_ID
 
 # encrypt something
 -u  : GnuPG key id
-gpg --encrypt -u "some long code32 string" -r "accopeland@lbl.gov" --encrypt "some string"
+$ gpg --encrypt -u "some long code32 string" -r "accopeland@lbl.gov" --encrypt "some string"
 
 # Search for keys
-gpg --search-keys 'user@emailaddress.com'
+$ gpg --search-keys 'user@emailaddress.com'
 
 # To Encrypt a File
-gpg --encrypt --recipient 'user@emailaddress.com' example.txt
+$ gpg --encrypt --recipient 'user@emailaddress.com' example.txt
 
 # To Decrypt a File
-gpg --output example.txt --decrypt example.txt.gpg
+$ gpg --output example.txt --decrypt example.txt.gpg
 
 # Export keys
-gpg --output ~/public_key.txt --armor --export KEY_ID
-gpg --output ~/private_key.txt --armor --export-secret-key KEY_ID #Where KEY_ID is the 8 character GPG key ID.
-Store these files to a safe location, such as a USB drive, then remove the private key file.
-shred -zu ~/private_key.txt
+$ gpg --output ~/public_key.txt --armor --export KEY_ID #Where KEY_ID is the 8 character GPG key ID.
+$ gpg --output ~/private_key.txt --armor --export-secret-key KEY_ID # Store files in safe location,
+$ shred -zu ~/private_key.txt  # remove the private key file.
 
 # Import keys
 Retrieve the key files which you previously exported.
-gpg --import ~/public_key.txt
-gpg --allow-secret-key-import --import ~/private_key.txt
-shred -zu ~/private_key.txt #  Then delete the private key file.
+$ gpg --import ~/public_key.txt
+$ gpg --allow-secret-key-import --import ~/private_key.txt
+$ shred -zu ~/private_key.txt #  Then delete the private key file.
 
 # Revoke a key
 Create a revocation certificate.
-gpg --output ~/revoke.asc --gen-revoke KEY_ID #  Where KEY_ID is the 8 character GPG key ID.
-gpg --import ~/revoke.asc #  After creating the certificate import it.
-gpg --send-keys KEY_ID #  Then ensure that key servers know about the revokation.
+$ gpg --output ~/revoke.asc --gen-revoke KEY_ID #  Where KEY_ID is the 8 character GPG key ID.
+$ gpg --import ~/revoke.asc #  After creating the certificate import it.
+$ gpg --send-keys KEY_ID #  Then ensure that key servers know about the revokation.
 
 # Signing and Verifying files
 If you are uploading files to launchpad you may also want to include a GPG signature file.
@@ -64,32 +63,22 @@ This then produces a file with a .asc extension which can be uploaded.
 If you need to set the default key more permanently then edit the
 file ~/.gnupg/gpg.conf and set the default-key parameter.
 
-gpg --verify filename.asc # To verify a downloaded file using its signature file.
+$ gpg --verify filename.asc # To verify a downloaded file using its signature file.
 
 # Signing Public Keys
-gpg --keyserver <keyserver> --recv-keys <Key_ID> #Import the public key or retrieve it from a server.
-gpg --fingerprint <Key_ID> #  Check its fingerprint against any previously stated value.
-gpg --sign-key <Key_ID> #  Sign the key.
-gpg --keyserver <keyserver> --send-key <Key_ID> #  Upload the signed key to a server.
+$ gpg --keyserver <keyserver> --recv-keys <Key_ID> #Import the public key or retrieve it from a server.
+$ gpg --fingerprint <Key_ID> #  Check its fingerprint against any previously stated value.
+$ gpg --sign-key <Key_ID> #  Sign the key.
+$ gpg --keyserver <keyserver> --send-key <Key_ID> #  Upload the signed key to a server.
 
 # Change the email address associated with a GPG key
-gpg --edit-key <key ID>
-adduid
-
-Enter the new name and email address. You can then list the addresses with:
-    list
-
-If you want to delete a previous email address first select it:
-    uid <list number>
-
-Then delete it with:
-    deluid
-
-To finish type:
-    save
-
-Publish the key to a server:
-    gpg --send-keys <key ID>
+$ gpg --edit-key <key ID>
+gpg$ adduid #Enter the new name and email address.
+gpg$ list #  list the addresses
+gpg$ uid <list number> # To delete a previous email address first select it:
+gpg$ deluid  # Then delete it
+gpg$ save # To finish
+gpg$ gpg --send-keys <key ID>  # Publish the key to a server:
 
 # Creating Subkeys
 Subkeys can be useful if you don't wish to have your main GPG key
@@ -99,39 +88,27 @@ separately revoked installed on various machines. This avoids
 generating entirely separate keys and so breaking any web of trust
 which has been established.
 
-gpg --edit-key <key ID>
+$ gpg --edit-key <key ID>
+gpg> addkey  # Choose RSA (sign only), 4096 bits and select an expiry period.
+gpg> save
+# You can also repeat the procedure, but selecting RSA (encrypt only).
 
-At the prompt type:
-    addkey
+# To remove the master key, leaving only the subkey/s in place:
+$ gpg --export-secret-subkeys <subkey ID> > subkeys
+$ gpg --export <key ID> > pubkeys
+$ gpg --delete-secret-key <key ID>
 
-Choose RSA (sign only), 4096 bits and select an expiry period.
-Entropy will be gathered.
+# Import the keys back.
+$ gpg --import pubkeys subkeys
 
-At the prompt type:
-save
-
-You can also repeat the procedure, but selecting RSA (encrypt only).
-To remove the master key, leaving only the subkey/s in place:
-
-  gpg --export-secret-subkeys <subkey ID> > subkeys
-  gpg --export <key ID> > pubkeys
-  gpg --delete-secret-key <key ID>
-
-Import the keys back.
-
-  gpg --import pubkeys subkeys
-
-Verify the import.
-
-  gpg -K
-
+# Verify the import.
+$ gpg -K
 Should show sec# instead of just sec.
 
 # High-quality options for gpg for symmetric (secret key) encryption
-  This is what knowledgable people consider a good set of options for
-  symmetric encryption with gpg to give you a high-quality result.
-
-  gpg \
+ This is what knowledgable people consider a good set of options for
+ symmetric encryption with gpg to give you a high-quality result.
+$   gpg \
     --symmetric \
     --cipher-algo aes256 \
     --digest-algo sha512 \
@@ -146,3 +123,6 @@ Should show sec# instead of just sec.
     --no-symkey-cache \
     --output somefile.gpg \
     somefile # to encrypt
+
+# examine keybox file
+kbxutil --stats ~/.gnupg/pubring.kbx

@@ -18,3 +18,9 @@ gzip -r documents_directory
 
 # To create a *.gz compressed file and keep the original
 gzip < test.txt > test.txt.gz
+
+# full decoding example
+https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art053
+
+# Huffman coding
+https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art007

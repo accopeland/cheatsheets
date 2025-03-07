@@ -1,0 +1,10 @@
+# description
+better du in rust
+
+# install
+cargo install du-dust
+brew instal dust
+spack install dust
+
+#
+

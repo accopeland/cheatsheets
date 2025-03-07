@@ -96,3 +96,21 @@ runpip              Run pip in an existing pipx-managed Virtual Environment
 ensurepath          Ensure directories necessary for pipx operation are in your PATH environment variable.
 environment         Print a list of environment variables and paths used by pipx.
 completions         Print instructions on enabling shell completions for pipx
+
+# install specific version of package
+# same as for pip
+$ pipx install --pip-args=foo==24.0 mypkg
+# also <= >= == ~= (compat)
+
+# Error:  pipx install harlequin
+Fatal error from pip prevented installation. Full pip output in file:
+    /Users/copeland/.local/pipx/logs/cmd_2025-01-06_13.57.09_pip_errors.log
+pip seemed to fail to build package:
+    tree-sitter<0.21.0,>=0.20.1
+Some possibly relevant errors from pip install:
+    ERROR: Ignored the following versions that require a different python version: 0.21.0 Requires-Python <3.12,>=3.8; 1.7.0 Requires-Python >=3.6,<3.10; 1.8.0 Requires-Python >=3.6,<3.10; 1.8.1 Requires-Python >=3.6,<3.10; 1.9.0 Requires-Python >=3.6,<3.10
+    ERROR: Could not find a version that satisfies the requirement tree-sitter-languages==1.10.2; extra == "syntax" (from textual[syntax]) (from versions: none)
+    ERROR: No matching distribution found for tree-sitter-languages==1.10.2; extra == "syntax"
+Error installing harlequin.
+# Fix: pipx install --python python3.12 harlequin
+# Fix: pip install https://github.com/tconbeer/harlequin/archive/main.zip

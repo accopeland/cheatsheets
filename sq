@@ -1,0 +1,85 @@
+# description
+Another sql cli tool
+
+# install
+brew install neilotoole/sq/sq
+spack install sq
+
+# docs
+https://sq.io/docs/overview
+
+# config
+$ sq config location
+~/.config/sq
+
+# add
+sq add 'mysql://rqc_read:************@128.55.210.74/rqc' # nerscdb04.nersc.gov
+ ~/local/bin/sq add 'mysql://rqc_read:Angel-shark.314@localhost/rqc'
+sq add postgres://dw_user:dw_user@dw-prddb01.jgi.doe.gov/dwprd1p # direct
+sq add postgres://dw_user:dw_user@localhost/dwprd1p # tunnel 5432
+sq add 'postgres://dw_user:dw_user@localhost/dwprd1p?search_path=uss' # tunnel 5432
+
+# postgres schema
+By default, the Postgres driver connects to the default public schema.
+To use an alternate schema, add the search_path param to the location string when adding the Postgres source.
+For example, to use the customer schema:
+sq add 'postgres://sakila:p_ssW0rd@localhost/sakila?search_path=customer'  # Note that the location string should be quoted due to the ? character.
+
+# usage
+sq '@postgres_db | .actor | .first_name, .last_name | .[0:5]'
+
+# diff
+sq diff @sakila/staging.actor @sakila/prod.actor
+
+# excel
+cat foo.xslx | sq .field --opts header=true
+
+# metadata
+sq inspect @db
+
+# commands
+$ sq add ./actor.tsv          # add a source
+$ sq src @actor_tsv           # set active source
+$ sq ls                       # list sources
+$ sq ls -v                    # list sources (verbose)
+$ sq group                    # get active group
+$ sq group prod               # set active group
+$ sq mv @sales @prod/sales    # rename a source
+$ sq ping --all               # ping all sources
+$ sq rm @actor_tsv            # remove a source
+
+# list dbs
+$ sq src
+
+# json
+{"level":"debug","time":"00:07:48.799992","caller":"sqlserver/sqlserver.go:452:(*database).Close","msg":"Close database: @sakila_mssql | sqlserver | sqlserver://sakila:xxxxx@localhost?database=sakila"}
+{"level":"debug","time":"00:07:48.800016","caller":"source/files.go:323:(*Files).Close","msg":"Files.Close invoked: has 1 clean funcs"}
+{"level":"debug","time":"00:07:48.800031","caller":"source/files.go:61:NewFiles.func1","msg":"About to clean fscache from dir: /var/folders/68/qthwmfm93zl4mqdw_7wvsv7w0000gn/T/sq_files_fscache_2273841732"}
+$ cat sq.log | sq '.data  | .[0:3] | .level,.msg'
+
+# db support
+Postgres
+SQLite
+MySQL, MariaDB
+SQL Server, Azure SQL Edge
+
+# other inputs
+Excel XLSX
+CSV
+TSV
+JSON
+JSONA (JSON Array)
+JSONL (JSON Lines)
+
+# output formats
+INSERT to SQL databases
+Excel XLSX
+CSV
+TSV
+JSON
+JSONL (JSON Lines)
+JSONA (JSON Array)
+XML
+HTML
+Markdown
+Raw (bytes)

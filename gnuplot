@@ -74,6 +74,7 @@ gnuplot> array xpos[7] = [4,5,6,7,8,9,10]
 gnuplot> plot for [col=1:7] '' u col w parallelaxes at xpos[col] title columnhead(i)
 
 # alpha linecolor -- add colors by name with transparency (without hex-color code list)
+# https://stackoverflow.com/questions/62049929/translate-palette-defined-to-rgb-variable
 gnuplot> reset session
 gnuplot> ColorNames = 'red green blue magenta yellow cyan'   # must be existing gnuplot color names
 gnuplot> ColorValues = ''  # get the color values from dummy palettes

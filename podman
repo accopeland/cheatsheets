@@ -15,7 +15,14 @@ brew install podman
 $podman --version
 
 # code.jgi.doe.gov -- https://docs.jgi.doe.gov/spaces/infra/pages/139069932/How+to+Build+and+Push+a+Docker+Image+in+Gitlab+code.jgi.doe.gov+-+without+CI+CD
-#
+# ..
+
+# nersc
+https://docs.nersc.gov/development/containers/podman-hpc/overview/#troubleshooting
+/global/common/shared/tig/podman-hpc/bin/podman-hpc
+
+# perlmutter
+$  /global/common/shared/tig/podman-hpc/bin/podman-hpc  run --rm desihub/fastspecfit:3.1.1 python -m mpi4py --mpi-lib-version
 
 # lima startup
 limactl start /usr/local/share/lima/examples/podman.yaml
@@ -34,7 +41,7 @@ $ podman login -u accopeland@lbl.gov code.jgi.doe.gov # gitlab PAT expire 30d
 Password:
 $ <PAT>
 Login Succeeded!
-# or ? 
+# or ?
 $ podman login # default to u=accopeland p=LDAP url=code.jgi.doe.gov
 
 # registry login ???
@@ -44,6 +51,39 @@ $ podman login -u accopeland@lbl.gov code.jgi.doe.gov (use PAT) # NOPE
 $ podman login library.jgi.doe.gov:5050 -u accopeland@lbl.gov
 Password:
 <PAT>
+
+# registry search
+$ podman search registry.fedoraproject.org/
+
+# docker login
+echo "gQ...w" | podman login --username accopeland@lbl.gov  --password-stdin docker.io
+
+# search
+$ podman search docker://ezralanglois/interop_centos7
+Error: 1 error occurred:
+        * couldn't search registry "docker:": pinging container registry docker:: Get "https://docker/v2/": dial tcp: lookup docker on 10.92.100.225:53: no such host
+
+$ podman search docker.io/ezralanglois/interop_centos7
+NAME                                      DESCRIPTION
+docker.io/ezralanglois/interop_centos7
+docker.io/ezralanglois/interop            Build server using centos 5
+docker.io/ezralanglois/centos5_boost1_55
+docker.io/ezralanglois/subtomo
+
+# pull by digest
+$ podman pull alpine@sha256:d7342993700f8cd7aba8496c2d0e57be0666e80b4c441925fc6f9361fa81d10e
+
+# search
+podman search REGISTRY_URL/IMAGE_NAME  # search for an image in registry
+podman search --format "{{.Name}}\t{{.Stars}}\t{{.Official}}" alpine --limit 3
+podman search --list-tags registry.access.redhat.com/ubi8 --limit 4
+
+# registry search
+podman search registry.fedoraproject.org/
+
+# docker login
+echo "gQ...w" | podman login --username accopeland@lbl.gov  --password-stdin docker.io
+>>>>>>> d9ad4d6 (github, podman, skopeo, spack updates)
 Login Succeeded!
 
 # code.jgi.doe.gov search
@@ -87,6 +127,8 @@ https://code.jgi.doe.gov/groups/advanced-analysis/-/container_registries
 https://code.jgi.doe.gov/groups/advanced-analysis/sequence-data-management/-/container_registries
 https://code.jgi.doe.gov/groups/advanced-analysis/jaws/-/container_registries
 
+# pull from buildcache
+$  podman pull ghcr.io/accopeland/buildcache-accopeland-perlmutter:gmake-4.4.1-hvsieahfrvdttpf6mlp577weuob5hsoa.spack
 
 # List running container
 $ podman ps

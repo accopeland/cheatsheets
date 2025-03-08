@@ -1282,10 +1282,40 @@ $ spack install --use-buildcache only <package>
 $ spack mirror add v0.22.0 https://binaries.spack.io/v0.22.0
 $ spack buildcache keys --install --trust
 
+# container registry login
+$  podman login ghcr.io/accopeland/buildcache-accopeland-perlmutter -u accopeland -p <github_classic_token>
+Login Succeeded!
+
 # add oci buildcache
-$ spack mirror add --oci-username username --oci-password password my_registry oci://example.com/my_image
-$ spack buildcache push --base-image ubuntu:20.04 my_registry ninja
+# create PAT (github classic only; admin:repo_hook, repo, write:packages
+$ spack -e .  mirror add --oci-username accopeland --oci-password $MY_OCI_TOKEN --unsigned github-mirror  oci://ghcr.io/accopeland/buildcache-accopeland-perlmutter
+$ cat spack.yaml  # verify
+$ spack -e . buildcache push github-mirror
+$ spack buildcache push --base-image ubuntu:20.04 my_registry ninja # must use github classic token
+==> Uploading manifests
+==> [1/3] Tagged gmake@4.4.1/hvsieah as ghcr.io/accopeland/buildcache-accopeland-perlmutter:gmake-4.4.1-hvsieahfrvdttpf6mlp577weuob5hsoa.spack
+==> [2/3] Tagged gcc-runtime@13.1.0/ud3h5i7 as ghcr.io/accopeland/buildcache-accopeland-perlmutter:gcc-runtime-13.1.0-ud3h5i7hx47xa2kjdp5vuy5qxihodpuv.spack
+==> [3/3] Tagged zlib-ng@2.2.1/hoislfp as ghcr.io/accopeland/buildcache-accopeland-perlmutter:zlib-ng-2.2.1-hoislfpshlhuw3l4kr55wxh5z5x6r4ph.spack
+# https://github.com/users/accopeland/packages/container/package/buildcache-accopeland-perlmutter
 $ spack install <specs...> # install from the registry
+
+# push w tag
+# login ...
+$ spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env github-mirror
+==> Selected 3 specs to push to oci://ghcr.io/accopeland/buildcache-accopeland-perlmutter
+==> Checking for existing specs in the buildcache
+==> Fetching https://ghcr.io/v2/accopeland/buildcache-accopeland-perlmutter/blobs/sha256:a8ba914b78a7f2f826a6283819be0ee1d10a93ff7a0a93a22688e2ba5ac97753
+==> Fetching https://ghcr.io/v2/accopeland/buildcache-accopeland-perlmutter/blobs/sha256:4c99c21a428812fffec94f556b1bf8e8ab09fbff89cb82687c1c4e674bafd442
+==> Fetching https://ghcr.io/v2/accopeland/buildcache-accopeland-perlmutter/blobs/sha256:a8448296a775c18a5e814ed331b8861ff6747b284736f8f212b0a051a3def59c
+==> Fetching https://index.docker.io/v2/library/ubuntu/blobs/sha256:a24be041d9576937f62435f8564c2ca6e429d2760537b04c50ca50adb0c6d212
+==> Fetching https://index.docker.io/v2/library/ubuntu/blobs/sha256:9cb31e2e37eab1bff50f727e979fcacb509e225fb853433a6fe21d2fb34e6305
+==> All specs are already in the buildcache. Use --force to overwrite them.
+
+# list buildcache
+$  spack -e . buildcache list --allarch
+
+# pull from buildcache
+$  podman pull ghcr.io/accopeland/buildcache-accopeland-perlmutter:gmake-4.4.1-hvsieahfrvdttpf6mlp577weuob5hsoa.spack
 
 # use oci image from buildcache
 $ docker run -it example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack

@@ -31,3 +31,23 @@ git config --global url.https://github.com/.insteadOf git://github.com/
 $ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 > Login Succeeded
 docker push ghcr.io/NAMESPACE/IMAGE_NAME:latest  ##Pushing container images
+
+# get bearer token -- need PAT
+$ curl -s "https://ghcr.io/token?service=ghcr.io&scope=repository:accopeland:pull"  -u "accopeland:$CR_PAT"
+
+# list tags via v2 api 
+# get bearer token
+$ curl -s "https://ghcr.io/token?service=ghcr.io&scope=repository:accopeland:pull"  -u "accopeland:$CR_PAT"
+{"token":"Z2h..="}
+$ skopeo list-tags --registry-token Z2..=  docker://ghcr.io/accopeland/buildcache-accopeland-perlmutter
+{
+    "Repository": "ghcr.io/accopeland/buildcache-accopeland-perlmutter",
+    "Tags": [
+        "zlib-ng-2.2.1-hoislfpshlhuw3l4kr55wxh5z5x6r4ph.spack",
+        "gmake-4.4.1-hvsieahfrvdttpf6mlp577weuob5hsoa.spack",
+        "gcc-runtime-13.1.0-ud3h5i7hx47xa2kjdp5vuy5qxihodpuv.spack"
+    ]
+}
+
+# change visibility of containers
+# https://github.com/users/<user>/packages/container/buildcache/settings

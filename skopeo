@@ -1,5 +1,9 @@
 # description
 
+# see also
+crane -- https://crane.ggcr.dev/manifest/alpine
+regctl
+
 # install
 spack install skopeo
 

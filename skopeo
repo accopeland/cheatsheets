@@ -18,7 +18,10 @@ containers-policy.json
 containers-registries.d
 containers-storage.conf
 
-# inspect -- without downloading image
+# inspect - WRONG
+$ skopeo inspect  docker.io/ezralanglois/interop_centos7 # NOPE
+
+# inspect -- RIGHT
 $ skopeo inspect docker://library.jgi.doe.gov:5050/qaqc/docker/bbtools:39.01
 {
     "Name": "library.jgi.doe.gov:5050/qaqc/docker/bbtools",
@@ -56,7 +59,8 @@ $ skopeo inspect docker://library.jgi.doe.gov:5050/qaqc/docker/bbtools:39.01
         "SAMTOOLS_VERSION=1.15"
     ]
 }
-$ skopeo inspect docker://library.jgi.doe.gov:5050/user-support-analysis/rna-count/rnacount
+$ skopeo inspect docker://library.jgi.doe.gov:5050/user-support-analysis/rna-count/rnacount # YES
+$  skopeo inspect docker://ghcr.io/accopeland/buildcache-accopeland-perlmutter:zlib-ng-2.2.1-hoislfpshlhuw3l4kr55wxh5z5x6r4ph.spack # YES
 
 # inspect via podman
 $ podman run --rm quay.io/skopeo/stable inspect --creds $USER:$PASSWORD docker://$IMAGE

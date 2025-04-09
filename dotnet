@@ -1,0 +1,15 @@
+# description
+MS cross platform/language toolkit
+
+# install
+https://dotnet.microsoft.com/en-us/download/dotnet/9.0
+
+$ brew install dotnet
+$ spack install dotnet-core-sdk
+
+# docs
+https://learn.microsoft.com/dotnet/core/tools
+
+# usage
+
+

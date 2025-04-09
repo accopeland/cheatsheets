@@ -2,6 +2,7 @@
 TOols for data transfer
 
 # options
+qcp - https://github.com/crazyscot/qcp (quic) # cannot compile, cannot cargo install
 mutil - https://github.com/pkolano/mutil/blob/master/patch/coreutils-8.22.patch
 dcache / dccp - how to install ?
 aria - aria2c
@@ -21,6 +22,14 @@ parallel+rsync
 aspera-cli / ascp
 xrootd
 nc
+
+# globus
+350-400 MB/s peak ; 189 MB/s average from perlmutter:$HOME to dori:$HOME # kind of worst case scenario
+193MB/s avg from perlmutter:$PSCRATCH to dori:$HOME
+
+# parsyncfp2
+# must have parsyncfp2, stats, scut , ethtool, fpart on both ends in $PATH
+$ ./parsyncfp2   --NP 4 --chunksize=500M --startdir=/tmp/copeland/ foo  copeland@perlmutter.nersc.gov:/pscratch/sd/c/copeland
 
 # minio
  https://min.io/docs/minio/linux/reference/minio-mc.html#quickstart

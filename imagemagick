@@ -1,0 +1,20 @@
+# description
+ImageMagick CLI image processing toolkit
+
+# install
+$ brew install imagemagick
+
+# docs
+https://usage.imagemagick.org/
+
+# masking
+
+# morphology
+
+# flatten
+
+# histogram equalization
+
+
+# background removal
+$ magick overlay_figure.gif   overlay_bgnd.gif    -compose ChangeMask  -composite  overlay_removed.png

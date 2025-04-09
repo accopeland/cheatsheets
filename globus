@@ -2,44 +2,175 @@
 Notes on the globus data transfer toolkit
 
 # install
+$ pixi global install globus-cli
 
 # find endpoints
-globus endpoint search dtn
+$ globus endpoint search dtn
 
 # nersc / perlmutter
 access Perlmutter Scratch ; new endpoint .
 It can be accessed from 6acb4921-e899-4367-bda2-54a351aab227 and is named "NERSC Perlmutter jgi_dna Collab".
 https://app.globus.org/file-manager/collections/6acb4921-e899-4367-bda2-54a351aab227/overview
 
-# activate
-globus endpoint activate 8409a10b-de09-4670-a886-2c0b33f0fe25 #| esnet@globusid.org | ESnet Sun
+# auth
+Now a huge PITA as every collection, endpoint, gateway, etc. etc. requires separate authentication via oauth2 and tokens only last 10 minutes !? WTF
+Also almost every endpoint fails due to permission or ACL problems . Great.
+This may be helpful on perlmutter
+$ /global/common/software/nersc/pm-2022q3/sw/globus-tools/bin/generate_token.py
+
+# dori
+$ globus endpoint search dori
+ID                                   | Owner                                                        | Display Name
+------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------
+f533e7f6-9ac3-4358-a03f-8d832c58d2d0 | kmfernsler@lbl.gov                                           | DORI JAWS XFER
+b9ecc9a6-e711-4009-be17-e06cd1a7c686 | kmfernsler@lbl.gov                                           | DORI RQC Mapped
+dbf1c389-6f0b-4537-a9aa-44649fea86cb | kmfernsler@lbl.gov                                           | JGI Dori Collections
+5e9a3af4-9a38-4024-98d5-3e51c118457c | kmfernsler@lbl.gov                                           | LBNL/JGI Dori GCSv5 Endpoint
+68b52342-f9b0-47f6-bd91-da762d80a2c4 | liujiamin@nih.gov                                            | Data_for_Dorian
+0d4b4960-d36d-11ed-9711-e54704575ba0 | accopeland@globusid.org                                      | dori-acc
+390c27ee-d3cd-11ed-8ebd-fdf94a47aaa3 | accopeland@globusid.org                                      | dori-acc
+8b6ac8b6-ffd2-4804-a483-a259071587b1 | u0156108@kuleuven.be                                         | Dorien Imbrechts Sophie Janssens - PI Danielle Copmans
+7acfb1fd-b8ac-4eaa-b687-85111010b3f3 | 1a130a01-48bc-489b-a729-9ab858de1755@clients.auth.globus.org | DORI JAWS XFER PRODUCTION
+1543ce8b-954a-44fa-b9cf-5323a398d5a6 | 1a130a01-48bc-489b-a729-9ab858de1755@clients.auth.globus.org | DORI JAWS XFER TEST
+5085df38-1618-4699-aef1-c9aaa53baeba | fernsler@identity2.c4daf5.08cc.data.globus.org               | DORI RQC
+b1adeee0-dbc9-453c-a3dc-950dd6aea97a | 550a39dd-8ef6-4d88-ac86-3bd0479f9d29@clients.auth.globus.org | DORI RQC
+46b0f78b-b3bd-48b0-81f7-28e9d3248ec8 | fernsler@identity2.c4daf5.08cc.data.globus.org               | DORI RQC OLD
+c23e9780-d81c-48b5-8637-76e03389e921 | fernsler@identity2.c4daf5.08cc.data.globus.org               | DORI-XFER
+e9ffba03-0916-4711-a93f-26c0ba62e67e | fernsler@identity2.c4daf5.08cc.data.globus.org               | DORI XFER NEW
+9d899b22-57ab-4765-ad0e-2e71af46d933 | kmfernsler@lbl.gov                                           | LBNL/JGI Dori GCSv5 Endpoint
+16e38e24-4ee0-47cb-b050-7140193888cc | nbouffar@uvm.edu                                             | MIC - Dorion, Amber
+2d7eca76-df4c-497b-8b4d-5a5793db20e2 | fernsler@identity2.c4daf5.08cc.data.globus.org               | "New Test Dori"
+
+# jgi
+$ globus endpoint search jgi
+ID                                   | Owner                                                        | Display Name
+------------------------------------ | ------------------------------------------------------------ | -------------------------------
+dbf1c389-6f0b-4537-a9aa-44649fea86cb | kmfernsler@lbl.gov                                           | JGI Dori Collections
+162e71bd-7587-4ea6-9005-be884e80d96c | 41ee4ab3-064e-4849-85ad-277d5b25cb88@clients.auth.globus.org | NERSC DTN jgi_dna Collab
+6acb4921-e899-4367-bda2-54a351aab227 | d4496e7f-1432-44da-9b88-0e6688f4f0d3@clients.auth.globus.org | NERSC Perlmutter jgi_dna Collab
+dc817eb0-7cd2-4b90-81a4-e8f8109e05b7 | kmfernsler@lbl.gov                                           | POSIX JAWS Data
+a10c7703-b317-4b2a-aae0-a5f74b2796f8 | wei@globusid.org                                             | GLBRC JGI Sync
+712d1be6-e0d0-4b76-a86d-419b428fc493 | wei@globusid.org                                             | JGI Sync 2 - Dev
+69e9ec2b-c3fa-40d9-94db-2fa398da7be9 | johnson@nersc.gov                                            | DTS JGI Share
+9eb0a185-d1bb-460f-8700-066cc9cf04ae | turam@alcf.anl.gov                                           | IRIBeta_jgi_scratch
+...
+9eb0a185-d1bb-460f-8700-066cc9cf04ae | turam@alcf.anl.gov                                           | IRIBeta_jgi_scratch
+042ed3c6-a97d-11ec-b877-3912f602f346 | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | James_jgi_2013_data
+2254580c-a230-456e-afa1-2f823555d32f | accopeland@lbl.gov                                           | JGI#analysis
+0aaa9820-48ea-11ef-adef-8f248ba91607 | ji08046@uga.edu                                              | JGI DNA Seq
+12c0326b-15b1-4d0f-960b-e37b9faa23c7 | dchi0034@globus.massive.cloud.monash.edu                     | JGI Genome portal3
+be536f13-1dc4-470c-8955-300ee352b71f | 873731f9-e843-4790-86ae-42f19ef93790@clients.auth.globus.org | JGI Genome Portal shared endpoint 4
+1da3c3e0-ee95-4d7f-8646-65f8a7d1458b | mamelara@identitylrc.01b17.8540.data.globus.org              | JGI JAWS
+e8b18c38-36cd-11eb-b54c-02d9497ca481 | 3f31be0f-76b1-4d2b-b21b-aa4839bea12d@clients.auth.globus.org | jgijaws@lrc
+8709fcc4-c52f-11e9-939a-02ff96a5aa76 | 5dbafbb3-578b-4fb5-aa2f-2b60ad18072d@clients.auth.globus.org | jgi_jaws_shared
+b0ce6d72-2548-11eb-8fb9-0a34088e79f9 | 5dbafbb3-578b-4fb5-aa2f-2b60ad18072d@clients.auth.globus.org | jgi_jaws_shared2
+e89995f5-0cda-4d9e-afb2-0eb7580d0c9a | wei@globusid.org                                             | jgi_sync_app
+a5935488-ea55-48fe-b14f-515054e47e8c | 0af488d7-1a3b-4774-b535-38db356ce836@clients.auth.globus.org | MSC DTN Test Guest Collection - svc-jgi-archive
+a1a80a22-c71a-11ec-acbd-33b12c7d7cf2 | emsl@globusid.org                                            | MSC-JGI Archive Directory on Aurora
+22a05242-7fc7-11ec-891f-939ceb6dfaf1 | 07c29194-364e-4baa-8b73-c55c5eaca50a@clients.auth.globus.org | MSC-JGI Archive Directory on Tahoma
+90170904-5642-11ed-89db-ede5bae4f491 | 07c29194-364e-4baa-8b73-c55c5eaca50a@clients.auth.globus.org | MSC-JGI shared endpoint for JAWS Transfer (New 10/27/22)
+44fc3756-e38c-11ec-9bd1-2d2219dcc1fa | 7fabd6d5-f023-462f-a3ca-a5e78cb446f6@clients.auth.globus.org | NERSC jgi_dna
+8c49981a-daf4-11ec-b5c3-79437d2253ac | 3f31be0f-76b1-4d2b-b21b-aa4839bea12d@clients.auth.globus.org | new-jgijaws#lrc
+7acfb1fd-b8ac-4eaa-b687-85111010b3f3 | 1a130a01-48bc-489b-a729-9ab858de1755@clients.auth.globus.org | DORI JAWS XFER PRODUCTION
+5a54e23a-9c7c-4311-ac54-58a46568e5ab | mamelara@lbl.gov                                             | JAWS GCSv5.4 Endpoint # dead
+...
+
+
+# deprecated -- activate
+$ globus endpoint activate 8409a10b-de09-4670-a886-2c0b33f0fe25 #| esnet@globusid.org | ESnet Sun
+
+# gcs collection
+$  globus gcs collection show dbf1c389-6f0b-4537-a9aa-44649fea86cb
+Display Name:                     JGI Dori Collections
+Owner:                            kmfernsler@lbl.gov
+ID:                               dbf1c389-6f0b-4537-a9aa-44649fea86cb
+Collection Type:                  mapped
+Storage Gateway ID:               28845367-19b6-498c-8f43-bfb0b348050f
+Connector:                        POSIX
+Allow Guest Collections:          True
+Disable Anonymous Writes:         False
+High Assurance:                   False
+Authentication Timeout (Minutes): 43200
+Multi-factor Authentication:      False
+Manager URL:                      https://c4daf5.08cc.data.globus.org
+HTTPS URL:                        https://m-104f72.c4daf5.08cc.data.globus.org
+TLSFTP URL:                       tlsftp://m-104f72.c4daf5.08cc.data.globus.org:443
+Force Encryption:                 False
+Public:                           True
+Organization:                     The Joint Genome Institute
+Contact E-mail:                   hpcs@lbl.gov
+
+
+
+# login
+$ globus login
+...
+
+# authenticate for endpoint
+$ globus login --gcs  a63daf88-8a9f-4818-b3a0-c60c7b8aeec7
+Please authenticate with Globus here:
+------------------------------------
+https://auth.globus.org/v2/oauth2/authorize?client_id=8322cf64-cf32-4202-8501-a69daa...
+------------------------------------
+Enter the resulting Authorization Code here: bk5nJU843pYjS1ffp8MsQ8OHew0Un8
+You have successfully logged in to the Globus CLI!
+
+# You can check your primary identity with
+$ globus whoami
+
+# identities are in session use
+$ globus session show
+
+# Logout of Globus CLI
+$  globus logout
+
+# collection
+$ globus gcs collection show 8409a10b-de09-4670-a886-2c0b33f0fe25
+
+# endpoint
+$ globus endpoint show  8409a10b-de09-4670-a886-2c0b33f0fe25
+Expected 8409a10b-de09-4670-a886-2c0b33f0fe25 to be an endpoint ID.
+Instead, found it was of type 'Globus Connect Server v5 Guest Collection'.
 
 # ls
 globus ls 8409a10b-de09-4670-a886-2c0b33f0fe25 # esnet@globusid.org | ESnet Sun
 
 # copy -- transfer : only between endpoints
-globus transfer ...
+$ globus transfer "$COLLECTION1:/home/share/godata/file1.txt" "$COLLECTION2:~/file1.txt" --label "CLI single file"
+$ globus transfer "$COLLECTION1:/home/share/godata" "$COLLECTION2:~/godata" --recursive --label "CLI single folder"
+$ globus transfer "$COLLECTION1:/home/share/godata" "$COLLECTION2:/home/share/godata" --recursive --label "Unauthorized Transfer"
+
+# task
+$ globus transfer "$COLLECTION1:/home/share/godata" "$COLLECTION2:/home/share/godata" --recursive --label "Unauthorized Transfer"
+Message: The transfer has been accepted and a task has been created and queued for execution
+Task ID: 67d6e4ba-dda2-11e6-9d11-22000a1e3b52
+# copy and paste the task id for later use
+$ task_id=67d6e4ba-dda2-11e6-9d11-22000a1e3b52
+# view details about the task
+# note the Details field reads PERMISSION_DENIED
+$ globus task show $task_id
 
 # globus-cli
 https://github.com/globus/globus-cli
-pipx install globus-cli
-globus login --no-local-server (if no X or web server open)
+
+# login
+$ globus login --no-local-server (if no X or web server open)
 
 # globus portal ipynb
-git clone https://github.com/globus/globus-sample-data-portal.git
-cd globus-jupyter-notebooks/
-source venv/bin/activate
-pip install -r requirements.txt
-. ./venv/bin/activate
-jupyter-notebook SDK.ipynb
-deactivate
+$ git clone https://github.com/globus/globus-sample-data-portal.git
+$ cd globus-jupyter-notebooks/
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+$ . ./venv/bin/activate
+$ jupyter-notebook SDK.ipynb
+$ deactivate
 
 # root trust certificates
 /Applications/Globus Connect Personal.app/Contents/MacOS/etc/ca
 /var/lib/globus-connect-server/grid-security/certificates
 
 # globus-url-copy
-globus-url-copy -cd -r -p 8 -udt -concurrency
+$ globus-url-copy -cd -r -p 8 -udt -concurrency
         #
         -fast
         -cd
@@ -58,9 +189,61 @@ https://wikihub.berkeley.edu/display/istrit/Research+Data+Storage%2C+Part+II%3A+
 https://www.globus.org/connectors/google-drive
 
 # globus / gdrive
-globus ls -al b6534bbc-5bb1-11e9-bf33-0edbf3a4e7ee
-globus ls -al 6aab24f8-a49e-11e7-adda-22000a92523b
-globus ls 2254580c-a230-456e-afa1-2f823555d32f
-globus ls -l 2254580c-a230-456e-afa1-2f823555d32f:'/External Assembly Projects'
+$ globus ls -al b6534bbc-5bb1-11e9-bf33-0edbf3a4e7ee:/global/cfs/projectdirs/datatran/
+$ globus ls -al 6aab24f8-a49e-11e7-adda-22000a92523b # dead
+$ globus ls -al 2254580c-a230-456e-afa1-2f823555d32f # JGI#analysis login incorrect
+$ globus ls -al 2254580c-a230-456e-afa1-2f823555d32f:'/External Assembly Projects' # login failed
+$  globus ls -al dbf1c389-6f0b-4537-a9aa-44649fea86cb # dori endpoint ; after login and auth and link to globus.org email via OIDC
 
 # globus-cli: https://docs.globus.org/cli/examples/
+
+# bookmark
+$ globus bookmark create #        Create a bookmark for the current user.
+$ globus bookmark delete #        Delete a bookmark.
+$ globus bookmark list #        List your bookmarks.
+$ globus bookmark rename #        Change a bookmark's name.
+$ globus bookmark show #        Resolve a bookmark name or ID to an endpoint:path.
+
+# bookmark example
+$ COLLECTION=6c54cade-bde5-45c1-bdea-f4bd71dba2cc # Collection ID for Globus Tutorial Collection 1
+$ globus bookmark create $COLLECTION:/home/share/godata/ "Example Bookmark" # Make a new bookmark at Tutorial Collection 1's godata folder
+    Bookmark ID: ab45785a-dda3-11e6-9d11-22000a1e3b52
+$ globus bookmark list  # The bookmark now shows up in the bookmarks list
+Name             | Endpoint ID                           | Bookmark ID                          | Path
+---------------- | ------------------------------------- | ------------------------------------ | --------------
+Example Bookmark | ddb59aef-6d04-11e5-ba46-22000b92c6ecc | ab45785a-dda3-11e6-9d11-22000a1e3b52 | /home/share/godata/
+$ globus ls "$(globus bookmark show 'Example Bookmark')"  # The bookmark can now be used to get a path without any UUIDs
+file1.txt
+file2.txt
+file3.txt
+
+# collection
+$ globus collection delete #        Delete an existing Collection.
+$ globus collection list #        List all Collections on an Endpoint.
+$ globus collection show #        Show a Collection definition.
+$ globus collection update #        Update a Collection definition.
+
+# storage gateway
+$ globus endpoint storage-gateway list #        List the Storage Gateways on an Endpoint.
+
+# flows --  secure, managed automation of complex workflows at scale.
+flows are series of actions that can perform common chores—like replicating data across multiple storage systems—as well as
+complex, bespoke workflows—such as managing multiple conditional data analysis and results distribution operations.
+
+# GCP
+$ globus gcp set-subscription-id #        Update a GCP endpoint's subscription.
+$ globus gcp create guest # Create a new Guest Collection on GCP.
+$ globus gcp create mapped #        Create a new GCP Mapped Collection.
+$ globus gcp update guest #        Update a Guest Collection on GCP.
+$ globus gcp update mapped #        Update a GCP Mapped Collection.
+
+#  group
+$  globus group list
+Group ID                             | Name          | Type    | Session Enforcement | Roles
+------------------------------------ | ------------- | ------- | ------------------- | ------------
+18b7ce23-d3e5-11ed-b16f-777f9af0a268 | usa           | regular | not strict          | admin
+ee386fa0-d3e4-11ed-b519-b5fe535477fb | grp-org-gt-ga | regular | not strict          | admin,member
+e9cf6436-0b52-11e8-b6f6-0ea08e639e9e | sra asm       | regular | strict              | admin
+55087021-d3e5-11ed-a915-9d958efadf46 | qaqc          | regular | not strict          | admin
+99d2a548-7218-11e2-adc0-12313d2d6e7f | kbase_users   | regular | not strict          | member
+2eba3415-d3e5-11ed-a915-9d958efadf46 | gaa           | regular | not strict          | admin

@@ -54,7 +54,30 @@ $ mstconfig -d 04:00.0 q
 # device info
 $ ibv_devinfo
 
-# ibstat -  query basic status of InfiniBand device(s)
+# tools (rdma-core https://github.com/rdma-core/infiniband-diags )
+  dump_fts
+  ibaddr
+  ibcacheedit
+  ibccconfig
+  ibccquery
+  iblinkinfo
+  ibnetdiscover
+  ibping
+  ibportstate
+  ibqueryerrors
+  ibroute
+  ibstat
+  ibsysstat
+  ibtracert
+  perfquery
+  saquery
+  sminfo
+  smpdump
+  smpquery
+  vendstat
+
+
+# ibstat (rdma-core) -  query basic status of InfiniBand device(s)
 $ ibstat
 
 # interface
@@ -135,7 +158,7 @@ $ cat  /sys/class/infiniband/mlx5_0/ports/1/state #mlx5_0 mlx5_1
 # debug: check rate
 $ cat /sys/class/infiniband/<kernel module>/ports/<port number>/rate
 
-# perfquery
+# perfquery (rdma-core)
 $ ./perfquery           # read local port's performance counters
 $ ./perfquery 32 1              # read performance counters from lid 32, port 1
 $ ./perfquery -x 33 1   # read extended performance counters from lid 32, port 1
@@ -251,6 +274,7 @@ $ qperf -v -i mlx4_0:1 192.0.2.1 rc_bi_bw
 $ qperf -v -i mlx4_0:1 192.0.2.1 rc_bw
 
 # infiniband perftest
+https://github.com/linux-rdma/perftest
 ib_atomic_bw - client/server Calculates BW of RDMA Atomic transactions between a pair of machines
 ib_atomic_lat - client/server Calculates latency of RDMA Atomic transaction of message_size between a pair of machines
 ib_read_bw - client/server Calculates BW of RDMA read between a pair of machines. Read available only in RC connection mode

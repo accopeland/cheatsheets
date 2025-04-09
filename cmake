@@ -31,6 +31,15 @@ CC=gcc-4.6.1 CXX=g++-4.6.2 cmake -G "Your Generator" path/to/your/source
 rm -r CMakeCache.txt CMakeFiles/;  mkdir Release ; BOOST_ROOT=/jgi/tools/misc_libraries/boost/1.42.0 cmake -DCMAKE_INSTALL_PREFIX=/home/copeland/local/x86_64/seqan -DCMAKE_BUILD_TYPE=Release
 mkdir build; cd build; cmake ..; make
 
+# minimum CMakeLists.txt
+$ cat > CMakeLists.txt
+cmake_minimum_required(VERSION 2.8)
+project( <proj> )
+find_package( OpenCV REQUIRED )  # deps
+include_directories( ${OpenCV_INCLUDE_DIRS} ) # includes
+add_executable( <prog> <prog.cpp> ) # exe and cpp
+target_link_libraries( DisplayImage ${OpenCV_LIBS} ) # libs
+
 # compile targets in CMakeLists.txt
 cmake -DCMAKE_INSTALL_PREFIX -DCMAKE_BUILD_TYPE (debug,release,..) -DCMAKE_BUILD_SHARED_LIBS=OFF
 

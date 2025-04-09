@@ -19,7 +19,7 @@ a tag object that points to a commit object,
 a tag object that points to a tag object that points to a commit object, etc.
 
 # tree object
-An object containing a list of file names and modes along with refs to the associated blob and/or tree objects. 
+An object containing a list of file names and modes along with refs to the associated blob and/or tree objects.
 A tree is equivalent to a directory.
 
 # tree-ish treeish
@@ -198,6 +198,12 @@ $ git show 83fb499:path/fo/file.ext                            # Shows the file 
 $ git diff branch_1 branch_2                                   # Check difference between branches
 $ git log                                                      # Show all the commits
 $ git status                                                   # Show the changes from last commit
+
+# add another upstream to fork
+$ git remote add upstream github.com/spack/spack.git
+$ git fetch upstream develop
+$ # if needed... git stash
+$ git rebase --interactive
 
 # To view the commit history of a set of files:
 $ git log --pretty=email --patch-with-stat --reverse --full-index -- Admin\*.py > Sripts.patch

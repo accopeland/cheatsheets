@@ -1,0 +1,41 @@
+# description
+fzf enhanced git tools
+
+# install
+$ brew install forgit
+
+# config
+see $PATH
+git-forgit
+
+# commands
+git-forgit
+
+# diff
+$ git-forgit diff
+
+# blame
+
+# show
+
+# log
+$ git-forgit log
+
+# misc
+Interactive git diff viewer (gd)
+Interactive git show viewer (gso)
+Interactive git reset HEAD <file> selector (grh)
+Interactive git checkout <file> selector (gcf)
+Interactive git checkout <branch> selector (gcb)
+Interactive git branch -D <branch> selector (gbd)
+Interactive git checkout <tag> selector (gct)
+Interactive git checkout <commit> selector (gco)
+Interactive git revert <commit> selector (grc)
+Interactive git stash viewer (gss)
+Interactive git stash push selector (gsp)
+Interactive git clean selector (gclean)
+Interactive git cherry-pick selector (gcp)
+Interactive git rebase -i selector (grb)
+Interactive git reflog viewer (grl)
+Interactive git blame selector (gbl)
+Interactive git commit --fixup && git rebase -i --autosquash selector (gfu)

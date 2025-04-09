@@ -650,6 +650,12 @@ packages.yaml
 $ ls $SPACK_ROOT/var/spack/environments
 $ ls ~/spack/var/spack/environments/<envname>/.spack-env/view #symlink
 
+# upgrade / rebase
+$ git remote add upstream github.com/spack/spack.git
+$ git fetch upstream develop
+$ # if needed... git stash
+$ git rebase --interactive
+
 # emulate homebrew --  mimic the behavior of Homebrew, and  clean up out-of-date packages from environment after an upgrade.
 #  upgrade entire software stack in an environment and clean up old package versions, run the following:
 $ spack env activate myenv
@@ -1051,7 +1057,7 @@ srun -N<nodes> spack install
 # disable parallel build (make)
 $ spack install -j1 <pkg>
 
-# disable parallel make 
+# disable parallel make
     parallel = False
 
 # build parallel
@@ -1951,6 +1957,12 @@ modules:
           set:
             SLURM_MPI_TYPE: pmix
 
+# spack db
+/Users/copeland/.spack/bootstrap/store
+
+# spack db version error
+$ spack reindex ???
+
 # cleanup / gc
 $ spack -e . gc  # rm non-explicitly installed build deps in active env; everything first marked as root, then env subtracted then roots are readded.
 $ spack gc -e .  #gets rid of everything in the DB not needed (via run/link deps) by this env
@@ -2251,3 +2263,44 @@ Python 3.6 is now deprecated for running Spack and support for 3.6, 3.7 and earl
 # setup sbin packages
 def setup_run_environment(self, env):
     env.prepend_path("PATH", self.prefix.sbin)
+
+# upgrade
+$ git status
+$ git remote -v
+$ git remote add upstream https://github.com/spack/spack.git
+$ git remote -v
+$ git pull --dry-run upstream
+$ git fetch upstream develop
+$ git status
+$ git stash
+$ git rebase --interactive
+$ spack_init
+$ spack reindex
+$ spack spec podman
+
+# splicing + public buildcache
+$ source $SPACK_ROOT/share/spack/setup-env.sh
+$ module load cmake || true # The module loads might fail if not on HPC cluster
+$ module load gcc || true
+$ spack env create -d ~/projects/system-spack-env
+$ spack env activate -p ~/projects/system-spack-env
+$ spack compiler find # You might want to include / exclude as necessary
+$ spack external find --all --exclude libtool --exclude gettext --exclude python --exclude bzip
+$ spack config add concretizer:targets:granularity:generic
+$ spack config add view:false
+$ spack config add concretizer:reuse:true
+$ spack config add concretizer:unify:true
+$ spack config add concretizer:splice:automatic:true
+  packages=(
+    "neovim@0.10.2"
+    "stow"
+    "npm"
+    "python"
+    "py-pip"
+  )
+  packages+=("node-js@22.14.0 arch=linux-ubuntu22.04-x86_64_v3 %gcc@11.4.0") # Add specific node version / target to ensure public mirror is used
+$ spack add ${packages[*]}
+$ spack mirror add develop https://binaries.spack.io/develop
+$ spack buildcache keys --install --trust
+$ spack concretize -f
+$ spack install -j $(nproc) --fail-fast

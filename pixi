@@ -1,0 +1,53 @@
+# description
+yet another python package manager
+
+# see also
+pip
+pipx
+uv
+poetry
+pipenv
+venv
+conda
+mamba
+micromamba
+...
+
+# install
+$ brew install pixi
+$ curl -fsSL https://pixi.sh/install.sh | bash
+$ PIXI_HOME=/global/cfs/cdirs/jgiqaqc curl -fsSL https://pixi.sh/install.sh | bash
+
+# source install
+$ cargo install --locked --git https://github.com/prefix-dev/pixi.git pixi
+
+# source install error
+# Error: error: linker `cc` not found
+# Fix: ln -s $SPACK_GCC/bin/gcc $SPACK_GCC/bin/cc
+
+# global installs
+$ pixi global install git bash ripgrep bat
+
+# sidestep run
+# there is also no "conda activate" / "conda deactivate" function.
+# Instead, a project should define all configurations in a pixi.toml and run pixi shell, or pixi run in the project folder.
+# Pixi automatically discovers the environment, installs and activates it. Bonus points: pixi doesn't even need to modify your .bashrc/.zshrc file to work!
+$ pixi run python
+# or
+$ pixi shell
+
+# switch from conda
+$ pixi init --import ./environment.yml
+
+# create project
+
+# use project
+
+# create env
+
+# use env
+
+# jupyter
+
+# Error: module not found
+# Fix: ???

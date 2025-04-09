@@ -1,6 +1,12 @@
 # description
 Various tools for performance measurement and benchmarking
 
+# tracing
+0xtools  (linux bpf/perf)
+
+# RDMA
+https://github.com/linux-rdma/perftest (linux)
+
 # profiling
 ply
 bpf
